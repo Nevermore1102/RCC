@@ -107,8 +107,8 @@ message SubCrossShardTx
 {
     bytes subTxRlp = 1;
     uint64 messageId = 2;
-    uint64 sourceShardId = 3;
-    uint64 destinShardId = 4;
+    int64 sourceShardId = 3;
+    int64 destinShardId = 4;
     bytes signeddata = 5;
     bytes readwriteset = 6;
 }

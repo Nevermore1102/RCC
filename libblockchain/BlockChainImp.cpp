@@ -1377,30 +1377,39 @@ void BlockChainImp::writeTotalTransactionCount(
             entry->setField(SYS_VALUE, lexical_cast<std::string>(block.transactions()->size()));
             tb->insert(SYS_KEY_TOTAL_TRANSACTION_COUNT, entry);
         }
-        auto receipts = block.transactionReceipts();
-        int32_t failedTransactions = 0;
-        for (auto& receipt : *receipts)
+
+        BLOCKCHAIN_LOG(INFO) << LOG_KV("block.unExecutedTxNum111", block.unExecutedTxNum);
+        BLOCKCHAIN_LOG(INFO) << LOG_KV("block.getTransactionSize()111", block.getTransactionSize());
+
+        // 如果区块中有交易执行过，再启动写回执操作(最多只提交两次) EDIT BY THB
+        if(block.unExecutedTxNum < block.getTransactionSize())
         {
-            if (receipt->status() != TransactionException::None)
+            auto receipts = block.transactionReceipts();
+            int32_t failedTransactions = 0;
+            for (auto& receipt : *receipts)
             {
-                ++failedTransactions;
+                if (receipt->status() != TransactionException::None)
+                {
+                    ++failedTransactions;
+                }
             }
-        }
-        entries = tb->select(SYS_KEY_TOTAL_FAILED_TRANSACTION, tb->newCondition());
-        if (entries->size() > 0)
-        {
-            auto entry = entries->get(0);
-            auto currentCount = lexical_cast<int64_t>(entry->getField(SYS_VALUE));
-            currentCount += failedTransactions;
-            auto updateEntry = tb->newEntry();
-            updateEntry->setField(SYS_VALUE, lexical_cast<std::string>(currentCount));
-            tb->update(SYS_KEY_TOTAL_FAILED_TRANSACTION, updateEntry, tb->newCondition());
-        }
-        else
-        {
-            auto entry = tb->newEntry();
-            entry->setField(SYS_VALUE, lexical_cast<std::string>(failedTransactions));
-            tb->insert(SYS_KEY_TOTAL_FAILED_TRANSACTION, entry);
+
+            entries = tb->select(SYS_KEY_TOTAL_FAILED_TRANSACTION, tb->newCondition());
+            if (entries->size() > 0)
+            {
+                auto entry = entries->get(0);
+                auto currentCount = lexical_cast<int64_t>(entry->getField(SYS_VALUE));
+                currentCount += failedTransactions;
+                auto updateEntry = tb->newEntry();
+                updateEntry->setField(SYS_VALUE, lexical_cast<std::string>(currentCount));
+                tb->update(SYS_KEY_TOTAL_FAILED_TRANSACTION, updateEntry, tb->newCondition());
+            }
+            else
+            {
+                auto entry = tb->newEntry();
+                entry->setField(SYS_VALUE, lexical_cast<std::string>(failedTransactions));
+                tb->insert(SYS_KEY_TOTAL_FAILED_TRANSACTION, entry);
+            }
         }
     }
     else
@@ -1492,13 +1501,16 @@ void BlockChainImp::writeNumber2Hash(const Block& block, std::shared_ptr<Executi
 void BlockChainImp::writeHash2Block(Block& block, std::shared_ptr<ExecutiveContext> context)
 {
     Table::Ptr tb = context->getMemoryTableFactory()->openTable(SYS_HASH_2_BLOCK, false);
+    BLOCKCHAIN_LOG(INFO) << LOG_DESC("aaaaaaaaa1111");
     if (tb)
     {
         Entry::Ptr entry = std::make_shared<Entry>();
         // use binary block data since v2.2.0, use toHex before v2.2.0
         writeBlockToField(block, entry);
+        BLOCKCHAIN_LOG(INFO) << LOG_DESC("aaaaaaaaa2222");
         entry->setForce(true);
         tb->insert(block.blockHeader().hash().hex(), entry);
+        BLOCKCHAIN_LOG(INFO) << LOG_DESC("aaaaaaaaa3333");
     }
     else
     {
@@ -1568,12 +1580,36 @@ CommitResult BlockChainImp::commitBlock(
                 return CommitResult::ERROR_PARENT_HASH;
             }
             auto write_record_time = utcTime();
-            tbb::parallel_invoke([this, block, context]() { writeHash2Block(*block, context); },
-                [this, block, context]() { writeNumber2Hash(*block, context); },
-                [this, block, context]() { writeNumber(*block, context); },
-                [this, block, context]() { writeTotalTransactionCount(*block, context); },
-                [this, block, context]() { writeTxToBlock(*block, context); },
-                [this, block, context]() { writeHash2BlockHeader(*block, context); });
+            
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("AAAAAAAA");
+            // tbb::parallel_invoke([this, block, context]() { writeHash2Block(*block, context); },
+            //     [this, block, context]() { writeNumber2Hash(*block, context); },
+            //     [this, block, context]() { writeNumber(*block, context); },
+            //     [this, block, context]() { writeTotalTransactionCount(*block, context); },
+            //     [this, block, context]() { writeTxToBlock(*block, context); },
+            //     [this, block, context]() { writeHash2BlockHeader(*block, context); });
+
+            writeHash2Block(*block, context);
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("AAAAAAAA1");
+            writeNumber2Hash(*block, context);
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("AAAAAAAA2");
+            writeNumber(*block, context);
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("AAAAAAAA3");
+            writeTotalTransactionCount(*block, context);
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("AAAAAAAA4");
+            writeTxToBlock(*block, context);
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("AAAAAAAA5");
+            writeHash2BlockHeader(*block, context);
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("AAAAAAAA6");
+
+            // tbb::parallel_invoke([this, block, context]() { writeHash2Block(*block, context); },
+            //     [this, block, context]() { writeNumber2Hash(*block, context); },
+            //     [this, block, context]() { writeNumber(*block, context); },
+            //     [this, block, context]() { writeTotalTransactionCount(*block, context); },
+            //     [this, block, context]() { writeTxToBlock(*block, context); },
+            //     [this, block, context]() { writeHash2BlockHeader(*block, context); });
+
+            BLOCKCHAIN_LOG(INFO) << LOG_DESC("BBBBBBB");
 
             auto write_table_time = utcTime() - write_record_time;
 
@@ -1686,8 +1722,11 @@ void BlockChainImp::writeBlockToField(
     dev::eth::Block const& _block, dev::storage::Entry::Ptr _entry)
 {
     std::shared_ptr<bytes> out = std::make_shared<bytes>();
+    BLOCKCHAIN_LOG(INFO) << LOG_DESC("bbbbbbbbbb1111");
     _block.encode(*out);
+    BLOCKCHAIN_LOG(INFO) << LOG_DESC("bbbbbbbbbb2222");
     writeBytesToField(out, _entry, SYS_VALUE);
+    BLOCKCHAIN_LOG(INFO) << LOG_DESC("bbbbbbbbbb3333");
 }
 
 // write bytes to the SYS_VALUE field

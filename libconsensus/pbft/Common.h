@@ -35,13 +35,6 @@ namespace dev
 {
 namespace consensus
 {
-    // // ADD BY THB
-    extern int internal_groupId; // 当前分片所在的groupID
-    extern int SHARDNUM; // 分片总数
-    extern int NODENUM; // 所有节点数目
-    extern std::vector<dev::h512>forwardNodeId;
-    extern std::vector<dev::h512>shardNodeId;
-    extern std::map<int, int> messageIDs;
 
 // for bip152: packetType for partiallyBlock
 enum P2PPacketType : uint32_t
@@ -566,5 +559,16 @@ struct ViewChangeReq : public PBFTMsg
         sig2 = signHash(fieldsWithoutBlock(), keyPair);
     }
 };
+
+    // // ADD BY THB
+    extern int internal_groupId; // 当前分片所在的groupID
+    extern int SHARDNUM; // 分片总数
+    extern int NODENUM; // 所有节点数目
+    extern std::vector<dev::h512>forwardNodeId;
+    extern std::vector<dev::h512>shardNodeId;
+    extern std::map<int, int> messageIDs;
+    extern std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
+
+
 }  // namespace consensus
 }  // namespace dev

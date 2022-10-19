@@ -2500,22 +2500,22 @@ class SubCrossShardTx :
   void _internal_set_messageid(::PROTOBUF_NAMESPACE_ID::uint64 value);
   public:
 
-  // uint64 sourceShardId = 3;
+  // int64 sourceShardId = 3;
   void clear_sourceshardid();
-  ::PROTOBUF_NAMESPACE_ID::uint64 sourceshardid() const;
-  void set_sourceshardid(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  ::PROTOBUF_NAMESPACE_ID::int64 sourceshardid() const;
+  void set_sourceshardid(::PROTOBUF_NAMESPACE_ID::int64 value);
   private:
-  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_sourceshardid() const;
-  void _internal_set_sourceshardid(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  ::PROTOBUF_NAMESPACE_ID::int64 _internal_sourceshardid() const;
+  void _internal_set_sourceshardid(::PROTOBUF_NAMESPACE_ID::int64 value);
   public:
 
-  // uint64 destinShardId = 4;
+  // int64 destinShardId = 4;
   void clear_destinshardid();
-  ::PROTOBUF_NAMESPACE_ID::uint64 destinshardid() const;
-  void set_destinshardid(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  ::PROTOBUF_NAMESPACE_ID::int64 destinshardid() const;
+  void set_destinshardid(::PROTOBUF_NAMESPACE_ID::int64 value);
   private:
-  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_destinshardid() const;
-  void _internal_set_destinshardid(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  ::PROTOBUF_NAMESPACE_ID::int64 _internal_destinshardid() const;
+  void _internal_set_destinshardid(::PROTOBUF_NAMESPACE_ID::int64 value);
   public:
 
   // @@protoc_insertion_point(class_scope:protos.SubCrossShardTx)
@@ -2527,8 +2527,8 @@ class SubCrossShardTx :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr signeddata_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr readwriteset_;
   ::PROTOBUF_NAMESPACE_ID::uint64 messageid_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 sourceshardid_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 destinshardid_;
+  ::PROTOBUF_NAMESPACE_ID::int64 sourceshardid_;
+  ::PROTOBUF_NAMESPACE_ID::int64 destinshardid_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_shard_2eproto;
 };
@@ -4897,42 +4897,42 @@ inline void SubCrossShardTx::set_messageid(::PROTOBUF_NAMESPACE_ID::uint64 value
   // @@protoc_insertion_point(field_set:protos.SubCrossShardTx.messageId)
 }
 
-// uint64 sourceShardId = 3;
+// int64 sourceShardId = 3;
 inline void SubCrossShardTx::clear_sourceshardid() {
-  sourceshardid_ = PROTOBUF_ULONGLONG(0);
+  sourceshardid_ = PROTOBUF_LONGLONG(0);
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint64 SubCrossShardTx::_internal_sourceshardid() const {
+inline ::PROTOBUF_NAMESPACE_ID::int64 SubCrossShardTx::_internal_sourceshardid() const {
   return sourceshardid_;
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint64 SubCrossShardTx::sourceshardid() const {
+inline ::PROTOBUF_NAMESPACE_ID::int64 SubCrossShardTx::sourceshardid() const {
   // @@protoc_insertion_point(field_get:protos.SubCrossShardTx.sourceShardId)
   return _internal_sourceshardid();
 }
-inline void SubCrossShardTx::_internal_set_sourceshardid(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+inline void SubCrossShardTx::_internal_set_sourceshardid(::PROTOBUF_NAMESPACE_ID::int64 value) {
   
   sourceshardid_ = value;
 }
-inline void SubCrossShardTx::set_sourceshardid(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+inline void SubCrossShardTx::set_sourceshardid(::PROTOBUF_NAMESPACE_ID::int64 value) {
   _internal_set_sourceshardid(value);
   // @@protoc_insertion_point(field_set:protos.SubCrossShardTx.sourceShardId)
 }
 
-// uint64 destinShardId = 4;
+// int64 destinShardId = 4;
 inline void SubCrossShardTx::clear_destinshardid() {
-  destinshardid_ = PROTOBUF_ULONGLONG(0);
+  destinshardid_ = PROTOBUF_LONGLONG(0);
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint64 SubCrossShardTx::_internal_destinshardid() const {
+inline ::PROTOBUF_NAMESPACE_ID::int64 SubCrossShardTx::_internal_destinshardid() const {
   return destinshardid_;
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint64 SubCrossShardTx::destinshardid() const {
+inline ::PROTOBUF_NAMESPACE_ID::int64 SubCrossShardTx::destinshardid() const {
   // @@protoc_insertion_point(field_get:protos.SubCrossShardTx.destinShardId)
   return _internal_destinshardid();
 }
-inline void SubCrossShardTx::_internal_set_destinshardid(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+inline void SubCrossShardTx::_internal_set_destinshardid(::PROTOBUF_NAMESPACE_ID::int64 value) {
   
   destinshardid_ = value;
 }
-inline void SubCrossShardTx::set_destinshardid(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+inline void SubCrossShardTx::set_destinshardid(::PROTOBUF_NAMESPACE_ID::int64 value) {
   _internal_set_destinshardid(value);
   // @@protoc_insertion_point(field_set:protos.SubCrossShardTx.destinShardId)
 }

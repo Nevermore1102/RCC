@@ -272,7 +272,7 @@ void SyncThreadMaster::receiveWorker()
             // 通过RPC接口将交易发送至本地服务器，并开始共识
 
             // m_rpc_service->sendRawTransaction(destinshardid, signeddata); // 通过调用本地的RPC接口发起新的共识
-            m_rpc_service->sendSubCsRawTransaction(destinshardid, signeddata, 1); // 通过调用本地的RPC接口发起新的共识
+            // m_rpc_service->sendSubCsRawTransaction(destinshardid, signeddata, 1); // 通过调用本地的RPC接口发起新的共识
         }
 
         got_message = m_pluginManager->precommit_txs->try_pop(msg_subPreCommitedDisTx);

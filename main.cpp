@@ -1,5 +1,5 @@
 //#include <grpcpp/grpcpp.h>
-#include <json/json.h>
+// #include <json/json.h>
 #include <leveldb/db.h>
 #include <libblockchain/BlockChainImp.h>
 #include <libblockverifier/BlockVerifier.h>
@@ -40,6 +40,7 @@
 #include <string>
 #include <unistd.h>
 #include <thread>
+#include <libplugin/benchmark.h>
 
 using namespace std;
 using namespace dev;
@@ -81,6 +82,7 @@ namespace dev{
         std::vector<dev::h512>forwardNodeId;
         std::vector<dev::h512>shardNodeId;
         std::map<int, int> messageIDs;
+        std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
     }
 }
 
@@ -89,6 +91,7 @@ namespace dev{
         std::vector<int>latest_commit_cs_tx;
         std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
         std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
+        blocked_tx_pool _blocked_tx_pool;
     }
 }
 
@@ -98,6 +101,9 @@ namespace dev{
         std::map<dev::h256, int> txhash2sourceshardid; // txhash - > sourceshardid
         std::map<dev::h256, int> txhash2messageid; // txhash - > messageid
         std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
+        std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
+        std::map<dev::h256, transaction_info> corsstxhash2transaction_info; // txhash - > readwriteset
+
     }
 }
 
@@ -199,188 +205,9 @@ private:
     SecureInitializer::Ptr m_secureInitializer;
 };
 
-class CrossShardTest
-{
-    private:
-        std::vector<std::string> m_transactionsRLP;
-        std::string m_contractStr;
-
-        std::shared_ptr<dev::rpc::Rpc> m_rpcService;
-        shared_ptr<SyncThreadMaster> m_syncs;
-        int32_t m_groupId;
-        int32_t m_internal_groupId;
-
-    public:
-        CrossShardTest(std::shared_ptr<dev::rpc::Rpc> _rpcService, int32_t _groupId, shared_ptr<SyncThreadMaster> _syncs)
-        {
-            m_rpcService = _rpcService;
-            m_groupId = _groupId;
-            m_syncs = _syncs;
-        }
-
-        void sendTx()
-        {
-            for(int i = 0; i < m_transactionsRLP.size(); i++)
-            {
-                std::string txrlpstr = m_transactionsRLP.at(i);
-
-                dev::plugin::coordinatorRlp.push_back(txrlpstr); // 协调者记录自己发送的跨片交易请求
-                std::string response = m_rpcService->sendRawTransaction(1, txrlpstr); // 通过一个节点将交易发送给协调者中的所有节点，共识、出块
-                std::cout << "用户向协调者分片发送了一笔交易请求..." << std::endl;
-            }
-        }
-
-        void start()
-        {
-            if(m_groupId == 4)
-            {
-                m_syncs->startThread();
-            }
-        }
-
-        void deployContract()
-        {
-            ifstream infile("./deploy.json", ios::binary);
-            assert(infile.is_open());
-            Json::Reader reader;
-            Json::Value root;
-
-            if(reader.parse(infile, root))
-            {
-                m_contractStr = root[0].asString();
-            }
-            infile.close();
-            //std::string response = m_rpcService->sendRawTransaction(1, m_contractStr);
-            std::cout<<" 合约部署结束 " <<std::endl;
-        }
-
-        void InjectTxRLP()
-        {
-            ifstream infile("./signedtxs.json", ios::binary);
-            assert(infile.is_open());
-            Json::Reader reader;
-            Json::Value root;
-            int64_t number = 0;
-            std::string _transactionRLP = "";
-
-            if(reader.parse(infile, root))
-            {
-                number = root.size();
-                for(int i = 0; i < number; i++)
-                {
-                    _transactionRLP = root[i].asString();
-                    m_transactionsRLP.push_back(_transactionRLP);
-                }
-            }
-            infile.close();
-            ifstream infile2("./resendTx.json", ios::binary);
-            assert(infile2.is_open());
-            number = 0;
-            std::string address = "";
-
-            if(reader.parse(infile2, root))
-            {
-                number = root.size();
-                for(int i = 0; i < number; i++)
-                {
-                    address = root[i][0].asString();
-                    std::vector<std::string> resendTx;
-                    for(int j = 1; j < root[i].size(); j++)
-                    {
-                        resendTx.push_back(root[i][j].asString());
-                    }
-                    dev::plugin::resendTxs.insert(pair<std::string, std::vector<std::string>>(address, resendTx));
-                }
-            }
-            infile2.close();
-            // std::cout<<"测试交易导入成功..." <<std::endl;
-        }
-
-        void InjextConAddress2txrlps()
-        {
-            ifstream infile("./conAddress2txrlps.json", ios::binary);
-            assert(infile.is_open());
-            Json::Reader reader;
-            Json::Value root;
-            int64_t number = 0;
-
-            if(reader.parse(infile, root))
-            {
-                number = root.size();
-                if(number != 0)
-                {
-                    for(int i = 0; i < number; i++)
-                    {
-                        std::string conAddress = root[i][0].asString();
-                        std::vector<std::string> subtxrlps;
-
-                        int txNum = root[i].size() - 1;
-                        dev::plugin::subTxNum.insert(pair<std::string, int>(conAddress, txNum));
-                        for(int j = 1; j < root[i].size(); j++)
-                        {
-                            std::string item = root[i][j].asString();
-                            subtxrlps.push_back(item);
-                        }
-                        dev::plugin::conAddress2txrlps.insert(pair<std::string, std::vector<std::string>>(conAddress, subtxrlps));
-                    }
-                }
-            }
-            infile.close();
-            // std::cout<<"跨片子交易信息，以及子交易数目导入成功！" <<std::endl;
-        }
-
-        void InjectTxRead_Write_Sets()
-        {
-            ifstream infile("./read_write_sets.json");
-            // assert(infile.is_open());
-
-            Json::Reader reader;
-            Json::Value root;
-            int64_t number = 0;
-            std::string _txRlp = "";
-            std::string _readWriteSet = "";
-            std::map <std::string, std::string> txRead_Write_Set_Map;
-
-            if(reader.parse(infile, root))
-            {
-                number = root.size();
-                for(int i = 0; i < number; i++)
-                {
-                    _txRlp = root[i][0].asString();
-                    _readWriteSet = root[i][1].asString();
-                    dev::plugin::txRWSet.insert(pair<std::string, std::string>(_txRlp, _readWriteSet));               
-                }
-            }
-            infile.close();
-            // std::cout<<"交易读写集导入成功..." <<std::endl;
-        }
-
-        void InjectTxDAddr()
-        {
-            ifstream infile("./txDAddress.json", ios::binary);
-            assert(infile.is_open());
-            Json::Reader reader;
-            Json::Value root;
-            int64_t number = 0;
-
-            if(reader.parse(infile, root))
-            {
-                number = root.size();
-                for(int i = 0; i < number; i++)
-                {
-                    std::string conAddress = root[i].asString();
-                    dev::plugin::disTxDepositAddrs.push_back(conAddress);                    
-                }
-            }
-            infile.close();
-            // std::cout<< "跨片交易存证地址导入成功！" <<std::endl;
-        }
-};
-
 int main(){
 
     std::cout<< "* * * * * * * * * HieraChain v0.0.3 * * * * * * * * *" <<std::endl;
-
     dev::consensus::SHARDNUM = 3; // 初始化分片数目
     std::cout << "SHARDNUM = " << dev::consensus::SHARDNUM << std::endl;
 
@@ -415,9 +242,9 @@ int main(){
 
     auto nodeIdstr = asString(contents("conf/node.nodeid"));
     NodeID nodeId = NodeID(nodeIdstr.substr(0, 128));
-    PROTOCOL_ID syncId = getGroupProtoclID(groupId, ProtocolID::InterGroup);
+    std::string nodeIdHex = toHex(nodeId);
 
-    std::cout << "syncId = " << syncId << std::endl;
+    PROTOCOL_ID syncId = getGroupProtoclID(groupId, ProtocolID::InterGroup);
 
     std::shared_ptr<dev::initializer::Initializer> initialize = std::make_shared<dev::initializer::Initializer>();
     // initialize->init_with_groupP2PService("./config.ini", p2pService);  // 启动3个群组
@@ -435,26 +262,15 @@ int main(){
     std::shared_ptr<ConsensusPluginManager> consensusPluginManager = std::make_shared<ConsensusPluginManager>(rpcService);
     syncs->setAttribute(blockchainManager);
     syncs->setAttribute(consensusPluginManager);
-    // syncs->startThread(); // 不再启用轮循检查，通过回调函数异步通知
 
-    // // 启动后等待客户端部署合约，将合约贴在文件后，输入回车符，程序继续往下运行
-    // int flag;
-    // cin >> flag;
-    // std::cout << "开始两阶段提交跨片交易性能测试..." << endl;
-
-    // CrossShardTest cst(rpcService, groupId, syncs);
-    // cst.InjectTxRead_Write_Sets(); // 导入所有跨片交易读写集
-    // cst.start(); // 启动 receive 和 work thread
-
-    // cst.InjectTxDAddr();
-    // if(internal_groupId == 1) // 群组1导入所有待发送的交易RLP码
-    // {
-    //     cst.InjectTxRLP();
-    //     cst.InjextConAddress2txrlps(); // 导入跨片子交易
-    //     std::cout << "测试交易导入成功..." << std::endl;
-    //     std::cout << "准备发送交易..."<< std::endl;
-    //     cst.sendTx(); // 向群组二节点发送交易（其实交易应该生成片2的交易，coordinator只是共识保存）
-    // }
+    // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
+    if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
+    {
+        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+        transactionInjectionTest _injectionTest(rpcService, 1);
+        //_injectionTest.deployContractTransaction("./deploy.json", 1);
+        _injectionTest.injectionTransactions("./signedtxs.json", 1);
+    }
 
     std::cout << "node " + jsonrpc_listen_ip + ":" + jsonrpc_listen_port + " start success." << std::endl;
 

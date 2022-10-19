@@ -800,7 +800,11 @@ protected:
         m_cs_service = _service;
     }
 
+    void senddistx();
+
 protected:
+
+    
 
     std::shared_ptr <dev::p2p::P2PInterface> m_cs_service; // ADD BY THB, 留作跨组通信使用的P2P服务
 

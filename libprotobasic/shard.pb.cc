@@ -447,7 +447,7 @@ const char descriptor_table_protodef_shard_2eproto[] PROTOBUF_SECTION_VARIABLE(p
   "imestamp\030\007 \001(\004\022\021\n\tsignature\030\010 \001(\014\022\017\n\007sha"
   "rdId\030\t \001(\004\"\216\001\n\017SubCrossShardTx\022\020\n\010subTxR"
   "lp\030\001 \001(\014\022\021\n\tmessageId\030\002 \001(\004\022\025\n\rsourceSha"
-  "rdId\030\003 \001(\004\022\025\n\rdestinShardId\030\004 \001(\004\022\022\n\nsig"
+  "rdId\030\003 \001(\003\022\025\n\rdestinShardId\030\004 \001(\003\022\022\n\nsig"
   "neddata\030\005 \001(\014\022\024\n\014readwriteset\030\006 \001(\014b\006pro"
   "to3"
   ;
@@ -4023,14 +4023,14 @@ const char* SubCrossShardTx::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint64 sourceShardId = 3;
+      // int64 sourceShardId = 3;
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           sourceshardid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // uint64 destinShardId = 4;
+      // int64 destinShardId = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           destinshardid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
@@ -4091,16 +4091,16 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(2, this->_internal_messageid(), target);
   }
 
-  // uint64 sourceShardId = 3;
+  // int64 sourceShardId = 3;
   if (this->sourceshardid() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(3, this->_internal_sourceshardid(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(3, this->_internal_sourceshardid(), target);
   }
 
-  // uint64 destinShardId = 4;
+  // int64 destinShardId = 4;
   if (this->destinshardid() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(4, this->_internal_destinshardid(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(4, this->_internal_destinshardid(), target);
   }
 
   // bytes signeddata = 5;
@@ -4159,17 +4159,17 @@ size_t SubCrossShardTx::ByteSizeLong() const {
         this->_internal_messageid());
   }
 
-  // uint64 sourceShardId = 3;
+  // int64 sourceShardId = 3;
   if (this->sourceshardid() != 0) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
         this->_internal_sourceshardid());
   }
 
-  // uint64 destinShardId = 4;
+  // int64 destinShardId = 4;
   if (this->destinshardid() != 0) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
         this->_internal_destinshardid());
   }
 

@@ -8,6 +8,8 @@
 #include <libprotobasic/shard.pb.h>
 #include <libplugin/Common.h>
 #include <librpc/Rpc.h>
+#include <libdevcore/CommonJS.h>
+#include <libethcore/Transaction.h>
 
 namespace dev {
     namespace plugin {
@@ -55,8 +57,7 @@ namespace dev {
                 tbb::concurrent_unordered_map<std::string,u256>testMap;
 
                 /// receive writeResult from exnode
-                tbb::concurrent_quels
-                <protos::TxWithReadSet> *readSetQueue;
+                tbb::concurrent_queue<protos::TxWithReadSet> *readSetQueue;
 
                 // receive txs from leader
                 tbb::concurrent_queue<protos::Transaction> *txs;

@@ -32,11 +32,26 @@ namespace dev
 {
 namespace rpc
 {
-
+    
 extern std::vector<dev::h256> subcrosstxhash; // 记录所有待处理的跨片子交易hash
 extern std::map<dev::h256, int> txhash2sourceshardid; // txhash - > sourceshardid
 extern std::map<dev::h256, int> txhash2messageid; // txhash - > messageid
 extern std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
+extern std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
+
+struct transaction_info
+{
+    long int type; // 交易类型, 0 为片内交易, 1 为跨片子交易
+	long int source_shard_id;
+	long int destin_shard_id;
+	long unsigned message_id;
+    long int readwritesetnum;
+	dev::h256 sub_tx_hash;
+	std::string cross_tx_hash;
+	std::string readwrite_key; 
+};
+
+extern std::map<dev::h256, transaction_info> corsstxhash2transaction_info;
 
 ///< RPCExceptionCode
 enum RPCExceptionType : int

@@ -94,15 +94,20 @@ Block& Block::operator=(Block const& _block)
  */
 void Block::encode(bytes& _out) const
 {
+    
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc11111");
     if (g_BCOSConfig.version() >= RC2_VERSION)
     {
         encodeRC2(_out);
+        BLOCK_LOG(INFO) << LOG_DESC("cccccccsssss");
         return;
     }
 
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc222222");
     m_blockHeader.verify();
     calTransactionRoot(false);
     calReceiptRoot(false);
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc333333");
     bytes headerData;
     m_blockHeader.encode(headerData);
     /// get block RLPStream
@@ -123,25 +128,47 @@ void Block::encode(bytes& _out) const
 
 void Block::encodeRC2(bytes& _out) const
 {
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc444444");
     m_blockHeader.verify();
-    calTransactionRoot(false);
-    calReceiptRoot(false);
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc555555");
+
+    // 如果区块中有交易执行过，再启动写回执操作(最多只提交两次) EDIT BY THB
+    BLOCK_LOG(INFO) << LOG_KV("unExecutedTxNum", unExecutedTxNum);
+    BLOCK_LOG(INFO) << LOG_KV("getTransactionSize()", getTransactionSize());
+
+    if(unExecutedTxNum < getTransactionSize())
+    {
+        calTransactionRoot(false);
+        calReceiptRoot(false);
+    }
+
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc66666");
+
     bytes headerData;
     m_blockHeader.encode(headerData);
+
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc777777");
     /// get block RLPStream
     RLPStream block_stream;
     block_stream.appendList(5);
     // append block header
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc88888");
     block_stream.appendRaw(headerData);
     // append transaction list
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc99999");
     block_stream.append(ref(m_txsCache));
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc101010");
     // append block hash
     block_stream.append(m_blockHeader.hash());
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc111111");
     // append sig_list
     block_stream.appendVector(*m_sigList);
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc121212");
     // append transactionReceipts list
     block_stream.appendRaw(m_tReceiptsCache);
     block_stream.swapOut(_out);
+    BLOCK_LOG(INFO) << LOG_DESC("ccccccc131313");
+
 }
 
 

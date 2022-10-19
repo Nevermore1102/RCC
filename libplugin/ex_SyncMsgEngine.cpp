@@ -161,7 +161,6 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
-            // std::cout << "DistributedTxPacket" << std::endl;
             if(size)
             {
                 std::cout << "data is null" << std::endl;
@@ -170,15 +169,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
             {
                 try
                 {
-                    // std::cout << "节点接收到 DistributedTxPacket 消息" << std::endl;
                     PLUGIN_LOG(INFO) << LOG_DESC("开始对收到的 DistributedTxPacket 消息进行处理");
                     std::string str = rlps[0].toString();
-                    // protos::RLPWithReadSet msg_rs;
-                    // msg_rs.ParseFromString(str);
-
                     protos::SubCrossShardTx msg_rs;
                     msg_rs.ParseFromString(str);
-
                     m_pluginManager->processReceivedDisTx(msg_rs); // 存交易
                 }
                 catch(const std::exception& e)
@@ -187,9 +181,6 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
                 }
             }
         }
-
-
-
         else if(packet->packetType == PreCommittedTxPacket) // 若是 分布式事务precommit消息
         {
             RLP const& rlps = (*packet).rlp();

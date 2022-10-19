@@ -1,4 +1,5 @@
 #include <libplugin/ConsensusPluginManager.h>
+#include <librpc/Common.h>
 
 using namespace std;
 using namespace dev;
@@ -40,7 +41,7 @@ void ConsensusPluginManager::processReceivedDisTx(protos::SubCrossShardTx _txrlp
     msg_txWithReadset = _txrlp;
     
     std::cout << "接收到协调者发来跨片交易请求..." << std::endl;
-    auto rlp = msg_txWithReadset.subtxrlp();
+    // auto rlp = msg_txWithReadset.subtxrlp();
     auto messageid = msg_txWithReadset.messageid();
     auto readwriteset = msg_txWithReadset.readwriteset();
     auto sourceshardid = msg_txWithReadset.sourceshardid();
@@ -48,16 +49,24 @@ void ConsensusPluginManager::processReceivedDisTx(protos::SubCrossShardTx _txrlp
     auto signeddata = msg_txWithReadset.signeddata();
 
     PLUGIN_LOG(INFO) << LOG_DESC("交易解析完毕")
-                        << LOG_KV("rlp", rlp)
                         << LOG_KV("messageid", messageid)
                         << LOG_KV("readset", readwriteset)
                         << LOG_KV("sourceShardId", sourceshardid)
                         << LOG_KV("destinshardid", destinshardid)
                         << LOG_KV("signeddata", signeddata);
 
-    // m_rpc_service->sendRawTransaction(destinshardid, signeddata); // 通过调用本地的RPC接口发起新的共识
-    m_rpc_service->sendSubCsRawTransaction(destinshardid, signeddata, 1, sourceshardid, messageid, readwriteset); // 通过调用本地的RPC接口发起新的共识
-    // distxs->push(_txrlp);
+    // 存储跨片交易信息 ADD BY THB
+    Transaction::Ptr tx = std::make_shared<Transaction>(jsToBytes(signeddata, OnFailed::Throw), CheckTransaction::Everything);
+    dev::rpc::subcrosstxhash.push_back(tx->hash());
+    dev::rpc::txhash2sourceshardid.insert(std::make_pair(tx->hash(), sourceshardid));
+    dev::rpc::txhash2messageid.insert(std::make_pair(tx->hash(), messageid));
+    dev::rpc::txhash2readwriteset.insert(std::make_pair(tx->hash(), readwriteset));
+    std::string cross_tx_hash = "00000000";
+
+    dev::rpc::transaction_info _transaction_info{1, sourceshardid, 0, messageid, 0, tx->hash(), cross_tx_hash, readwriteset};
+    dev::rpc::corsstxhash2transaction_info.insert(std::make_pair(tx->hash(), _transaction_info));
+
+    m_rpc_service->sendRawTransaction(destinshardid, signeddata); // 通过调用本地的RPC接口发起新的共识
 }
 
 void ConsensusPluginManager::processReceivedPreCommitedTx(protos::SubPreCommitedDisTx _txrlp)
