@@ -1,6 +1,9 @@
 ## HieraChain
 
-#### HieraChain is a Scalable Permissioned Blockchain System with Hierarchical Sharding
+HieraChain is a Scalable Permissioned Blockchain System with Hierarchical Sharding
+
+
+#### Development Log
 
 - [2022.09.15] v0.0.1版本发布，在fisco 2.8.0基础上增加了跨群组通信功能，需要安装protubuf库(推荐3.11.2版本)
 
