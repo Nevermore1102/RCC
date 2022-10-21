@@ -43,14 +43,18 @@ public:
         std::shared_ptr<std::vector<std::pair<u256, std::vector<unsigned char>>>>;
     using Ptr = std::shared_ptr<Block>;
 
-    size_t unExecutedTxNum; // 区块中还未处理的交易数目 ADD BY THB
+    //ADD BY THB 
+    size_t unExecutedTxNum; // 区块中还未处理的交易数目 
     bool isFirstExecute = true; // 标记区块是否第一次执，默认为true
+    std::shared_ptr<std::map<std::string, int>> m_blockLockedRwKey; // 被区块第一次执行时锁住的读写集信息，当区块最终提交时将里面所有读写集释放    
+
     ///-----constructors of Block
     Block()
     {
         m_transactions = std::make_shared<Transactions>();
         m_transactionReceipts = std::make_shared<TransactionReceipts>();
         m_sigList = std::make_shared<SigListType>();
+        m_blockLockedRwKey = std::make_shared<std::map<std::string, int>>();
     }
     explicit Block(bytesConstRef _data,
         CheckTransaction const _option = CheckTransaction::Everything, bool _withReceipt = true,

@@ -1299,13 +1299,13 @@ void PBFTEngine::checkAndCommit()
         }
 
         m_timeManager.m_lastSignTime = utcSteadyTime();
-        checkAndSave();
+        checkAndSave(false);
     }
 }
 
 /// if collect >= 2/3 SignReq and CommitReq, then callback this function to commit block
 /// check whether view and height is valid, if valid, then commit the block and clear the context
-void PBFTEngine::checkAndSave()
+void PBFTEngine::checkAndSave(bool commitPhase)
 {
     auto start_commit_time = utcTime();
     auto record_time = utcTime();
@@ -1337,8 +1337,13 @@ void PBFTEngine::checkAndSave()
                                   << LOG_KV("myNode", m_keyPair.pub().abridged());
             return;
         }
+        
 
         /// add sign-list into the block header
+
+        PBFTENGINE_LOG(INFO) << LOG_KV("m_reqCache->prepareCache().height", m_reqCache->prepareCache().height);
+        PBFTENGINE_LOG(INFO) << LOG_KV("m_highestBlock.number()", m_highestBlock.number());
+
         if (m_reqCache->prepareCache().height > m_highestBlock.number())
         {
             /// Block block(m_reqCache->prepareCache().block);
@@ -1348,7 +1353,6 @@ void PBFTEngine::checkAndSave()
             auto genSig_time_cost = utcTime() - record_time;
             record_time = utcTime();
             /// callback block chain to commit block
-            
             PBFTENGINE_LOG(INFO) << LOG_DESC("tanghaibo degug111");
 
             CommitResult ret = m_blockChain->commitBlock(p_block, std::shared_ptr<ExecutiveContext>(m_reqCache->prepareCache().p_execContext));
@@ -1357,39 +1361,19 @@ void PBFTEngine::checkAndSave()
 
             PBFTENGINE_LOG(INFO) << LOG_DESC("tanghaibo degug222");
 
-            /**
-             * 
-             * enum class CommitResult
-            {
-                OK = 0,             // 0
-                ERROR_NUMBER = -1,  // 1
-                ERROR_PARENT_HASH = -2,
-                ERROR_COMMITTING = -3
-            };
-             * 
-            */
-
-        //    if(ret == CommitResult::OK)
-        //    {
-        //         PBFTENGINE_LOG(INFO) << LOG_DESC("OK");
-        //    }
-        //    if(ret == CommitResult::ERROR_NUMBER)
-        //    {
-        //         PBFTENGINE_LOG(INFO) << LOG_DESC("ERROR_NUMBER");
-        //    }
-        //    if(ret == CommitResult::ERROR_PARENT_HASH)
-        //    {
-        //         PBFTENGINE_LOG(INFO) << LOG_DESC("ERROR_PARENT_HASH");
-        //    }
-        //    if(ret == CommitResult::ERROR_COMMITTING)
-        //    {
-        //         PBFTENGINE_LOG(INFO) << LOG_DESC("ERROR_COMMITTING");
-        //    }
-            
-            /// drop handled transactions
+            /// drop handled transactions 
             if (ret == CommitResult::OK)
             {
-                dropHandledTransactions(p_block);
+                // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
+                if(commitPhase)
+                {
+                    // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
+                    PBFTENGINE_LOG(INFO) << LOG_DESC("区块数据持久化完毕，开始执行交易...");
+                    auto executedNum = executeBlockTransactions(p_block);
+                }
+
+                dropHandledTransactions(p_block); // 临时取消
+
                 auto dropTxs_time_cost = utcTime() - record_time;
                 record_time = utcTime();
                 m_blockSync->noteSealingBlockNumber(m_reqCache->prepareCache().height);
@@ -1421,8 +1405,6 @@ void PBFTEngine::checkAndSave()
                 m_blockSync->noteSealingBlockNumber(m_blockChain->number());
                 m_txPool->handleBadBlock(*p_block);
             }
-        
-        
         }
         else
         {
@@ -1439,7 +1421,7 @@ void PBFTEngine::checkAndSave()
 
 /// if collect >= 2/3 SignReq and CommitReq, then callback this function to commit block
 /// check whether view and height is valid, if valid, then commit the block and clear the context
-// void PBFTEngine::checkAndSave(PROTOCOL_ID _group_protocolID)
+// void PBFTEngine::checkAndSave(bool  _group_protocolID)
 // {
 //     auto start_commit_time = utcTime();
 //     auto record_time = utcTime();
@@ -1761,7 +1743,7 @@ bool PBFTEngine::handleCommitMsg(CommitReq::Ptr commit_req, PBFTMsgPacket const&
         return true;
     }
     m_reqCache->addCommitReq(commit_req);
-    checkAndSave();
+    checkAndSave(true);
     PBFTENGINE_LOG(INFO) << LOG_DESC("handleCommitMsg Succ") << LOG_KV("INFO", oss.str())
                          << LOG_KV("Timecost", 1000 * t.elapsed());
     return true;

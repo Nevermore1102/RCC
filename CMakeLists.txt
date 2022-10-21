@@ -124,7 +124,7 @@ elseif()
   message(WARNING "Doxygen is needed to build the documentation. Please install doxygen and graphviz")
 endif()
 
-add_executable(mini-test ${SRC_LIST} ${HEADERS})
-target_compile_options(mini-test PRIVATE -Wno-unused-variable -Wno-sign-compare -Wno-uninitialized -Wno-unused-parameter)
+add_executable(hierachain_node ${SRC_LIST} ${HEADERS})
+target_compile_options(hierachain_node PRIVATE -Wno-unused-variable -Wno-sign-compare -Wno-uninitialized -Wno-unused-parameter)
 # target_link_libraries(mini-p2p PUBLIC initializer gRPC::grpc++)
-target_link_libraries(mini-test PUBLIC initializer plugin) # 链接具有累积性，initializer中包含了其他静态库
+target_link_libraries(hierachain_node PUBLIC initializer plugin) # 链接具有累积性，initializer中包含了其他静态库

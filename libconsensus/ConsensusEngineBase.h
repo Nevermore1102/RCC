@@ -36,6 +36,7 @@
 #include <libsync/SyncInterface.h>
 #include <libtxpool/TxPoolInterface.h>
 #include <libp2p/Service.h>
+#include <libblockverifier/Common.h>
 
 namespace dev
 {
@@ -367,6 +368,8 @@ protected:
     }
 
     dev::blockverifier::ExecutiveContext::Ptr executeBlock(dev::eth::Block& block);
+    int executeBlockTransactions(std::shared_ptr<dev::eth::Block> block);
+
     virtual void checkBlockValid(dev::eth::Block const& block);
     virtual void checkBlockTimeStamp(dev::eth::Block const& _block);
 

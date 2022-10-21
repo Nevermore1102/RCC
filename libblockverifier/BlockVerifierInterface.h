@@ -30,6 +30,8 @@
 #include <libethcore/TransactionReceipt.h>
 #include <libmptstate/State.h>
 #include <memory>
+#include <libexecutive/Executive.h>
+
 
 namespace dev
 {
@@ -53,6 +55,10 @@ public:
 
     virtual dev::eth::TransactionReceipt::Ptr executeTransaction(
         const dev::eth::BlockHeader& blockHeader, dev::eth::Transaction::Ptr _t) = 0;
+
+    virtual dev::eth::TransactionReceipt::Ptr execute(dev::eth::Transaction::Ptr _t,
+        dev::blockverifier::ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive) = 0;
+
 };
 }  // namespace blockverifier
 }  // namespace dev

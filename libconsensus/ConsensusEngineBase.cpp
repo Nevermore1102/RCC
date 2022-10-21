@@ -69,9 +69,30 @@ dev::blockverifier::ExecutiveContext::Ptr ConsensusEngineBase::executeBlock(Bloc
     BlockInfo parentBlockInfo{parentBlock->header().hash(), parentBlock->header().number(),
         parentBlock->header().stateRoot()};
     /// reset execute context
-    // std::cout << "准备执行区块" << std::endl;
     return m_blockVerifier->executeBlock(block, parentBlockInfo);
 }
+
+int ConsensusEngineBase::executeBlockTransactions(std::shared_ptr<dev::eth::Block> block)
+{
+    ENGINE_LOG(INFO) << "即将执行交易...";
+
+    for (size_t i = 0; i < block->transactions()->size(); i++)
+    {
+        auto& tx = (*block->transactions())[i];
+        // auto transactionReceipt = m_blockVerifier->executeTransaction(block->blockHeader(), tx);
+
+        ENGINE_LOG(INFO) << LOG_KV("block->blockHeader().number()", block->blockHeader().number()); 
+        auto cached_executeContent = dev::blockverifier::cached_executeContents.at(block->blockHeader().number());
+        auto executiveContext = cached_executeContent.executiveContext;
+        auto executive = cached_executeContent.executive;
+
+        auto transactionReceipt = m_blockVerifier->execute(tx, executiveContext, executive);
+        executiveContext->getState()->commit(); // 状态写缓存
+        ENGINE_LOG(INFO) << LOG_KV("transactionReceipt", transactionReceipt->status());
+        block->setTransactionReceipt(i, transactionReceipt);
+    }
+}
+
 
 void ConsensusEngineBase::checkBlockValid(Block const& block)
 {

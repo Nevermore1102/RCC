@@ -11,7 +11,7 @@ void transactionInjectionTest::deployContractTransaction(std::string filename, i
 
     if(reader.parse(infile, root)) { signedDeployContractTransaction = root[0].asString(); }
     infile.close();
-    std::string response = m_rpcService->sendRawTransaction(groupId, signedDeployContractTransaction);
+    auto response = m_rpcService->sendRawTransaction(groupId, signedDeployContractTransaction);
     PLUGIN_LOG(INFO) << LOG_DESC("部署合约交易完成...") << LOG_KV("response", response);
 }
 

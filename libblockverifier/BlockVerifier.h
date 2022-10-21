@@ -38,6 +38,7 @@
 #include <memory>
 #include <thread>
 #include <librpc/Common.h>
+#include <libconsensus/pbft/Common.h>
 
 namespace dev
 {
@@ -110,25 +111,25 @@ private:
 class blocked_tx_pool
 {
     public:
-		// std::shared_ptr<tbb::concurrent_unordered_map<std::string, int>> cs_readwriteset_num;  // 每笔跨片交易应当收到的读写集个数(tx_hash-->num)
-		// std::shared_ptr<tbb::concurrent_unordered_map<std::string, int>> received_cs_readwriteset_num; // 每笔跨片交易已经收到的跨片交易读写集个数 (tx_hash-->num)
+		std::shared_ptr<tbb::concurrent_unordered_map<std::string, int>> cs_rwset_num;  // 每笔跨片交易应当收到的读写集个数(tx_hash-->num)
+		std::shared_ptr<tbb::concurrent_unordered_map<std::string, int>> received_rwset_num; // 每笔跨片交易已经收到的跨片交易读写集个数 (cross_tx_hash-->num)
 
 		// // std::shared_ptr<tbb::concurrent_unordered_map<std::string, std::shared_ptr<dev::eth::Transaction>>> cached_cs_tx; // 缓冲队列跨片交易集合(用以应对网络传输下，收到的交易乱序)，(shardid_messageid-->subtx)，由执行模块代码触发
 		// std::shared_ptr<tbb::concurrent_unordered_map<std::string, std::shared_ptr<dev::blockverifier::executableTransaction>>> cached_cs_tx; // 缓冲队列跨片交易集合(用以应对网络传输下，收到的交易乱序)，(shardid_messageid-->subtx)，由执行模块代码触发
 
-		// std::shared_ptr<tbb::concurrent_unordered_map<std::string, candidate_tx_queue>> candidate_tx_queues; // 执行队列池 readwriteset --> candidate_tx_queue
+		std::shared_ptr<tbb::concurrent_unordered_map<std::string, candidate_tx_queue>> candidate_tx_queues; // 执行队列池 readwriteset --> candidate_tx_queue
 		// std::shared_ptr<tbb::concurrent_vector<int>> latest_candidate_tx_messageids; // 已经提交candidate_cs_tx的来自不同分片的最大 messageid[3,4]
 
 		std::shared_ptr<tbb::concurrent_unordered_map<std::string, int>> locking_key; // 交易池交易因等待收齐状态而正在锁定的状态key（以为区块还未提交）
-		// std::shared_ptr<tbb::concurrent_unordered_map<std::string, std::string>> hash2blocked_readwriteset; // cross_shard_tx_hash --> blocked_readwriteset, 然后根据 blocked_readwriteset 寻找到 candidate_tx_queue
+		std::shared_ptr<tbb::concurrent_unordered_map<std::string, std::string>> cs_txhash2blockedrwset; // cross_shard_tx_hash --> blocked_readwriteset, 然后根据 blocked_readwriteset 寻找到 candidate_tx_queue
 
         blocked_tx_pool()
         {
-			// cs_readwriteset_num = std::make_shared<tbb::concurrent_unordered_map<std::string, int>>();
-			// received_cs_readwriteset_num = std::make_shared<tbb::concurrent_unordered_map<std::string, int>>();
+			cs_rwset_num = std::make_shared<tbb::concurrent_unordered_map<std::string, int>>();
+			received_rwset_num = std::make_shared<tbb::concurrent_unordered_map<std::string, int>>();
 
 			// cached_cs_tx = std::make_shared<tbb::concurrent_unordered_map<std::string, std::shared_ptr<dev::blockverifier::executableTransaction>>>(); // 放在RPC模块进行处理
-			// candidate_tx_queues = std::make_shared<tbb::concurrent_unordered_map<std::string, candidate_tx_queue>>();
+			candidate_tx_queues = std::make_shared<tbb::concurrent_unordered_map<std::string, candidate_tx_queue>>();
 			// latest_candidate_tx_messageids = std::make_shared<tbb::concurrent_vector<int>>(dev::consensus::SHARDNUM);
 
 			locking_key = std::make_shared<tbb::concurrent_unordered_map<std::string, int>>();
@@ -139,17 +140,17 @@ class blocked_tx_pool
 
         // void insert_tx(dev::eth::Transaction _tx, int _type);
 
-        void insertIntraTx(dev::eth::Transaction::Ptr _tx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive, std::string& readwrite_key);
+        void insertIntraTx(dev::eth::Transaction::Ptr _tx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive, std::string& readwrite_key, std::shared_ptr<dev::eth::Block> block);
 
         // void insert_cached_cs_tx(dev::eth::Transaction::Ptr _subtx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive); // 放在RPC模块进行处理
 
-        // void insert_candidate_cs_tx(dev::eth::Transaction::Ptr _subtx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive); // 放在RPC模块进行处理
+        void insert_candidate_cs_tx(dev::eth::Transaction::Ptr _subtx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive, std::shared_ptr<dev::eth::Block> block); // 放在RPC模块进行处理
 
 		// void insert_readwriteset(readwriteset_msg _readwriteset_msg); // P2P模块触发
 
         // int tryExecute(readwriteset_msg _readwriteset_msg); // 当收到一个读写集之后，P2P触发的回调函数tryExecute，尝试执行 candidate_cs_tx 中第一笔交易
 
-        // bool split(const std::string &str, std::vector<std::string> &ret, std::string sep);  // 工具函数
+        bool split(const std::string &str, std::vector<std::string> &ret, std::string sep);  // 工具函数
 };
 
 extern blocked_tx_pool _blocked_tx_pool; // 声明全局变量

@@ -436,7 +436,8 @@ protected:
     void checkAndCommit();
 
     /// if collect >= 2/3 SignReq and CommitReq, then callback this function to commit block
-    void checkAndSave();
+    // void checkAndSave();
+    void checkAndSave(bool commitPhase);
     // void checkAndSave(PROTOCOL_ID _group_protocolID);
     bool checkAndChangeView(VIEWTYPE const& _view);
 

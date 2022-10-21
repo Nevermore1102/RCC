@@ -1577,6 +1577,7 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             RPC_LOG(INFO)<<LOG_DESC("投递交易1");
             ret = txPool->submitTransactions(tx);
             RPC_LOG(INFO)<<LOG_DESC("交易投递结束1");
+            RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
             break;
         // the v2 submit transactions sync
         // and v3 submit transactions async
@@ -1584,6 +1585,7 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             RPC_LOG(INFO)<<LOG_DESC("投递交易2");
             ret = txPool->submit(tx);
             RPC_LOG(INFO)<<LOG_DESC("交易投递结束2") << LOG_KV("toJS(ret.first)", ret.first) << LOG_KV("toJS(ret.second)", ret.second);
+            RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
             break;
         // default submit transactions sync
         default:
@@ -1591,9 +1593,11 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             checkSyncStatus(_groupID);
             RPC_LOG(INFO)<<LOG_DESC("投递交易3");
             ret = txPool->submitTransactions(tx);
+            RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
             RPC_LOG(INFO)<<LOG_DESC("交易投递结束3");
             break;
         }
+
         return toJS(ret.first);
     }
     catch (JsonRpcException& e)

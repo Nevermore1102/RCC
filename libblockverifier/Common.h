@@ -28,6 +28,9 @@
 #include <libethcore/Transaction.h>
 #include <memory>
 
+#include <libexecutive/Executive.h>
+#include <libethcore/Block.h>
+
 #define BLOCKVERIFIER_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("BLOCKVERIFIER")
 #define EXECUTIVECONTEXT_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("EXECUTIVECONTEXT")
 #define PARA_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("PARA") << LOG_BADGE(utcTime())
@@ -36,6 +39,42 @@ namespace dev
 {
 namespace blockverifier
 {
+
+struct BlockInfo
+{
+    dev::h256 hash;
+    int64_t number;
+    dev::h256 stateRoot;
+};
+
+struct executableTransaction // 缓存的交易
+{
+	dev::eth::Transaction::Ptr tx;
+    std::shared_ptr<dev::blockverifier::ExecutiveContext> executiveContext;
+	dev::executive::Executive::Ptr executive;
+    std::shared_ptr<dev::eth::Block> block;
+};
+
+struct candidate_tx_queue
+{
+	std::string rwkey; // 队列所阻塞的读写集
+	std::queue<std::shared_ptr<executableTransaction>> queue; // 缓存的可执行交易
+};
+
+struct rwset_msg
+{
+	int source_shard_id;
+	int destin_shard_id;
+	std::string cross_tx_hash; // 跨片交易相对应的交易哈希
+	std::string readwriteset;
+};
+
+struct blockExecuteContent
+{
+    std::shared_ptr<ExecutiveContext> executiveContext;
+    std::shared_ptr<dev::executive::Executive> executive;
+};
+
     // 已经提交的来自不同分片的最新跨片交易编号
     extern std::vector<int>latest_commit_cs_tx; 
 
@@ -45,11 +84,8 @@ namespace blockverifier
     // 因前序交易未完成而被阻塞的区块 std::map<SHARDID_MESSAGEID, std::make_shared<Block>>
     extern std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
 
-struct BlockInfo
-{
-    dev::h256 hash;
-    int64_t number;
-    dev::h256 stateRoot;
-};
+    extern std::map<int, blockExecuteContent> cached_executeContents; // 缓存的区块执行变量
+
+
 }  // namespace blockverifier
 }  // namespace dev

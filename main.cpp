@@ -41,6 +41,7 @@
 #include <unistd.h>
 #include <thread>
 #include <libplugin/benchmark.h>
+#include <libethcore/Block.h>
 
 using namespace std;
 using namespace dev;
@@ -83,6 +84,7 @@ namespace dev{
         std::vector<dev::h512>shardNodeId;
         std::map<int, int> messageIDs;
         std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
+        std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks;
     }
 }
 
@@ -92,6 +94,7 @@ namespace dev{
         std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
         std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
         blocked_tx_pool _blocked_tx_pool;
+        std::map<int, blockExecuteContent> cached_executeContents; // 缓存的区块执行变量
     }
 }
 
@@ -263,14 +266,14 @@ int main(){
     syncs->setAttribute(blockchainManager);
     syncs->setAttribute(consensusPluginManager);
 
-    // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
-    if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
-    {
-        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-        transactionInjectionTest _injectionTest(rpcService, 1);
-        //_injectionTest.deployContractTransaction("./deploy.json", 1);
-        _injectionTest.injectionTransactions("./signedtxs.json", 1);
-    }
+    // // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
+    // if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
+    // {
+    //     PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+    //     transactionInjectionTest _injectionTest(rpcService, 1);
+    //     _injectionTest.deployContractTransaction("./deploy.json", 1);
+    //     // _injectionTest.injectionTransactions("./signedtxs.json", 1);
+    // }
 
     std::cout << "node " + jsonrpc_listen_ip + ":" + jsonrpc_listen_port + " start success." << std::endl;
 
