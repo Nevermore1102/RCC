@@ -136,11 +136,8 @@ void Block::encodeRC2(bytes& _out) const
     BLOCK_LOG(INFO) << LOG_KV("unExecutedTxNum", unExecutedTxNum);
     BLOCK_LOG(INFO) << LOG_KV("getTransactionSize()", getTransactionSize());
 
-    if(unExecutedTxNum < getTransactionSize())
-    {
-        calTransactionRoot(false);
-        calReceiptRoot(false);
-    }
+    calTransactionRoot(false);
+    calReceiptRoot(false);
 
     BLOCK_LOG(INFO) << LOG_DESC("ccccccc66666");
 

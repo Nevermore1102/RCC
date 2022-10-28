@@ -1364,13 +1364,13 @@ void PBFTEngine::checkAndSave(bool commitPhase)
             /// drop handled transactions 
             if (ret == CommitResult::OK)
             {
-                // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
-                if(commitPhase)
-                {
-                    // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
-                    PBFTENGINE_LOG(INFO) << LOG_DESC("区块数据持久化完毕，开始执行交易...");
-                    auto executedNum = executeBlockTransactions(p_block);
-                }
+                // // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
+                // if(commitPhase)
+                // {
+                //     // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
+                //     PBFTENGINE_LOG(INFO) << LOG_DESC("区块数据持久化完毕，开始执行交易...");
+                //     auto executedNum = executeBlockTransactions(p_block);
+                // }
 
                 dropHandledTransactions(p_block); // 临时取消
 

@@ -48,16 +48,17 @@ evmc_bytes32 getStorage(
     evmc_host_context* _context, const evmc_address* _addr, const evmc_bytes32* _key)
 {
     // evmc_bytes32 是 unsigned char数组类型
-    std::cout << "getStorage key = "  << _key->bytes << std::endl;
-    std::cout << "getStorage addr = " << _addr->bytes << std::endl;
-
     auto& env = static_cast<EVMHostContext&>(*_context);
 
     // programming assert for debug
     assert(fromEvmC(*_addr) == env.myAddress());
+
+    auto addr = fromEvmC(*_addr);
     u256 key = fromEvmC(*_key);
 
-    std::cout << "getStorage u256 key = " << key << std::endl;
+    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage ") << LOG_KV("addr", addr);
+    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage ") << LOG_KV("key", key);
+    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage ") << LOG_KV("value", env.store(key));
 
     return toEvmC(env.store(key));
 }
@@ -65,8 +66,6 @@ evmc_bytes32 getStorage(
 evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* _addr,
     const evmc_bytes32* _key, const evmc_bytes32* _value)
 {
-    std::cout << "setStorage key = " << _key->bytes << std::endl;
-    std::cout << "setStorage value = " << _value->bytes << std::endl;
 
     auto& env = static_cast<EVMHostContext&>(*_context);
     if (!env.isPermitted())
@@ -74,11 +73,10 @@ evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* 
         BOOST_THROW_EXCEPTION(eth::PermissionDenied());
     }
     assert(fromEvmC(*_addr) == env.myAddress());
+
+    auto addr = fromEvmC(*_addr);
     u256 index = fromEvmC(*_key);
     u256 value = fromEvmC(*_value);
-
-    std::cout << "setStorage u256 index = " << index << std::endl;
-    std::cout << "setStorage u256 value = " << value << std::endl;
 
     u256 oldValue = env.store(index);
 
@@ -93,6 +91,11 @@ evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* 
         status = EVMC_STORAGE_DELETED;
         env.sub().refunds += env.evmSchedule().sstoreRefundGas;
     }
+
+    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("addr", addr);
+    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("index", index);
+    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("value", value);
+
     env.setStore(index, value);  // Interface uses native endianness
     return status;
 }

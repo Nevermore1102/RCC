@@ -76,7 +76,7 @@ namespace dev {
 }
 
 namespace dev{
-    namespace consensus{
+    namespace consensus {
         int internal_groupId; // 当前分片所在的groupID
         int SHARDNUM; // 分片总数
         int NODENUM; // 所有节点数目
@@ -89,7 +89,7 @@ namespace dev{
 }
 
 namespace dev{
-    namespace blockverifier{
+    namespace blockverifier {
         std::vector<int>latest_commit_cs_tx;
         std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
         std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
@@ -106,7 +106,9 @@ namespace dev{
         std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
         std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
         std::map<dev::h256, transaction_info> corsstxhash2transaction_info; // txhash - > readwriteset
-
+        std::map<int, int> sended_tx_messageid;
+        std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions;
+        std::map<int, int> sended_messageid;
     }
 }
 
@@ -235,6 +237,12 @@ int main(){
         dev::blockverifier::latest_commit_cs_tx.push_back(0);
     }
 
+    // 对dev::rpc::sended_tx_messageid进行初始化
+    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
+    {
+        dev::rpc::sended_tx_messageid.insert(std::make_pair(i, 0));
+    }
+
     GroupP2PService groupP2Pservice("./configgroup.ini");
     auto p2pService = groupP2Pservice.p2pInitializer()->p2pService();
     putGroupPubKeyIntoService(p2pService, pt);
@@ -272,28 +280,15 @@ int main(){
     //     PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
     //     transactionInjectionTest _injectionTest(rpcService, 1);
     //     _injectionTest.deployContractTransaction("./deploy.json", 1);
-    //     // _injectionTest.injectionTransactions("./signedtxs.json", 1);
+    //     _injectionTest.injectionTransactions("./signedtxs.json", 1);
     // }
 
     std::cout << "node " + jsonrpc_listen_ip + ":" + jsonrpc_listen_port + " start success." << std::endl;
+    if(nearest_upper_groupId != "N/A") { std::cout << "nearest_upper_groupId = " << nearest_upper_groupId << std::endl; }
+    else { std::cout<<"it's a root group" << std::endl; }
 
-    if(nearest_upper_groupId != "N/A")
-    {
-        std::cout << "nearest_upper_groupId = " << nearest_upper_groupId << std::endl;
-    }
-    else
-    {
-        std::cout<<"it's a root group" << std::endl;
-    }
-
-    if(nearest_lower_groupId != "N/A")
-    {
-        std::cout << "nearest_lower_groupId = " << nearest_lower_groupId << std::endl;
-    }
-    else
-    {
-        std::cout<<"it's a leaf group" << std::endl;
-    }
+    if(nearest_lower_groupId != "N/A") { std::cout << "nearest_lower_groupId = " << nearest_lower_groupId << std::endl; }
+    else { std::cout<<"it's a leaf group" << std::endl; }
 
     size_t duration = 0;
     while (true)
