@@ -566,7 +566,7 @@ struct ViewChangeReq : public PBFTMsg
     extern int NODENUM; // 所有节点数目
     extern std::vector<dev::h512>forwardNodeId;
     extern std::vector<dev::h512>shardNodeId;
-    extern std::map<int, int> messageIDs;
+    extern std::map<int, int> messageIds;
     extern std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
     extern std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks; // 缓存的未执行完的区块指针
 }  // namespace consensus

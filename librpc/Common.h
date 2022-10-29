@@ -42,7 +42,6 @@ extern std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readw
 extern std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
 extern std::map<int, int> sended_tx_messageid; // source_shard_id - > message_id
 extern std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions; // sourceshard_id_message_id --> sharded_ptr<Transaction>
-extern std::map<int, int> sended_messageid;
 
 struct transaction_info
 {
@@ -52,8 +51,9 @@ struct transaction_info
 	long unsigned message_id;
     long int readwritesetnum;
 	dev::h256 sub_tx_hash;
-	std::string cross_tx_hash;
+	std::string crossshardtxid;
 	std::string readwrite_key; 
+    std::string participants;
 };
 
 extern std::map<dev::h256, transaction_info> corsstxhash2transaction_info;

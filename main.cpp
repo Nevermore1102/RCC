@@ -82,7 +82,7 @@ namespace dev{
         int NODENUM; // 所有节点数目
         std::vector<dev::h512>forwardNodeId;
         std::vector<dev::h512>shardNodeId;
-        std::map<int, int> messageIDs;
+        std::map<int, int> messageIds;
         std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
         std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks;
     }
@@ -108,7 +108,6 @@ namespace dev{
         std::map<dev::h256, transaction_info> corsstxhash2transaction_info; // txhash - > readwriteset
         std::map<int, int> sended_tx_messageid;
         std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions;
-        std::map<int, int> sended_messageid;
     }
 }
 
@@ -228,7 +227,7 @@ int main(){
     // 对dev::consensus::messageIDs进行初始化
     for(int i = 0; i < dev::consensus::SHARDNUM; i++)
     {
-        dev::consensus::messageIDs.insert(std::make_pair(i, 0));
+        dev::consensus::messageIds.insert(std::make_pair(i, 0));
     }
 
     // 对dev::consensus::latest_commit_cs_tx进行初始化
@@ -237,7 +236,7 @@ int main(){
         dev::blockverifier::latest_commit_cs_tx.push_back(0);
     }
 
-    // 对dev::rpc::sended_tx_messageid进行初始化
+    // 对dev::rpc::sended_tx_messageid 进行初始化
     for(int i = 0; i < dev::consensus::SHARDNUM; i++)
     {
         dev::rpc::sended_tx_messageid.insert(std::make_pair(i, 0));
@@ -246,7 +245,7 @@ int main(){
     GroupP2PService groupP2Pservice("./configgroup.ini");
     auto p2pService = groupP2Pservice.p2pInitializer()->p2pService();
     putGroupPubKeyIntoService(p2pService, pt);
-    putGroupPubKeyIntoshardNodeId(pt); // 读取全网所有节点Ï
+    putGroupPubKeyIntoshardNodeId(pt); // 读取全网所有节点
     p2pService->start();
 
     GROUP_ID groupId = std::stoi(pt.get<std::string>("group.global_group_id")); // 全局通信使用的groupid

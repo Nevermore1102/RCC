@@ -1303,10 +1303,7 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
         }
         // calculate the keccak256 before submit into the transaction pool
         tx->hash();
-        RPC_LOG(INFO) << LOG_DESC("准备将交易投递到交易池")
-            << LOG_KV("signedData", _rlp)
-            << LOG_KV("txhash", tx->hash())
-            << LOG_KV("tx_nonce", tx->nonce());
+        RPC_LOG(INFO) << LOG_DESC("准备将交易投递到交易池") << LOG_KV("signedData", _rlp) << LOG_KV("txhash", tx->hash()) << LOG_KV("tx_nonce", tx->nonce());
 
         // 判断交易是否为片内交易 ADD BY THB
         bytes m_data = tx->get_data();
@@ -1322,61 +1319,17 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             hex_m_data_str += temp;
         }
 
-        int m = hex_m_data_str.find("0x444555666", 0);
-        if( m != -1 )
+        if( dev::rpc::corsstxhash2transaction_info.count(tx->hash()) != 0 ) // 如果是跨片子交易
         {
-            std::vector<std::string> subtemp;
-            boost::split(subtemp, hex_m_data_str, boost::is_any_of("_"), boost::token_compress_on);
-            std::string readwriteset = subtemp.at(1);
-            dev::rpc::innertxhash2readwriteset.insert(std::make_pair(tx->hash(), readwriteset)); // 记录片内交易的读写集(txhash --> readwriteset)
-
-            RPC_LOG(INFO) << LOG_DESC("RPC模块检查到交易为片内交易...");
-            RPC_LOG(INFO) << LOG_DESC("片内交易读写集为") << LOG_KV("readwriteset", readwriteset);
-            std::pair<h256, Address> ret;
-            switch (clientProtocolversion)
-            {
-            // the oldest SDK: submit transactions sync
-            case ProtocolVersion::v1:
-            case ProtocolVersion::v2:
-                checkRequest(_groupID);
-                checkSyncStatus(_groupID);
-                RPC_LOG(INFO)<<LOG_DESC("投递交易1");
-                ret = txPool->submitTransactions(tx);
-                RPC_LOG(INFO)<<LOG_DESC("交易投递结束1");
-                RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
-                break;
-            // the v2 submit transactions sync
-            // and v3 submit transactions async
-            case ProtocolVersion::v3:
-                RPC_LOG(INFO)<<LOG_DESC("投递交易2");
-                ret = txPool->submit(tx);
-                RPC_LOG(INFO)<<LOG_DESC("交易投递结束2") << LOG_KV("toJS(ret.first)", ret.first) << LOG_KV("toJS(ret.second)", ret.second);
-                RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
-                break;
-            // default submit transactions sync
-            default:
-                checkRequest(_groupID);
-                checkSyncStatus(_groupID);
-                RPC_LOG(INFO)<<LOG_DESC("投递交易3");
-                ret = txPool->submitTransactions(tx);
-                RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
-                RPC_LOG(INFO)<<LOG_DESC("交易投递结束3");
-                break;
-            }
-            return toJS(ret.first);
-        }
-        int n = hex_m_data_str.find("0x111222333", 0);
-        if( n != -1 )
-        {
-            RPC_LOG(INFO) << LOG_DESC("RPC模块检查到交易为跨片交易...");
-
-            // 获取跨片交易信息
+            RPC_LOG(INFO) << LOG_DESC("RPC模块检查到交易为跨片子交易...");
+            // 获取跨片子交易信息
             auto tx_hash = tx->hash();
             auto transaction_info = dev::rpc::corsstxhash2transaction_info.at(tx_hash);
             int source_shard_id = transaction_info.source_shard_id;
             int message_id = transaction_info.message_id;
-            int latested_message_id = sended_messageid.at(source_shard_id); // 当前投放在交易池中来自分片source_shard_id的消息最大message_id
+            int latested_message_id = sended_tx_messageid.at(source_shard_id); // 当前投放在交易池中来自分片source_shard_id的消息最大message_id
 
+            std::pair<h256, Address> ret;
             if( message_id > latested_message_id + 1 )
             {
                 RPC_LOG(INFO) << LOG_DESC("RPC模块收到了未来的消息, 对消息进行缓存...");
@@ -1386,10 +1339,11 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             }
             if( message_id == latested_message_id + 1 )
             {
+                RPC_LOG(INFO) << LOG_DESC("在 if( message_id == latested_message_id + 1 ) 中...");
                 std::string key = "";
                 do
                 {
-                    std::pair<h256, Address> ret;
+                    // std::pair<h256, Address> ret;
                     switch (clientProtocolversion)
                     {
                     // the oldest SDK: submit transactions sync
@@ -1397,48 +1351,51 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
                     case ProtocolVersion::v2:
                         checkRequest(_groupID);
                         checkSyncStatus(_groupID);
-                        RPC_LOG(INFO)<<LOG_DESC("投递交易1");
                         ret = txPool->submitTransactions(tx);
-                        RPC_LOG(INFO)<<LOG_DESC("交易投递结束1");
                         RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
                         break;
                     // the v2 submit transactions sync
                     // and v3 submit transactions async
                     case ProtocolVersion::v3:
-                        RPC_LOG(INFO)<<LOG_DESC("投递交易2");
                         ret = txPool->submit(tx);
-                        RPC_LOG(INFO)<<LOG_DESC("交易投递结束2") << LOG_KV("toJS(ret.first)", ret.first) << LOG_KV("toJS(ret.second)", ret.second);
-                        RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
                         break;
                     // default submit transactions sync
                     default:
                         checkRequest(_groupID);
                         checkSyncStatus(_groupID);
-                        RPC_LOG(INFO)<<LOG_DESC("投递交易3");
                         ret = txPool->submitTransactions(tx);
-                        RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
-                        RPC_LOG(INFO)<<LOG_DESC("交易投递结束3");
                         break;
                     }
 
-                    sended_messageid.at(source_shard_id) = message_id;
+                    sended_tx_messageid.at(source_shard_id) = message_id;
                     message_id = message_id + 1;
                     key = std::to_string(source_shard_id) + std::to_string(message_id); // 尝试从缓存中获取下一个message
 
-                    if(cachedTransactions.count(key) != 0) { tx = cachedTransactions.at(key); }
-                } while (cachedTransactions.count(key) != 0);
-                return toJS(tx->hash());
+                    if(cachedTransactions.count(key) != 0)
+                    {
+                        tx = cachedTransactions.at(key);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                } while (true);
+                return toJS(ret.first);
             }
         }
-        else
+        else // 片内交易、原始跨片交易、部署合约交易
         {
-            // std::vector<std::string> subtemp;
-            // boost::split(subtemp, hex_m_data_str, boost::is_any_of("_"), boost::token_compress_on);
-            // std::string readwriteset = subtemp.at(1);
-            // dev::rpc::innertxhash2readwriteset.insert(std::make_pair(tx->hash(), readwriteset)); // 记录片内交易的读写集(txhash --> readwriteset)
+            int r = hex_m_data_str.find("0x444555666", 0);
+            if( r != -1)
+            {
+                std::vector<std::string> subtemp;
+                boost::split(subtemp, hex_m_data_str, boost::is_any_of("_"), boost::token_compress_on);
+                std::string readwriteset = subtemp.at(1);
+                dev::rpc::innertxhash2readwriteset.insert(std::make_pair(tx->hash(), readwriteset)); // 记录片内交易的读写集(txhash --> readwriteset)
+                RPC_LOG(INFO) << LOG_DESC("RPC模块检查到交易为片内交易...");
+                RPC_LOG(INFO) << LOG_DESC("片内交易读写集为") << LOG_KV("readwriteset", readwriteset);
+            }
 
-            // RPC_LOG(INFO) << LOG_DESC("RPC模块检查到交易为片内交易...");
-            // RPC_LOG(INFO) << LOG_DESC("片内交易读写集为") << LOG_KV("readwriteset", readwriteset);
             std::pair<h256, Address> ret;
             switch (clientProtocolversion)
             {
@@ -1447,32 +1404,22 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             case ProtocolVersion::v2:
                 checkRequest(_groupID);
                 checkSyncStatus(_groupID);
-                RPC_LOG(INFO)<<LOG_DESC("投递交易1");
                 ret = txPool->submitTransactions(tx);
-                RPC_LOG(INFO)<<LOG_DESC("交易投递结束1");
-                RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
                 break;
             // the v2 submit transactions sync
             // and v3 submit transactions async
             case ProtocolVersion::v3:
-                RPC_LOG(INFO)<<LOG_DESC("投递交易2");
                 ret = txPool->submit(tx);
-                RPC_LOG(INFO)<<LOG_DESC("交易投递结束2") << LOG_KV("toJS(ret.first)", ret.first) << LOG_KV("toJS(ret.second)", ret.second);
-                RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
                 break;
             // default submit transactions sync
             default:
                 checkRequest(_groupID);
                 checkSyncStatus(_groupID);
-                RPC_LOG(INFO)<<LOG_DESC("投递交易3");
                 ret = txPool->submitTransactions(tx);
-                RPC_LOG(INFO)<<LOG_KV("Address", ret.second);
-                RPC_LOG(INFO)<<LOG_DESC("交易投递结束3");
                 break;
             }
             return toJS(ret.first);
         }
-        return toJS(h256(0));
     }
     catch (JsonRpcException& e)
     {

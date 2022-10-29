@@ -382,6 +382,8 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_shard_2eproto::offsets[] PROTO
   PROTOBUF_FIELD_OFFSET(::protos::SubCrossShardTx, destinshardid_),
   PROTOBUF_FIELD_OFFSET(::protos::SubCrossShardTx, signeddata_),
   PROTOBUF_FIELD_OFFSET(::protos::SubCrossShardTx, readwriteset_),
+  PROTOBUF_FIELD_OFFSET(::protos::SubCrossShardTx, participants_),
+  PROTOBUF_FIELD_OFFSET(::protos::SubCrossShardTx, crossshardtxid_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::protos::SubPreCommitedDisTx)},
@@ -445,11 +447,12 @@ const char descriptor_table_protodef_shard_2eproto[] PROTOBUF_SECTION_VARIABLE(p
   "\n\020transactionsRoot\030\003 \001(\014\022\016\n\006number\030\004 \001(\004"
   "\022\020\n\010gasLimit\030\005 \001(\014\022\017\n\007gasUsed\030\006 \001(\014\022\021\n\tt"
   "imestamp\030\007 \001(\004\022\021\n\tsignature\030\010 \001(\014\022\017\n\007sha"
-  "rdId\030\t \001(\004\"\216\001\n\017SubCrossShardTx\022\020\n\010subTxR"
+  "rdId\030\t \001(\004\"\274\001\n\017SubCrossShardTx\022\020\n\010subTxR"
   "lp\030\001 \001(\014\022\021\n\tmessageId\030\002 \001(\004\022\025\n\rsourceSha"
   "rdId\030\003 \001(\003\022\025\n\rdestinShardId\030\004 \001(\003\022\022\n\nsig"
-  "neddata\030\005 \001(\014\022\024\n\014readwriteset\030\006 \001(\014b\006pro"
-  "to3"
+  "neddata\030\005 \001(\014\022\024\n\014readwriteset\030\006 \001(\014\022\024\n\014p"
+  "articipants\030\007 \001(\014\022\026\n\016crossshardtxid\030\010 \001("
+  "\014b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_shard_2eproto_deps[1] = {
 };
@@ -471,7 +474,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_sha
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_shard_2eproto_once;
 static bool descriptor_table_shard_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_shard_2eproto = {
-  &descriptor_table_shard_2eproto_initialized, descriptor_table_protodef_shard_2eproto, "shard.proto", 1323,
+  &descriptor_table_shard_2eproto_initialized, descriptor_table_protodef_shard_2eproto, "shard.proto", 1369,
   &descriptor_table_shard_2eproto_once, descriptor_table_shard_2eproto_sccs, descriptor_table_shard_2eproto_deps, 13, 0,
   schemas, file_default_instances, TableStruct_shard_2eproto::offsets,
   file_level_metadata_shard_2eproto, 13, file_level_enum_descriptors_shard_2eproto, file_level_service_descriptors_shard_2eproto,
@@ -3950,6 +3953,14 @@ SubCrossShardTx::SubCrossShardTx(const SubCrossShardTx& from)
   if (!from._internal_readwriteset().empty()) {
     readwriteset_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.readwriteset_);
   }
+  participants_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_participants().empty()) {
+    participants_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.participants_);
+  }
+  crossshardtxid_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_crossshardtxid().empty()) {
+    crossshardtxid_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.crossshardtxid_);
+  }
   ::memcpy(&messageid_, &from.messageid_,
     static_cast<size_t>(reinterpret_cast<char*>(&destinshardid_) -
     reinterpret_cast<char*>(&messageid_)) + sizeof(destinshardid_));
@@ -3961,6 +3972,8 @@ void SubCrossShardTx::SharedCtor() {
   subtxrlp_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   signeddata_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   readwriteset_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  participants_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  crossshardtxid_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&messageid_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&destinshardid_) -
       reinterpret_cast<char*>(&messageid_)) + sizeof(destinshardid_));
@@ -3975,6 +3988,8 @@ void SubCrossShardTx::SharedDtor() {
   subtxrlp_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   signeddata_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   readwriteset_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  participants_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  crossshardtxid_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void SubCrossShardTx::SetCachedSize(int size) const {
@@ -3995,6 +4010,8 @@ void SubCrossShardTx::Clear() {
   subtxrlp_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   signeddata_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   readwriteset_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  participants_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  crossshardtxid_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&messageid_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&destinshardid_) -
       reinterpret_cast<char*>(&messageid_)) + sizeof(destinshardid_));
@@ -4049,6 +4066,22 @@ const char* SubCrossShardTx::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPAC
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
           auto str = _internal_mutable_readwriteset();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // bytes participants = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+          auto str = _internal_mutable_participants();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // bytes crossshardtxid = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66)) {
+          auto str = _internal_mutable_crossshardtxid();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
         } else goto handle_unusual;
@@ -4115,6 +4148,18 @@ failure:
         6, this->_internal_readwriteset(), target);
   }
 
+  // bytes participants = 7;
+  if (this->participants().size() > 0) {
+    target = stream->WriteBytesMaybeAliased(
+        7, this->_internal_participants(), target);
+  }
+
+  // bytes crossshardtxid = 8;
+  if (this->crossshardtxid().size() > 0) {
+    target = stream->WriteBytesMaybeAliased(
+        8, this->_internal_crossshardtxid(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields(), target, stream);
@@ -4150,6 +4195,20 @@ size_t SubCrossShardTx::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
         this->_internal_readwriteset());
+  }
+
+  // bytes participants = 7;
+  if (this->participants().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_participants());
+  }
+
+  // bytes crossshardtxid = 8;
+  if (this->crossshardtxid().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_crossshardtxid());
   }
 
   // uint64 messageId = 2;
@@ -4216,6 +4275,14 @@ void SubCrossShardTx::MergeFrom(const SubCrossShardTx& from) {
 
     readwriteset_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.readwriteset_);
   }
+  if (from.participants().size() > 0) {
+
+    participants_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.participants_);
+  }
+  if (from.crossshardtxid().size() > 0) {
+
+    crossshardtxid_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.crossshardtxid_);
+  }
   if (from.messageid() != 0) {
     _internal_set_messageid(from._internal_messageid());
   }
@@ -4253,6 +4320,10 @@ void SubCrossShardTx::InternalSwap(SubCrossShardTx* other) {
   signeddata_.Swap(&other->signeddata_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   readwriteset_.Swap(&other->readwriteset_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  participants_.Swap(&other->participants_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  crossshardtxid_.Swap(&other->crossshardtxid_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(messageid_, other->messageid_);
   swap(sourceshardid_, other->sourceshardid_);
