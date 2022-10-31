@@ -111,6 +111,4 @@ message SubCrossShardTx
     int64 destinShardId = 4;
     bytes signeddata = 5;
     bytes readwriteset = 6;
-    bytes participants = 7;
-    bytes crossshardtxid = 8;
 }

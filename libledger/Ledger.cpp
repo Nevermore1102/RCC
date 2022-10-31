@@ -391,6 +391,9 @@ bool Ledger::initBlockVerifier()
     m_blockVerifier = blockVerifier;
     Ledger_LOG(INFO) << LOG_BADGE("initLedger") << LOG_BADGE("initBlockVerifier SUCC")
                      << LOG_KV("evmFlags", m_param->mutableGenesisParam().evmFlags);
+
+    
+
     return true;
 }
 

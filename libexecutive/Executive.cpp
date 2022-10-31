@@ -364,6 +364,8 @@ bool Executive::callRC2(CallParameters const& _p, u256 const& _gasPrice, Address
             writeErrInfoToOutput("Error address:" + _p.codeAddress.hex());
             revert();
         }
+
+        EXECUTIVE_LOG(INFO) << LOG_DESC("TransactionException::CallAddressError");
         m_excepted = TransactionException::CallAddressError;
     }
 
@@ -455,7 +457,7 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
     // newNonce += 1;
     m_s->setNonce(m_newAddress, newNonce);
 
-    if (g_BCOSConfig.version() >= V2_3_0)
+    if (g_BCOSConfig.version() >= V2_3_0) // EDIT BY THB
     {
         grantContractStatusManager(memoryTableFactory, m_newAddress, _sender, _origin);
     }
@@ -568,7 +570,10 @@ bool Executive::go()
             };
             // Create VM instance.
 
-            auto vm = VMFactory::create();
+            auto vm = VMFactory::create();// MODIFTED BY THB
+            
+            //auto vm = m_vminstance;
+
             if (m_isCreation)
             {
                 m_s->clearStorage(m_ext->myAddress());

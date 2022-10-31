@@ -196,7 +196,7 @@ contract HelloWorld{
     BOOST_CHECK(runtimeCode == createdCode);
 
     // set()
-    bytes callDataToSet =
+    bytes callDataToSet = 
         fromHex(string("0x60fe47b1") +  // set(0xaa)
                 string("00000000000000000000000000000000000000000000000000000000000000aa"));
     Transaction::Ptr setTx =

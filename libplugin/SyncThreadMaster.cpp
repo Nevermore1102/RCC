@@ -360,7 +360,6 @@ void SyncThreadMaster::receiveWorker()
             // //参与者记录所有收到的 committed 交易， 交易rlp、交易地址、交易读集
             dev::plugin::receCommTxRlps.push(committed_txrlp); // 用队列去接收管道消息
         }
-
     }
 }
 

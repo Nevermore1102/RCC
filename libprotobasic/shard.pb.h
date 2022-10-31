@@ -2439,8 +2439,6 @@ class SubCrossShardTx :
     kSubTxRlpFieldNumber = 1,
     kSigneddataFieldNumber = 5,
     kReadwritesetFieldNumber = 6,
-    kParticipantsFieldNumber = 7,
-    kCrossshardtxidFieldNumber = 8,
     kMessageIdFieldNumber = 2,
     kSourceShardIdFieldNumber = 3,
     kDestinShardIdFieldNumber = 4,
@@ -2493,38 +2491,6 @@ class SubCrossShardTx :
   std::string* _internal_mutable_readwriteset();
   public:
 
-  // bytes participants = 7;
-  void clear_participants();
-  const std::string& participants() const;
-  void set_participants(const std::string& value);
-  void set_participants(std::string&& value);
-  void set_participants(const char* value);
-  void set_participants(const void* value, size_t size);
-  std::string* mutable_participants();
-  std::string* release_participants();
-  void set_allocated_participants(std::string* participants);
-  private:
-  const std::string& _internal_participants() const;
-  void _internal_set_participants(const std::string& value);
-  std::string* _internal_mutable_participants();
-  public:
-
-  // bytes crossshardtxid = 8;
-  void clear_crossshardtxid();
-  const std::string& crossshardtxid() const;
-  void set_crossshardtxid(const std::string& value);
-  void set_crossshardtxid(std::string&& value);
-  void set_crossshardtxid(const char* value);
-  void set_crossshardtxid(const void* value, size_t size);
-  std::string* mutable_crossshardtxid();
-  std::string* release_crossshardtxid();
-  void set_allocated_crossshardtxid(std::string* crossshardtxid);
-  private:
-  const std::string& _internal_crossshardtxid() const;
-  void _internal_set_crossshardtxid(const std::string& value);
-  std::string* _internal_mutable_crossshardtxid();
-  public:
-
   // uint64 messageId = 2;
   void clear_messageid();
   ::PROTOBUF_NAMESPACE_ID::uint64 messageid() const;
@@ -2560,8 +2526,6 @@ class SubCrossShardTx :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr subtxrlp_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr signeddata_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr readwriteset_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr participants_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr crossshardtxid_;
   ::PROTOBUF_NAMESPACE_ID::uint64 messageid_;
   ::PROTOBUF_NAMESPACE_ID::int64 sourceshardid_;
   ::PROTOBUF_NAMESPACE_ID::int64 destinshardid_;
@@ -5091,126 +5055,6 @@ inline void SubCrossShardTx::set_allocated_readwriteset(std::string* readwritese
   }
   readwriteset_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), readwriteset);
   // @@protoc_insertion_point(field_set_allocated:protos.SubCrossShardTx.readwriteset)
-}
-
-// bytes participants = 7;
-inline void SubCrossShardTx::clear_participants() {
-  participants_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline const std::string& SubCrossShardTx::participants() const {
-  // @@protoc_insertion_point(field_get:protos.SubCrossShardTx.participants)
-  return _internal_participants();
-}
-inline void SubCrossShardTx::set_participants(const std::string& value) {
-  _internal_set_participants(value);
-  // @@protoc_insertion_point(field_set:protos.SubCrossShardTx.participants)
-}
-inline std::string* SubCrossShardTx::mutable_participants() {
-  // @@protoc_insertion_point(field_mutable:protos.SubCrossShardTx.participants)
-  return _internal_mutable_participants();
-}
-inline const std::string& SubCrossShardTx::_internal_participants() const {
-  return participants_.GetNoArena();
-}
-inline void SubCrossShardTx::_internal_set_participants(const std::string& value) {
-  
-  participants_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
-}
-inline void SubCrossShardTx::set_participants(std::string&& value) {
-  
-  participants_.SetNoArena(
-    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:protos.SubCrossShardTx.participants)
-}
-inline void SubCrossShardTx::set_participants(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  
-  participants_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:protos.SubCrossShardTx.participants)
-}
-inline void SubCrossShardTx::set_participants(const void* value, size_t size) {
-  
-  participants_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:protos.SubCrossShardTx.participants)
-}
-inline std::string* SubCrossShardTx::_internal_mutable_participants() {
-  
-  return participants_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline std::string* SubCrossShardTx::release_participants() {
-  // @@protoc_insertion_point(field_release:protos.SubCrossShardTx.participants)
-  
-  return participants_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline void SubCrossShardTx::set_allocated_participants(std::string* participants) {
-  if (participants != nullptr) {
-    
-  } else {
-    
-  }
-  participants_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), participants);
-  // @@protoc_insertion_point(field_set_allocated:protos.SubCrossShardTx.participants)
-}
-
-// bytes crossshardtxid = 8;
-inline void SubCrossShardTx::clear_crossshardtxid() {
-  crossshardtxid_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline const std::string& SubCrossShardTx::crossshardtxid() const {
-  // @@protoc_insertion_point(field_get:protos.SubCrossShardTx.crossshardtxid)
-  return _internal_crossshardtxid();
-}
-inline void SubCrossShardTx::set_crossshardtxid(const std::string& value) {
-  _internal_set_crossshardtxid(value);
-  // @@protoc_insertion_point(field_set:protos.SubCrossShardTx.crossshardtxid)
-}
-inline std::string* SubCrossShardTx::mutable_crossshardtxid() {
-  // @@protoc_insertion_point(field_mutable:protos.SubCrossShardTx.crossshardtxid)
-  return _internal_mutable_crossshardtxid();
-}
-inline const std::string& SubCrossShardTx::_internal_crossshardtxid() const {
-  return crossshardtxid_.GetNoArena();
-}
-inline void SubCrossShardTx::_internal_set_crossshardtxid(const std::string& value) {
-  
-  crossshardtxid_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
-}
-inline void SubCrossShardTx::set_crossshardtxid(std::string&& value) {
-  
-  crossshardtxid_.SetNoArena(
-    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:protos.SubCrossShardTx.crossshardtxid)
-}
-inline void SubCrossShardTx::set_crossshardtxid(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  
-  crossshardtxid_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:protos.SubCrossShardTx.crossshardtxid)
-}
-inline void SubCrossShardTx::set_crossshardtxid(const void* value, size_t size) {
-  
-  crossshardtxid_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:protos.SubCrossShardTx.crossshardtxid)
-}
-inline std::string* SubCrossShardTx::_internal_mutable_crossshardtxid() {
-  
-  return crossshardtxid_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline std::string* SubCrossShardTx::release_crossshardtxid() {
-  // @@protoc_insertion_point(field_release:protos.SubCrossShardTx.crossshardtxid)
-  
-  return crossshardtxid_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-inline void SubCrossShardTx::set_allocated_crossshardtxid(std::string* crossshardtxid) {
-  if (crossshardtxid != nullptr) {
-    
-  } else {
-    
-  }
-  crossshardtxid_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), crossshardtxid);
-  // @@protoc_insertion_point(field_set_allocated:protos.SubCrossShardTx.crossshardtxid)
 }
 
 #ifdef __GNUC__

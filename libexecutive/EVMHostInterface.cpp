@@ -48,11 +48,11 @@ evmc_bytes32 getStorage(
     evmc_host_context* _context, const evmc_address* _addr, const evmc_bytes32* _key)
 {
     // evmc_bytes32 是 unsigned char数组类型
+
     auto& env = static_cast<EVMHostContext&>(*_context);
 
     // programming assert for debug
     assert(fromEvmC(*_addr) == env.myAddress());
-
     auto addr = fromEvmC(*_addr);
     u256 key = fromEvmC(*_key);
 
@@ -66,19 +66,21 @@ evmc_bytes32 getStorage(
 evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* _addr,
     const evmc_bytes32* _key, const evmc_bytes32* _value)
 {
-
     auto& env = static_cast<EVMHostContext&>(*_context);
     if (!env.isPermitted())
     {
         BOOST_THROW_EXCEPTION(eth::PermissionDenied());
     }
     assert(fromEvmC(*_addr) == env.myAddress());
-
     auto addr = fromEvmC(*_addr);
     u256 index = fromEvmC(*_key);
     u256 value = fromEvmC(*_value);
 
     u256 oldValue = env.store(index);
+
+    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("addr", addr);
+    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("index", index);
+    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("value", value);
 
     if (value == oldValue)
         return EVMC_STORAGE_UNCHANGED;
@@ -91,12 +93,12 @@ evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* 
         status = EVMC_STORAGE_DELETED;
         env.sub().refunds += env.evmSchedule().sstoreRefundGas;
     }
+    env.setStore(index, value);  // Interface uses native endianness
 
     EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("addr", addr);
     EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("index", index);
     EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("value", value);
 
-    env.setStore(index, value);  // Interface uses native endianness
     return status;
 }
 

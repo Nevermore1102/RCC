@@ -42,6 +42,7 @@
 #include <thread>
 #include <libplugin/benchmark.h>
 #include <libethcore/Block.h>
+#include <libconsensus/pbft/Common.h>
 
 using namespace std;
 using namespace dev;
@@ -72,24 +73,27 @@ namespace dev {
         std::vector<std::string> preCommittedDisTxRlp;
         std::map<std::string, std::string>txRlp2ConAddress;
         std::vector<std::string> coordinatorRlp;
+        std::shared_ptr<ExecuteVMTestFixture> executiveContext;
     }
 }
 
 namespace dev{
-    namespace consensus {
+    namespace consensus{
         int internal_groupId; // 当前分片所在的groupID
         int SHARDNUM; // 分片总数
         int NODENUM; // 所有节点数目
         std::vector<dev::h512>forwardNodeId;
         std::vector<dev::h512>shardNodeId;
-        std::map<int, int> messageIds;
+        std::map<int, int> messageIDs;
         std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
         std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks;
+        std::map<int, int> deploycontractBlock;
+        tbb::concurrent_queue<dev::eth::Transaction::Ptr> toExecute_transactions; // 缓存共识完的交易，按顺序存放在队列中，等待执行
     }
 }
 
 namespace dev{
-    namespace blockverifier {
+    namespace blockverifier{
         std::vector<int>latest_commit_cs_tx;
         std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
         std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
@@ -106,8 +110,7 @@ namespace dev{
         std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
         std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
         std::map<dev::h256, transaction_info> corsstxhash2transaction_info; // txhash - > readwriteset
-        std::map<int, int> sended_tx_messageid;
-        std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions;
+
     }
 }
 
@@ -227,19 +230,13 @@ int main(){
     // 对dev::consensus::messageIDs进行初始化
     for(int i = 0; i < dev::consensus::SHARDNUM; i++)
     {
-        dev::consensus::messageIds.insert(std::make_pair(i, 0));
+        dev::consensus::messageIDs.insert(std::make_pair(i, 0));
     }
 
     // 对dev::consensus::latest_commit_cs_tx进行初始化
     for(int i = 0; i < dev::consensus::SHARDNUM; i++)
     {
         dev::blockverifier::latest_commit_cs_tx.push_back(0);
-    }
-
-    // 对dev::rpc::sended_tx_messageid 进行初始化
-    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
-    {
-        dev::rpc::sended_tx_messageid.insert(std::make_pair(i, 0));
     }
 
     GroupP2PService groupP2Pservice("./configgroup.ini");
@@ -258,6 +255,7 @@ int main(){
 
     std::shared_ptr<dev::initializer::Initializer> initialize = std::make_shared<dev::initializer::Initializer>();
     // initialize->init_with_groupP2PService("./config.ini", p2pService);  // 启动3个群组
+
     initialize->init_with_groupP2PService("./config.ini", p2pService, syncId);  // 启动3个群组
     // initialize->init("./config.ini");  // 启动3个群组
 
@@ -270,24 +268,40 @@ int main(){
 
     shared_ptr<dev::plugin::SyncThreadMaster> syncs = std::make_shared<dev::plugin::SyncThreadMaster>(p2pService, syncId, nodeId, dev::consensus::internal_groupId, rpcService);
     std::shared_ptr<ConsensusPluginManager> consensusPluginManager = std::make_shared<ConsensusPluginManager>(rpcService);
+    consensusPluginManager->m_deterministExecute->start(); // 启动交易处理线程
     syncs->setAttribute(blockchainManager);
     syncs->setAttribute(consensusPluginManager);
 
     // // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
-    // if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
-    // {
-    //     PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-    //     transactionInjectionTest _injectionTest(rpcService, 1);
-    //     _injectionTest.deployContractTransaction("./deploy.json", 1);
-    //     _injectionTest.injectionTransactions("./signedtxs.json", 1);
-    // }
+    //if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
+    if(dev::consensus::internal_groupId == 1)
+    {
+        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+        transactionInjectionTest _injectionTest(rpcService, 1);
+        _injectionTest.deployContractTransaction("./deploy.json", 1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //_injectionTest.injectionTransactions("./signedtxs.json", 1);
+    }
 
     std::cout << "node " + jsonrpc_listen_ip + ":" + jsonrpc_listen_port + " start success." << std::endl;
-    if(nearest_upper_groupId != "N/A") { std::cout << "nearest_upper_groupId = " << nearest_upper_groupId << std::endl; }
-    else { std::cout<<"it's a root group" << std::endl; }
 
-    if(nearest_lower_groupId != "N/A") { std::cout << "nearest_lower_groupId = " << nearest_lower_groupId << std::endl; }
-    else { std::cout<<"it's a leaf group" << std::endl; }
+    if(nearest_upper_groupId != "N/A")
+    {
+        std::cout << "nearest_upper_groupId = " << nearest_upper_groupId << std::endl;
+    }
+    else
+    {
+        std::cout<<"it's a root group" << std::endl;
+    }
+
+    if(nearest_lower_groupId != "N/A")
+    {
+        std::cout << "nearest_lower_groupId = " << nearest_lower_groupId << std::endl;
+    }
+    else
+    {
+        std::cout<<"it's a leaf group" << std::endl;
+    }
 
     size_t duration = 0;
     while (true)

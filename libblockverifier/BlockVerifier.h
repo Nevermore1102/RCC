@@ -39,6 +39,7 @@
 #include <thread>
 #include <librpc/Common.h>
 #include <libconsensus/pbft/Common.h>
+#include <libblockverifier/Common.h>
 
 namespace dev
 {
@@ -95,6 +96,11 @@ public:
         std::shared_ptr<executive::StateFace> _s, dev::executive::EnvInfo const& _envInfo);
     void setEvmFlags(VMFlagType const& _evmFlags) { m_evmFlags = _evmFlags; }
 
+    // // // modify by thb, base方案：单独线程轮询处理缓存的交易
+    // static void executeTxs();
+
+    // bool startprocessThread(); // start for executeTxs
+
 private:
     ExecutiveContextFactory::Ptr m_executiveContextFactory;
     NumberHashCallBackFunction m_pNumberHash;
@@ -106,6 +112,7 @@ private:
 
     VMFlagType m_evmFlags = 0;
 
+    // pthread_t processthread; // modify by thb
 };
 
 class blocked_tx_pool

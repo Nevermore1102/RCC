@@ -29,6 +29,8 @@ namespace dev
 {
 namespace mptstate
 {
+#define MPTSTATE_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("MPTSTATE") << LOG_BADGE("MPTSTATE")
+
 OverlayDB MPTState::openDB(
     boost::filesystem::path const& _path, h256 const& _genesisHash, WithExisting _we)
 {
@@ -102,6 +104,7 @@ void MPTState::createContract(Address const& _address)
 
 void MPTState::setCode(Address const& _address, bytes&& _code)
 {
+    MPTSTATE_LOG(INFO) << LOG_KV("_address", _address) << LOG_KV("_code", toHex(_code));
     m_state.setCode(_address, std::move(_code));
 }
 

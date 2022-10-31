@@ -22,6 +22,11 @@
  * @date: 2018-09-28
  */
 #include "ConsensusEngineBase.h"
+#include <libconsensus/pbft/Common.h>
+#include <libplugin/executeVM.h>
+#include <libplugin/Common.h>
+#include <libblockverifier/Common.h>
+
 using namespace dev::eth;
 using namespace dev::db;
 using namespace dev::blockverifier;
@@ -76,20 +81,13 @@ int ConsensusEngineBase::executeBlockTransactions(std::shared_ptr<dev::eth::Bloc
 {
     ENGINE_LOG(INFO) << "即将执行交易...";
 
+    // std::string path = "./" + std::to_string(dev::consensus::internal_groupId);
+    // auto executiveContext = std::make_shared<plugin::ExecuteVMTestFixture>(path);
+
     for (size_t i = 0; i < block->transactions()->size(); i++)
     {
         auto& tx = (*block->transactions())[i];
-        // auto transactionReceipt = m_blockVerifier->executeTransaction(block->blockHeader(), tx);
-
-        ENGINE_LOG(INFO) << LOG_KV("block->blockHeader().number()", block->blockHeader().number()); 
-        auto cached_executeContent = dev::blockverifier::cached_executeContents.at(block->blockHeader().number());
-        auto executiveContext = cached_executeContent.executiveContext;
-        auto executive = cached_executeContent.executive;
-
-        auto transactionReceipt = m_blockVerifier->execute(tx, executiveContext, executive);
-        executiveContext->getState()->commit(); // 状态写缓存
-        ENGINE_LOG(INFO) << LOG_KV("transactionReceipt", transactionReceipt->status());
-        block->setTransactionReceipt(i, transactionReceipt);
+        dev::consensus::toExecute_transactions.push(tx); // 将共识完出块的交易逐个放入队列
     }
 }
 

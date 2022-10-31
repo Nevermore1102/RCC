@@ -317,7 +317,7 @@ owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc
 //
 void VM::interpretCases()
 {
-    std::cout << "开始解释执行代码......." << std::endl;
+    INTERPRETER_LOG(INFO) << LOG_DESC("In VM::interpretCases()");
 
     INIT_CASES
     DO_CASES
@@ -1372,16 +1372,24 @@ void VM::interpretCases()
             evmc_uint256be key = toEvmC(m_SP[0]);
             evmc_uint256be value;
 
-            // std::cout << "getstorage7" << std::endl;
-            printf("getstorage!\n");
             m_context->fn_table->get_storage(&value, m_context, &m_message->destination, &key);
+            INTERPRETER_LOG(INFO) << LOG_DESC("get_storage") <<LOG_KV("key", key);
+            INTERPRETER_LOG(INFO) << LOG_DESC("get_storage") <<LOG_KV("value", value);
+            printf("chenzhihao");
+
             m_SPP[0] = fromEvmC(value);
         }
         NEXT
 
             CASE(SSTORE)
         {
-            ON_OP();
+
+            printf("chenzhihao");
+
+            ON_OP();                // BLOCKVERIFIER_LOG(INFO) << LOG_DESC("正在执行部署合约交易...") << LOG_KV("block.blockHeader().number()", block.blockHeader().number());
+                // TransactionReceipt::Ptr resultReceipt = execute(tx, executiveContext, executive);
+                // block.setTransactionReceipt(i, resultReceipt);
+                // executiveContext->getState()->commit(); // 状态写缓存
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 #if 0
@@ -1395,6 +1403,10 @@ void VM::interpretCases()
             evmc_uint256be value = toEvmC(m_SP[1]);
             auto status =
                 m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
+ 
+            INTERPRETER_LOG(INFO) << LOG_DESC("SSTORE") <<LOG_KV("key", key);
+            INTERPRETER_LOG(INFO) << LOG_DESC("SSTORE") <<LOG_KV("value", value);
+
             if (status == EVMC_STORAGE_ADDED)
             {
                 // Charge additional amount for added storage item.
@@ -1403,7 +1415,7 @@ void VM::interpretCases()
             }
         }
         NEXT
-
+ 
             CASE(PC)
         {
             ON_OP();

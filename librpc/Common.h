@@ -25,8 +25,6 @@
 #include <string>
 #include <vector>
 #include <libdevcore/FixedHash.h>
-#include <libethcore/Transaction.h>
-
 #define INVALIDNUMBER -1
 #define RPC_LOG(LEVEL) LOG(LEVEL) << "[RPC]"
 
@@ -40,8 +38,6 @@ extern std::map<dev::h256, int> txhash2sourceshardid; // txhash - > sourceshardi
 extern std::map<dev::h256, int> txhash2messageid; // txhash - > messageid
 extern std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
 extern std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
-extern std::map<int, int> sended_tx_messageid; // source_shard_id - > message_id
-extern std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions; // sourceshard_id_message_id --> sharded_ptr<Transaction>
 
 struct transaction_info
 {
@@ -51,9 +47,8 @@ struct transaction_info
 	long unsigned message_id;
     long int readwritesetnum;
 	dev::h256 sub_tx_hash;
-	std::string crossshardtxid;
+	std::string cross_tx_hash;
 	std::string readwrite_key; 
-    std::string participants;
 };
 
 extern std::map<dev::h256, transaction_info> corsstxhash2transaction_info;

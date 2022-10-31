@@ -66,6 +66,12 @@ using PBFTMsgQueue = dev::concurrent_queue<PBFTMsgPacket::Ptr>;
 class PBFTEngine : public ConsensusEngineBase, public std::enable_shared_from_this<PBFTEngine>
 {
 public:
+
+    // static void executeTxs();
+
+    // bool startprocessThread(); // start for executeTxs
+
+
     using Ptr = std::shared_ptr<PBFTEngine>;
     virtual ~PBFTEngine() { stop(); }
     PBFTEngine(std::shared_ptr<dev::p2p::P2PInterface> _service,
@@ -105,6 +111,7 @@ public:
             std::make_shared<dev::ThreadPool>("PBFTAsync-" + std::to_string(m_groupId), 1);
         m_cachedForwardMsg =
             std::make_shared<std::map<dev::h256, std::pair<int64_t, PBFTMsgPacket::Ptr>>>();
+
     }
 
     PBFTEngine(std::shared_ptr<dev::p2p::P2PInterface> _service,

@@ -86,6 +86,5 @@ struct blockExecuteContent
 
     extern std::map<int, blockExecuteContent> cached_executeContents; // 缓存的区块执行变量
 
-
 }  // namespace blockverifier
 }  // namespace dev

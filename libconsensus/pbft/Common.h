@@ -27,6 +27,7 @@
 #include <libdevcrypto/CryptoInterface.h>
 #include <libethcore/Block.h>
 #include <libethcore/Exceptions.h>
+#include <tbb/concurrent_queue.h>
 
 #define PBFTENGINE_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("CONSENSUS") << LOG_BADGE("PBFT")
 #define PBFTSEALER_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("CONSENSUS") << LOG_BADGE("SEALER")
@@ -566,8 +567,11 @@ struct ViewChangeReq : public PBFTMsg
     extern int NODENUM; // 所有节点数目
     extern std::vector<dev::h512>forwardNodeId;
     extern std::vector<dev::h512>shardNodeId;
-    extern std::map<int, int> messageIds;
+    extern std::map<int, int> messageIDs;
     extern std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
     extern std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks; // 缓存的未执行完的区块指针
+    extern std::map<int, int> deploycontractBlock;
+    extern tbb::concurrent_queue<dev::eth::Transaction::Ptr> toExecute_transactions; // 缓存共识完的交易，按顺序存放在队列中，等待执行
+
 }  // namespace consensus
 }  // namespace dev

@@ -43,7 +43,8 @@ EVMInstance::EVMInstance(evmc_vm* _instance) noexcept : m_instance(_instance)
 std::shared_ptr<Result> EVMInstance::exec(executive::EVMHostContext& _ext, evmc_revision _rev,
     evmc_message* _msg, const uint8_t* _code, size_t _code_size)
 {
-    std::cout << "准备执行交易......" << std::endl;
+    EXECUTIVE_LOG(INFO) << LOG_DESC("In EVMInstance::exec...");
+
     auto result = std::make_shared<Result>(
         m_instance->execute(m_instance, _ext.interface, &_ext, _rev, _msg, _code, _code_size));
     return result;

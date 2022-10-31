@@ -39,6 +39,10 @@ namespace dev
 {
 namespace eth
 {
+
+#define INTERPRETER_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("INTERPRETER") << LOG_BADGE("INTERPRETER")
+
+
 class VM
 {
 public:

@@ -132,13 +132,15 @@ void Block::encodeRC2(bytes& _out) const
     m_blockHeader.verify();
     BLOCK_LOG(INFO) << LOG_DESC("ccccccc555555");
 
+    // 如果区块中有交易执行过，再启动写回执操作(最多只提交两次) EDIT BY THB
     BLOCK_LOG(INFO) << LOG_KV("unExecutedTxNum", unExecutedTxNum);
     BLOCK_LOG(INFO) << LOG_KV("getTransactionSize()", getTransactionSize());
 
-    calTransactionRoot(false);
-    BLOCK_LOG(INFO) << LOG_DESC("ccccccc515151515151");
-
-    calReceiptRoot(false);
+    if(unExecutedTxNum < getTransactionSize())
+    {
+        calTransactionRoot(false);
+        calReceiptRoot(false);
+    }
 
     BLOCK_LOG(INFO) << LOG_DESC("ccccccc66666");
 
