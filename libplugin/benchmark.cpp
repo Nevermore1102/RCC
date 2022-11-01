@@ -14,51 +14,51 @@ void transactionInjectionTest::deployContractTransaction(std::string filename, i
     Json::Value root;
     std::string deploytx_str = "";
 
-    std::string path = "./" + to_string(groupId);
-    dev::plugin::executiveContext = std::make_shared<ExecuteVMTestFixture>(path);
-
     if(reader.parse(infile, root))
     {
         for(int i = 0; i < root.size(); i++)
         {
             std::string deployTx = root[i].asString();
-            // m_rpcService->sendRawTransaction(groupId, deployTx);
-
-            deploytx_str = root[i].asString();
-
-            Transaction::Ptr tx = std::make_shared<Transaction>(
-                jsToBytes(deploytx_str, OnFailed::Throw), CheckTransaction::Everything);
-
-            auto exec = executiveContext->getExecutive();
-            auto vm = executiveContext->getExecutiveInstance();
-            exec->setVM(vm);
-            executiveContext->executeTransaction(exec, tx);
-
-            Address newAddress = exec->newAddress();
-            PLUGIN_LOG(INFO) << LOG_KV("Contract created at ", newAddress);
-
-            u256 value = 0;
-            u256 gasPrice = 0;
-            u256 gas = 100000000;
-            auto keyPair = KeyPair::create();
-            Address caller = Address("1000000000000000000000000000000000000000");
-
-            // set()
-            bytes callDataToSet =
-                fromHex(string("0x60fe47b1") +  // set(0xaa)
-                        string("00000000000000000000000000000000000000000000000000000000000000aa"));
-            Transaction::Ptr setTx =
-                std::make_shared<Transaction>(value, gasPrice, gas, newAddress, callDataToSet);
-            auto sig = dev::crypto::Sign(keyPair, setTx->hash(WithoutSignature));
-            setTx->updateSignature(sig);
-            setTx->forceSender(caller);
-            PLUGIN_LOG(INFO) << LOG_KV("setTx RLP", toHex(setTx->rlp()));
-            m_rpcService->sendRawTransaction(groupId, toHex(setTx->rlp()));
-
-            executiveContext->m_vminstance_pool.push(vm);
+            m_rpcService->sendRawTransaction(groupId, deployTx);
         }
     }
 
+    //         deploytx_str = root[i].asString();
+
+    //         Transaction::Ptr tx = std::make_shared<Transaction>(
+    //             jsToBytes(deploytx_str, OnFailed::Throw), CheckTransaction::Everything);
+
+    //         auto exec = executiveContext->getExecutive();
+    //         auto vm = executiveContext->getExecutiveInstance();
+    //         exec->setVM(vm);
+    //         executiveContext->executeTransaction(exec, tx);
+
+    //         Address newAddress = exec->newAddress();
+    //         PLUGIN_LOG(INFO) << LOG_KV("Contract created at ", newAddress);
+
+    //         u256 value = 0;
+    //         u256 gasPrice = 0;
+    //         u256 gas = 100000000;
+    //         auto keyPair = KeyPair::create();
+    //         Address caller = Address("1000000000000000000000000000000000000000");
+
+    //         // add()
+    //         bytes callDataToSet =
+    //             fromHex(string("0xb0c8f9dc") +  // set(0xaa)
+    //                     string("444555666") +
+    //                     string("7c") +
+    //                     string("9b2a577e6de3dc20cbaf1d04311fe23411c34ba20"));
+    //         Transaction::Ptr setTx =
+    //             std::make_shared<Transaction>(value, gasPrice, gas, newAddress, callDataToSet);
+    //         auto sig = dev::crypto::Sign(keyPair, setTx->hash(WithoutSignature));
+    //         setTx->updateSignature(sig);
+    //         setTx->forceSender(caller);
+    //         PLUGIN_LOG(INFO) << LOG_KV("setTx RLP", toHex(setTx->rlp()));
+    //         m_rpcService->sendRawTransaction(groupId, toHex(setTx->rlp()));
+
+    //         executiveContext->m_vminstance_pool.push(vm);
+    //     }
+    // }
 
 
     // /*
@@ -115,7 +115,7 @@ void transactionInjectionTest::deployContractTransaction(std::string filename, i
     // u256 gas = 100000000;
     // Address caller = Address("1000000000000000000000000000000000000000");
     // bytes code = fromHex(
-    //     string("60606040525b607b6000600050819055505b61018a8061001f6000396000f360606040526000357c01000000000000000000000000000000000000000000000000000000009004806360fe47b11461005d5780636d4ce63c1461007a57806383197ef0146100a2578063b7379733146100b657610058565b610002565b346100025761007860048080359060200190919050506100de565b005b346100025761008c60048050506100ec565b6040518082815260200191505060405180910390f35b34610002576100b460048050506100fe565b005b34610002576100c86004805050610104565b6040518082815260200191505060405180910390f35b806000600050819055505b50565b600060006000505490506100fb565b90565b6000ff5b565b60003073ffffffffffffffffffffffffffffffffffffffff16636d4ce63c600060405160200152604051817c0100000000000000000000000000000000000000000000000000000000028152600401809050602060405180830381600087803b156100025760325a03f11561000257505050604051805190602001509050610187565b9056") +
+    //     string("60806040526000805534801561001457600080fd5b50610120806100246000396000f3006080604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680636d4ce63c14604e578063b0c8f9dc146076575b600080fd5b348015605957600080fd5b50606060dc565b6040518082815260200191505060405180910390f35b348015608157600080fd5b5060da600480360381019080803590602001908201803590602001908080601f016020809104026020016040519081016040528093929190818152602001838380828437820191505050505050919291929050505060e5565b005b60008054905090565b600160005401600081905550505600a165627a7a723058201dcc0875527adadfb1650a147c914536d7279256a6f7bd1bc100f26a54c1c7ec0029") +
     //     string(""));
 
     // Transaction::Ptr tx = std::make_shared<Transaction>(
@@ -124,7 +124,6 @@ void transactionInjectionTest::deployContractTransaction(std::string filename, i
     // auto sig = dev::crypto::Sign(keyPair, tx->hash(WithoutSignature));
     // tx->updateSignature(sig);
     // tx->forceSender(caller);
-    
 
     // PLUGIN_LOG(INFO) << LOG_KV("DeployTx RLP", toHex(tx->rlp()));
 

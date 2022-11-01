@@ -84,7 +84,7 @@ namespace dev{
         int NODENUM; // 所有节点数目
         std::vector<dev::h512>forwardNodeId;
         std::vector<dev::h512>shardNodeId;
-        std::map<int, int> messageIDs;
+        std::map<int, int> messageIds;
         std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
         std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks;
         std::map<int, int> deploycontractBlock;
@@ -110,7 +110,8 @@ namespace dev{
         std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
         std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
         std::map<dev::h256, transaction_info> corsstxhash2transaction_info; // txhash - > readwriteset
-
+        std::map<int, int> sended_tx_messageid;
+        std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions;
     }
 }
 
@@ -230,13 +231,19 @@ int main(){
     // 对dev::consensus::messageIDs进行初始化
     for(int i = 0; i < dev::consensus::SHARDNUM; i++)
     {
-        dev::consensus::messageIDs.insert(std::make_pair(i, 0));
+        dev::consensus::messageIds.insert(std::make_pair(i, 0));
     }
 
     // 对dev::consensus::latest_commit_cs_tx进行初始化
     for(int i = 0; i < dev::consensus::SHARDNUM; i++)
     {
         dev::blockverifier::latest_commit_cs_tx.push_back(0);
+    }
+
+    // 对dev::rpc::sended_tx_messageid 进行初始化
+    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
+    {
+        dev::rpc::sended_tx_messageid.insert(std::make_pair(i, 0));
     }
 
     GroupP2PService groupP2Pservice("./configgroup.ini");
@@ -273,40 +280,55 @@ int main(){
     syncs->setAttribute(consensusPluginManager);
 
     // // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
-    //if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
-    if(dev::consensus::internal_groupId == 1)
+    // if(dev::consensus::internal_groupId == 1)
+    if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
     {
         PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
         transactionInjectionTest _injectionTest(rpcService, 1);
-        _injectionTest.deployContractTransaction("./deploy.json", 1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        //_injectionTest.injectionTransactions("./signedtxs.json", 1);
+        _injectionTest.deployContractTransaction("./deploy.json", 1); // 向分片1部署跨片存证合约以及片内交易合约
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep 1s
+        // _injectionTest.injectionTransactions("./data.json", 1);
     }
 
-    std::cout << "node " + jsonrpc_listen_ip + ":" + jsonrpc_listen_port + " start success." << std::endl;
+    if(dev::consensus::internal_groupId == 2 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(1)))
+    {
+        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+        transactionInjectionTest _injectionTest(rpcService, 2);
+        _injectionTest.deployContractTransaction("./deploy2.json", 2); // 向分片2部署跨片存证合约以及片内交易合约
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // _injectionTest.injectionTransactions("./data.json", 1);
+    }
 
+    if(dev::consensus::internal_groupId == 3 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(2)))
+    {
+        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+        transactionInjectionTest _injectionTest(rpcService, 3);
+        _injectionTest.deployContractTransaction("./deploy3.json", 3); // 向分片3部署跨片存证合约以及片内交易合约
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // _injectionTest.injectionTransactions("./data.json", 1);
+    }
+
+    PLUGIN_LOG(INFO) << LOG_KV("jsonrpc_listen_ip", jsonrpc_listen_ip)<< LOG_KV("jsonrpc_listen_port", jsonrpc_listen_port);
     if(nearest_upper_groupId != "N/A")
     {
-        std::cout << "nearest_upper_groupId = " << nearest_upper_groupId << std::endl;
+        PLUGIN_LOG(INFO) << LOG_KV("nearest_upper_groupId", nearest_upper_groupId);
     }
     else
     {
-        std::cout<<"it's a root group" << std::endl;
+        PLUGIN_LOG(INFO) << LOG_DESC("it's a root group");
     }
 
     if(nearest_lower_groupId != "N/A")
     {
-        std::cout << "nearest_lower_groupId = " << nearest_lower_groupId << std::endl;
+        PLUGIN_LOG(INFO) << LOG_KV("nearest_lower_groupId", nearest_lower_groupId);
     }
     else
     {
-        std::cout<<"it's a leaf group" << std::endl;
+        PLUGIN_LOG(INFO) << LOG_DESC("it's a leaf group");
     }
 
-    size_t duration = 0;
     while (true)
     {
-        duration ++;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return 0;

@@ -77,18 +77,17 @@ dev::blockverifier::ExecutiveContext::Ptr ConsensusEngineBase::executeBlock(Bloc
     return m_blockVerifier->executeBlock(block, parentBlockInfo);
 }
 
-int ConsensusEngineBase::executeBlockTransactions(std::shared_ptr<dev::eth::Block> block)
+int ConsensusEngineBase::addTransactions(std::shared_ptr<dev::eth::Block> block)
 {
-    ENGINE_LOG(INFO) << "即将执行交易...";
-
-    // std::string path = "./" + std::to_string(dev::consensus::internal_groupId);
-    // auto executiveContext = std::make_shared<plugin::ExecuteVMTestFixture>(path);
-
+    ENGINE_LOG(INFO) << LOG_DESC("开始缓存交易...");
+    int txNum = 0;
     for (size_t i = 0; i < block->transactions()->size(); i++)
     {
         auto& tx = (*block->transactions())[i];
         dev::consensus::toExecute_transactions.push(tx); // 将共识完出块的交易逐个放入队列
+        txNum++;
     }
+    ENGINE_LOG(INFO) << LOG_KV("增加的交易数目为", txNum);
 }
 
 

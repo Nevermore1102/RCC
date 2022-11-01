@@ -26,7 +26,7 @@ namespace dev {
                     commit_txs = new tbb::concurrent_queue<protos::CommittedRLPWithReadSet>();
                     notFinishedDAG = 0;
                     m_rpc_service = _service;
-                    //m_deterministExecute = std::make_shared<dev::plugin::deterministExecute>();
+                    m_deterministExecute = std::make_shared<dev::plugin::deterministExecute>();
                 }
                 void processReceivedWriteSet(protos::TxWithReadSet _rs);
                 void processReceivedTx(protos::Transaction _tx);

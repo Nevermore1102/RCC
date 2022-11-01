@@ -44,9 +44,6 @@ namespace consensus
 const std::string PBFTEngine::c_backupKeyCommitted = "committed";
 const std::string PBFTEngine::c_backupMsgDirName = "pbftMsgBackup/RocksDB";
 
-
-
-
 void PBFTEngine::start()
 {
     // create PBFTMsgFactory
@@ -1375,11 +1372,7 @@ void PBFTEngine::checkAndSave(bool commitPhase)
                 // // // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
                 if(commitPhase)
                 {
-                //     // 持久化结束，对区块内交易尝试第一次执行执行 ADD BY THB
-                //     PBFTENGINE_LOG(INFO) << LOG_DESC("区块数据持久化完毕，开始执行交易...");
-                    auto executedNum = executeBlockTransactions(p_block);
-                    
-                //     cachedBlocks.push(p_block);
+                    auto executedNum = addTransactions(p_block);
                 }
 
                 dropHandledTransactions(p_block); // 临时取消
@@ -1428,174 +1421,6 @@ void PBFTEngine::checkAndSave(bool commitPhase)
         }
     }
 }
-
-/// if collect >= 2/3 SignReq and CommitReq, then callback this function to commit block
-/// check whether view and height is valid, if valid, then commit the block and clear the context
-// void PBFTEngine::checkAndSave(bool  _group_protocolID)
-// {
-//     auto start_commit_time = utcTime();
-//     auto record_time = utcTime();
-//     auto minValidNodeSize = minValidNodes();
-//     size_t sign_size =
-//         m_reqCache->getSigCacheSize(m_reqCache->prepareCache().block_hash, minValidNodeSize);
-//     size_t commit_size =
-//         m_reqCache->getCommitCacheSize(m_reqCache->prepareCache().block_hash, minValidNodeSize);
-//     if (sign_size >= minValidNodeSize && commit_size >= minValidNodeSize)
-//     {
-//         PBFTENGINE_LOG(INFO) << LOG_DESC("checkAndSave: CommitReq enough")
-//                              << LOG_KV("prepareHeight", m_reqCache->prepareCache().height)
-//                              << LOG_KV("commitSize", commit_size)
-//                              << LOG_KV("hash", m_reqCache->prepareCache().block_hash.abridged())
-//                              << LOG_KV("nodeIdx", nodeIdx())
-//                              << LOG_KV("myNode", m_keyPair.pub().abridged());
-
-//         PBFTENGINE_LOG(INFO) << LOG_DESC("---------------- 准备提交区块.....");
-//         std::shared_ptr<dev::eth::Block> tmp_block = m_reqCache->prepareCache().pBlock;
-//         std::shared_ptr<Transactions> transactions = tmp_block->transactions();
-//         size_t txSize = transactions->size();
-//         for(size_t i = 0; i < txSize; i++)
-//         {
-//             bytes m_data = (*transactions)[i]->get_data();
-//             size_t m_data_size = m_data.size();
-
-//             std::string hex_m_data_str = "";
-//             for(size_t i = 0; i < m_data_size; i++)
-//             {
-//                 string temp;
-//                 stringstream ioss;
-//                 ioss << std::hex << m_data.at(i);
-//                 ioss >> temp;
-//                 hex_m_data_str += temp;
-//             }
-
-//             int n = hex_m_data_str.find("0x111222333", 0);
-//             int len = hex_m_data_str.length();
-
-//             if( n != -1)
-//             {
-//                 std::string subtxStr = hex_m_data_str.substr(n, len - n);
-//                 PBFTENGINE_LOG(INFO) << LOG_DESC("发现跨片交易！")
-//                                         << LOG_KV("n", n)
-//                                         << LOG_KV("len", len)
-//                                         << LOG_KV("subtxStr", subtxStr);
-
-//                 // 下面调用 void forwardTx(protos::SubCrossShardTx _subCrossShardTx) 对交易进行转发，转发到相应分片
-//                 protos::SubCrossShardTx subCrossShardTx;
-//                 subCrossShardTx.set_subtxrlp("tanghaibotesttx");
-//                 subCrossShardTx.set_messageid(1);
-//                 subCrossShardTx.set_sourceshardid(1);
-//                 subCrossShardTx.set_destinshardid(2);
-
-//                 std::string serializedSubCrossShardTx_str;
-//                 subCrossShardTx.SerializeToString(&serializedSubCrossShardTx_str);
-//                 auto txByte = asBytes(serializedSubCrossShardTx_str);
-
-//                 dev::sync::SyncDistributedTxPacket retPacket;
-//                 retPacket.encode(txByte);
-//                 auto msg = retPacket.toMessage(_group_protocolID);
-//                 //auto msg = retPacket.toMessage(262147);
-
-//                 PBFTENGINE_LOG(INFO) << LOG_DESC("协调者共识完毕向参与者分片发送了跨片交易....")
-//                                      << LOG_KV("_group_protocolID", _group_protocolID);
-
-//                 dev::h512 shard2NodeId[4] = {
-//                     dev::h512("a1218f83771287ec2638faf3abea073a64e37bede0ce5dc670e261dc98de08fd2865d2966c3d24c37d636f4b7822f792ec50797c434db5c69016d0d9b904c142"),
-//                     dev::h512("9a86081626101f013e5cd8581f149f774f9f207598840c40f48376c5e9657b3e1108547c7bd2dbea47d585a634a12aea18f44ada054b5d151c045094762a1bd1"),
-//                     dev::h512("65af37319d64e2527c5e098d07985cdb3d606844f352ad2f799be256fba0329fa61c9c0b62eaf992435a6bd58c2701e840d13c4abab16b4f22769584caaf8410"),
-//                     dev::h512("79178a6dcb3be693b3f4a785aafc6af5fe4b66387e7f0e9449693f7249c272fdebd40f8d16926df54ee0aaee10d57cd3fd485df4cb89bc333b77d2f962410586"),
-//                 };
-//                 PBFTENGINE_LOG(INFO) << LOG_DESC("协调者共识完毕, 主节点向分片2的所有节点广播共识结果消息...");
-
-//                 // 判断当前节点是否为共识住主节点
-//                 m_group_service->asyncSendMessageByNodeID(shard2NodeId[0], msg, CallbackFuncWithSession(), dev::network::Options());
-//             }
-//         }
-        
-//         if (m_reqCache->prepareCache().view != m_view)
-//         {
-//             PBFTENGINE_LOG(DEBUG) << LOG_DESC("checkAndSave: InvalidView")
-//                                   << LOG_KV("prepView", m_reqCache->prepareCache().view)
-//                                   << LOG_KV("view", m_view)
-//                                   << LOG_KV("prepHeight", m_reqCache->prepareCache().height)
-//                                   << LOG_KV(
-//                                          "hash", m_reqCache->prepareCache().block_hash.abridged())
-//                                   << LOG_KV("nodeIdx", nodeIdx())
-//                                   << LOG_KV("myNode", m_keyPair.pub().abridged());
-//             return;
-//         }
-
-//         /// add sign-list into the block header
-//         if (m_reqCache->prepareCache().height > m_highestBlock.number())
-//         {
-//             /// Block block(m_reqCache->prepareCache().block);
-//             std::shared_ptr<dev::eth::Block> p_block = m_reqCache->prepareCache().pBlock;
-//             m_reqCache->generateAndSetSigList(*p_block, minValidNodes());
-
-//             //ADD BY THB, 开始解析区块中的交易 std::shared_ptr<Transactions> transactions() const { return m_transactions; }
-//             // size_t txNum = p_block->
-
-//             // std::shared_ptr<Transactions> transactions = p_block->transactions();
-//             // size_t txSize = transactions->size();
-//             // for(size_t i = 0; i < txSize; i++)
-//             // {
-//             //     // PBFTENGINE_LOG(DEBUG) << LOG_KV("transactions.data", (*transactions)[i]->get_data());
-//             //     // std::cout << "-------------------- transactions.data = " << (*transactions)[i]->get_data() << std::endl;
-//             // }
-
-//             auto genSig_time_cost = utcTime() - record_time;
-//             record_time = utcTime();
-//             /// callback block chain to commit block
-//             CommitResult ret = m_blockChain->commitBlock(p_block, std::shared_ptr<ExecutiveContext>(m_reqCache->prepareCache().p_execContext));
-//             auto commitBlock_time_cost = utcTime() - record_time;
-//             record_time = utcTime();
-
-//             /// drop handled transactions
-//             if (ret == CommitResult::OK)
-//             {
-//                 dropHandledTransactions(p_block);
-//                 auto dropTxs_time_cost = utcTime() - record_time;
-//                 record_time = utcTime();
-//                 m_blockSync->noteSealingBlockNumber(m_reqCache->prepareCache().height);
-//                 auto noteSealing_time_cost = utcTime() - record_time;
-//                 PBFTENGINE_LOG(INFO)
-//                     << LOG_DESC("CommitBlock Succ")
-//                     << LOG_KV("prepareHeight", m_reqCache->prepareCache().height)
-//                     << LOG_KV("reqIdx", m_reqCache->prepareCache().idx)
-//                     << LOG_KV("hash", m_reqCache->prepareCache().block_hash.abridged())
-//                     << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged())
-//                     << LOG_KV("genSigTimeCost", genSig_time_cost)
-//                     << LOG_KV("commitBlockTimeCost", commitBlock_time_cost)
-//                     << LOG_KV("dropTxsTimeCost", dropTxs_time_cost)
-//                     << LOG_KV("noteSealingTimeCost", noteSealing_time_cost)
-//                     << LOG_KV("totalTimeCost", utcTime() - start_commit_time);
-//                 m_reqCache->delCache(m_reqCache->prepareCache().pBlock->blockHeader());
-//             }
-//             else
-//             {
-//                 PBFTENGINE_LOG(WARNING)
-//                     << LOG_DESC("CommitBlock Failed")
-//                     << LOG_KV("reqNum", p_block->blockHeader().number())
-//                     << LOG_KV("curNum", m_highestBlock.number())
-//                     << LOG_KV("reqIdx", m_reqCache->prepareCache().idx)
-//                     << LOG_KV("hash", p_block->blockHeader().hash().abridged())
-//                     << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
-//                 /// note blocksync to sync
-//                 m_blockSync->noteSealingBlockNumber(m_blockChain->number());
-//                 m_txPool->handleBadBlock(*p_block);
-//             }
-//         }
-//         else
-//         {
-//             PBFTENGINE_LOG(WARNING)
-//                 << LOG_DESC("checkAndSave: Consensus Failed, Block already exists")
-//                 << LOG_KV("reqNum", m_reqCache->prepareCache().height)
-//                 << LOG_KV("curNum", m_highestBlock.number())
-//                 << LOG_KV("blkHash", m_reqCache->prepareCache().block_hash.abridged())
-//                 << LOG_KV("highHash", m_highestBlock.hash().abridged())
-//                 << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
-//         }
-//     }
-// }
 
 void PBFTEngine::reportBlock(Block const& block)
 {
@@ -2818,67 +2643,83 @@ void PBFTEngine::senddistx()
 
         if( n != -1 )
         {
-            // std::string subtxStr = hex_m_data_str.substr(n, len - n);
-            PBFTENGINE_LOG(INFO) << LOG_DESC("发现跨片交易");
-            PBFTENGINE_LOG(INFO) << LOG_DESC("---------------- 准备提交区块 ---------------- ");
-            std::vector<std::string> subSignedTx;
+            PBFTENGINE_LOG(INFO) << LOG_DESC("协调者发现原始跨片交易...");
+            std::vector<std::string> dataItems;
             try
             {
-                boost::split(subSignedTx, hex_m_data_str, boost::is_any_of("|"), boost::token_compress_on);
+                boost::split(dataItems, hex_m_data_str, boost::is_any_of("|"), boost::token_compress_on); // 对分片中的所有节点id进行遍历, 加入到列表中
+                int itemNum = dataItems.size();
+                string crosstxId = dataItems.at(1);
+                int participantNum = (itemNum - 1) / 3;
 
-                // 对分片中的所有节点id进行遍历, 加入到列表中
-                int subSignedTx_size = subSignedTx.size();
-                string tempstr = subSignedTx.at(0);
-                std::vector<std::string> subtemp;
-                boost::split(subtemp, tempstr, boost::is_any_of("_"), boost::token_compress_on);
-                std::string cross_tx_hash = subtemp.at(1);
+                string participantGroupId[participantNum];
+                protos::SubCrossShardTx subTxs[participantNum];
 
-                std::string readwriteset = ""; // 存储交易读写集，中间用 ｜ 符号分开
-                std::string signedData = "";
-                std::string readWriteSet = "";
-                int destinShardID = 0;
-                int messageID = 0;
+                PBFTENGINE_LOG(INFO) << LOG_KV("crosstxId", crosstxId)
+                                     << LOG_KV("participantNum", participantNum);
 
-                int readwriteset_num = 0;
-                for(int i = 1; i < subSignedTx_size; i = i + 3)
+                int participantIndex = 2;
+                for(size_t j = 0; j < participantNum; j++)
                 {
-                    int j = i;
-                    destinShardID = atoi(subSignedTx.at(j).c_str()); // 目标分片ID
-                    signedData = subSignedTx.at(j+1); // 发向目标分片的跨片交易子交易
-                    readWriteSet = subSignedTx.at(j+2); // 交易读写集
-                    
-                    PBFTENGINE_LOG(INFO) << LOG_DESC("准备转发跨片子交易")
-                                << LOG_KV("source_shard_id", internal_groupId)
-                                << LOG_KV("destinShardID", destinShardID)
-                                << LOG_KV("messageID", messageID)
-                                << LOG_KV("subSignedData", signedData)
-                                << LOG_KV("cross_tx_hash", cross_tx_hash)
-                                << LOG_KV("readwriteset", readWriteSet);
+                    participantGroupId[j] = dataItems[participantIndex];
+                    participantIndex += 3;
+                    PBFTENGINE_LOG(INFO) << LOG_KV("participantGroupId", participantGroupId[j]);
+                }
 
-                    messageID = messageIDs[destinShardID];
-                    messageIDs[destinShardID]= messageID + 1;
+                string participants = "";
+                for(size_t i = 0; i < participantNum; i++)
+                {
+                    if(i == 0)
+                    {
+                        participants += participantGroupId[i];
+                    }
+                    else
+                    {
+                        participants = participants + "|" + participantGroupId[i];
+                    }
+                }
 
-                    // 将跨片子交易转发给相应的参与者分片
-                    // 下面调用 void forwardTx(protos::SubCrossShardTx _subCrossShardTx) 对交易进行转发，转发到相应分片
-                    protos::SubCrossShardTx subCrossShardTx;
-                    subCrossShardTx.set_signeddata(signedData);
-                    subCrossShardTx.set_messageid(messageID);
-                    subCrossShardTx.set_sourceshardid(internal_groupId);
-                    subCrossShardTx.set_destinshardid(destinShardID);
-                    subCrossShardTx.set_readwriteset(readWriteSet);
+                participantIndex = 2;
+                for(size_t j = 0; j < participantNum; j++)
+                {
+                    int destinShardId = atoi(dataItems.at(participantIndex).c_str()); // 目标分片ID
+                    string signedTx = dataItems.at(participantIndex + 1); // 发向目标分片的跨片交易子交易
+                    string rwSet = dataItems.at(participantIndex + 2);
 
-                    std::string serializedSubCrossShardTx_str;
-                    subCrossShardTx.SerializeToString(&serializedSubCrossShardTx_str);
-                    auto txByte = asBytes(serializedSubCrossShardTx_str);
+                    int messageId = messageIds[destinShardId];
+                    messageId = messageId + 1;
+                    messageIds[destinShardId]= messageId;
+
+                    PBFTENGINE_LOG(INFO) << LOG_KV("destinShardId", destinShardId)
+                                         << LOG_KV("signedTx", signedTx)
+                                         << LOG_KV("rwSet", rwSet)
+                                         << LOG_KV("messageId", messageId)
+                                         << LOG_KV("participants", participants);
+
+                    participantIndex += 3;
+
+                    // 准备给参与者发送的数据
+                    subTxs[i].set_signeddata(signedTx);
+                    subTxs[i].set_messageid(messageId);
+                    subTxs[i].set_sourceshardid(internal_groupId);
+                    subTxs[i].set_destinshardid(destinShardId);
+                    subTxs[i].set_readwriteset(rwSet);
+                    subTxs[i].set_participants(participants);
+                    subTxs[i].set_crossshardtxid(crosstxId);
+
+                    string serializedsubCrossShardTx;
+                    subTxs[i].SerializeToString(&serializedsubCrossShardTx);
+                    auto txBytes = asBytes(serializedsubCrossShardTx);
 
                     dev::sync::SyncDistributedTxPacket retPacket;
-                    retPacket.encode(txByte);
+                    retPacket.encode(txBytes);
                     auto msg = retPacket.toMessage(m_group_protocolID);
-
-                    PBFTENGINE_LOG(INFO) << LOG_DESC("协调者共识完毕, 开始向参与者分片发送跨片交易....")
-                                        << LOG_KV("m_group_protocolID", m_group_protocolID);
+      
+                    PBFTENGINE_LOG(INFO) << LOG_DESC("开始向参与者分片发送跨片交易....")
+                                         << LOG_KV("m_group_protocolID", m_group_protocolID);
 
                     std::string nodeIdStr = toHex(m_keyPair.pub());
+
                     for(size_t l = 0; l < forwardNodeId.size(); l++)
                     {
                         // 判断当前节点是否为转发人
@@ -2886,19 +2727,110 @@ void PBFTEngine::senddistx()
                         {
                             for(size_t k = 0; k < 4; k++)
                             {
-                                PBFTENGINE_LOG(INFO) << LOG_KV("正在发送给", shardNodeId.at((destinShardID-1)*4 + k));
-                                m_group_service->asyncSendMessageByNodeID(shardNodeId.at((destinShardID-1)*4 + k), msg, CallbackFuncWithSession(), dev::network::Options());
+                                PBFTENGINE_LOG(INFO) << LOG_KV("正在发送给", shardNodeId.at((destinShardId - 1) * 4 + k));
+                                m_group_service->asyncSendMessageByNodeID(shardNodeId.at((destinShardId - 1) * 4 + k), msg, CallbackFuncWithSession(), dev::network::Options());
                             }
                         }
                     }
-                    PBFTENGINE_LOG(INFO) << LOG_DESC("跨片消息消息转发完毕...");
                 }
+                PBFTENGINE_LOG(INFO) << LOG_DESC("跨片消息消息转发完毕...");
             }
             catch (std::exception& e)
             {
                 exit(1);
             }
         }
+    
+
+
+
+
+
+
+        // if( n != -1 )
+        // {
+        //     PBFTENGINE_LOG(INFO) << LOG_DESC("发现跨片交易");
+        //     PBFTENGINE_LOG(INFO) << LOG_DESC("---------------- 准备提交区块 ---------------- ");
+        //     std::vector<std::string> subSignedTx;
+        //     try
+        //     {
+        //         boost::split(subSignedTx, hex_m_data_str, boost::is_any_of("|"), boost::token_compress_on);
+
+        //         // 对分片中的所有节点id进行遍历, 加入到列表中
+        //         int subSignedTx_size = subSignedTx.size();
+        //         string tempstr = subSignedTx.at(0);
+        //         std::vector<std::string> subtemp;
+        //         boost::split(subtemp, tempstr, boost::is_any_of("_"), boost::token_compress_on);
+        //         std::string cross_tx_hash = subtemp.at(1);
+
+        //         std::string readwriteset = ""; // 存储交易读写集，中间用 ｜ 符号分开
+        //         std::string signedData = "";
+        //         std::string readWriteSet = "";
+        //         int destinShardID = 0;
+        //         int messageID = 0;
+
+        //         int readwriteset_num = 0;
+        //         for(int i = 1; i < subSignedTx_size; i = i + 3)
+        //         {
+        //             int j = i;
+        //             destinShardID = atoi(subSignedTx.at(j).c_str()); // 目标分片ID
+        //             signedData = subSignedTx.at(j+1); // 发向目标分片的跨片交易子交易
+        //             readWriteSet = subSignedTx.at(j+2); // 交易读写集
+                    
+        //             PBFTENGINE_LOG(INFO) << LOG_DESC("准备转发跨片子交易")
+        //                         << LOG_KV("source_shard_id", internal_groupId)
+        //                         << LOG_KV("destinShardID", destinShardID)
+        //                         << LOG_KV("messageID", messageID)
+        //                         << LOG_KV("subSignedData", signedData)
+        //                         << LOG_KV("cross_tx_hash", cross_tx_hash)
+        //                         << LOG_KV("readwriteset", readWriteSet);
+
+        //             messageID = messageIDs[destinShardID];
+        //             messageIDs[destinShardID]= messageID + 1;
+
+        //             // 将跨片子交易转发给相应的参与者分片
+        //             // 下面调用 void forwardTx(protos::SubCrossShardTx _subCrossShardTx) 对交易进行转发，转发到相应分片
+        //             protos::SubCrossShardTx subCrossShardTx;
+        //             subCrossShardTx.set_signeddata(signedData);
+        //             subCrossShardTx.set_messageid(messageID);
+        //             subCrossShardTx.set_sourceshardid(internal_groupId);
+        //             subCrossShardTx.set_destinshardid(destinShardID);
+        //             subCrossShardTx.set_readwriteset(readWriteSet);
+
+        //             std::string serializedSubCrossShardTx_str;
+        //             subCrossShardTx.SerializeToString(&serializedSubCrossShardTx_str);
+        //             auto txByte = asBytes(serializedSubCrossShardTx_str);
+
+        //             dev::sync::SyncDistributedTxPacket retPacket;
+        //             retPacket.encode(txByte);
+        //             auto msg = retPacket.toMessage(m_group_protocolID);
+
+        //             PBFTENGINE_LOG(INFO) << LOG_DESC("协调者共识完毕, 开始向参与者分片发送跨片交易....")
+        //                                 << LOG_KV("m_group_protocolID", m_group_protocolID);
+
+        //             std::string nodeIdStr = toHex(m_keyPair.pub());
+        //             for(size_t l = 0; l < forwardNodeId.size(); l++)
+        //             {
+        //                 // 判断当前节点是否为转发人
+        //                 if(nodeIdStr == toHex(forwardNodeId.at(l)))
+        //                 {
+        //                     for(size_t k = 0; k < 4; k++)
+        //                     {
+        //                         PBFTENGINE_LOG(INFO) << LOG_KV("正在发送给", shardNodeId.at((destinShardID-1)*4 + k));
+        //                         m_group_service->asyncSendMessageByNodeID(shardNodeId.at((destinShardID-1)*4 + k), msg, CallbackFuncWithSession(), dev::network::Options());
+        //                     }
+        //                 }
+        //             }
+        //             PBFTENGINE_LOG(INFO) << LOG_DESC("跨片消息消息转发完毕...");
+        //         }
+        //     }
+        //     catch (std::exception& e)
+        //     {
+        //         exit(1);
+        //     }
+        // }
+    
+    
     }
 }
 

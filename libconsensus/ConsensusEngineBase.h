@@ -368,7 +368,7 @@ protected:
     }
 
     dev::blockverifier::ExecutiveContext::Ptr executeBlock(dev::eth::Block& block);
-    int executeBlockTransactions(std::shared_ptr<dev::eth::Block> block);
+    int addTransactions(std::shared_ptr<dev::eth::Block> block);
 
     virtual void checkBlockValid(dev::eth::Block const& block);
     virtual void checkBlockTimeStamp(dev::eth::Block const& _block);

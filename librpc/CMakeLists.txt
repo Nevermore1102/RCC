@@ -5,4 +5,5 @@ file(GLOB HEADERS "*.h")
 
 add_library(rpc ${SRC_LIST} ${HEADERS})
 target_include_directories(rpc PRIVATE ..)
+target_compile_options(rpc PRIVATE -Wno-unused-variable -Wno-return-type)
 target_link_libraries(rpc PUBLIC flowlimit ledger consensus JsonRpcCpp::Server Boost::iostreams initializer)
