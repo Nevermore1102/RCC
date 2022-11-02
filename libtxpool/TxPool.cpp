@@ -505,7 +505,7 @@ bool TxPool::dropTransactions(std::shared_ptr<Block> block, bool)
     m_workerPool->enqueue([this, block]() { dropBlockTxsFilter(block); });
     // remove InvalidTxs
     m_workerPool->enqueue([this]() { removeInvalidTxs(); });
-    TXPOOL_LOG(INFO) << LOG_DESC("eeeeeee");
+    // TXPOOL_LOG(INFO) << LOG_DESC("eeeeeee");
 
     return succ;
 }

@@ -56,9 +56,10 @@ evmc_bytes32 getStorage(
     auto addr = fromEvmC(*_addr);
     u256 key = fromEvmC(*_key);
 
-    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage ") << LOG_KV("addr", addr);
-    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage ") << LOG_KV("key", key);
-    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage ") << LOG_KV("value", env.store(key));
+    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage") 
+                        << LOG_KV("addr", addr)
+                        << LOG_KV("key", key)
+                        << LOG_KV("value", env.store(key));
 
     return toEvmC(env.store(key));
 }
@@ -78,10 +79,6 @@ evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* 
 
     u256 oldValue = env.store(index);
 
-    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("addr", addr);
-    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("index", index);
-    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("value", value);
-
     if (value == oldValue)
         return EVMC_STORAGE_UNCHANGED;
 
@@ -95,9 +92,10 @@ evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* 
     }
     env.setStore(index, value);  // Interface uses native endianness
 
-    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("addr", addr);
-    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("index", index);
-    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage ") << LOG_KV("value", value);
+    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage") 
+                        << LOG_KV("addr", addr)
+                        << LOG_KV("index", index)
+                        << LOG_KV("value", value);
 
     return status;
 }

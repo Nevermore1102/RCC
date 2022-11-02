@@ -1259,8 +1259,7 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
                        << LOG_KV("groupID", _groupID) << LOG_KV("rlp", _rlp);
 #endif
 
-        RPC_LOG(INFO) << LOG_DESC("Rpc::sendRawTransaction(int _groupID, const std::string& _rlp, _notifyCallback")
-                      << LOG_KV("_rlp", _rlp);
+        RPC_LOG(INFO) << LOG_KV("tx_rlp", _rlp);
 
         auto txPool = ledgerManager()->txPool(_groupID);
         // only check txPool here
@@ -1342,7 +1341,7 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             }
             if( message_id == latested_message_id + 1 )
             {
-                RPC_LOG(INFO) << LOG_DESC("在 if( message_id == latested_message_id + 1 ) 中...");
+                // RPC_LOG(INFO) << LOG_DESC("在 if( message_id == latested_message_id + 1 ) 中...");
                 std::string key = "";
                 do
                 {

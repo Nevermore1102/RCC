@@ -79,7 +79,7 @@ dev::blockverifier::ExecutiveContext::Ptr ConsensusEngineBase::executeBlock(Bloc
 
 int ConsensusEngineBase::addTransactions(std::shared_ptr<dev::eth::Block> block)
 {
-    ENGINE_LOG(INFO) << LOG_DESC("开始缓存交易...");
+    // ENGINE_LOG(INFO) << LOG_DESC("开始缓存交易...");
     int txNum = 0;
     for (size_t i = 0; i < block->transactions()->size(); i++)
     {

@@ -131,7 +131,6 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
                              << LOG_KV("num", block.blockHeader().number());
     uint64_t pastTime = utcTime();
 
-    
     try
     {
         EnvInfo envInfo(block.blockHeader(), m_pNumberHash, 0);
@@ -139,7 +138,6 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
         auto executive = createAndInitExecutive(executiveContext->getState(), envInfo);
 
         // 交易全部不执行
-        
         for (size_t i = 0; i < block.transactions()->size(); i++)
         {
             auto& tx = (*block.transactions())[i];
@@ -148,17 +146,16 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
             // 若交易的读写集没有被阻塞，那么交易可以立即执行，并将读写key放入阻塞队列，直到区块被提交key才可以出队列
             //（读写集使用的场景是简单的读后写，例如A=A+1）
 
-            dev::h256 tx_hash = tx->hash();
+            // dev::h256 tx_hash = tx->hash();
 
             // BLOCKVERIFIER_LOG(INFO) << LOG_DESC("正在执行部署合约交易...") << LOG_KV("block.blockHeader().number()", block.blockHeader().number());
             // TransactionReceipt::Ptr resultReceipt = execute(tx, executiveContext, executive);
             // block.setTransactionReceipt(i, resultReceipt);
             // executiveContext->getState()->commit(); // 状态写缓存
 
-
-            if(dev::rpc::innertxhash2readwriteset.count(tx_hash) != 0)
-            {
-                BLOCKVERIFIER_LOG(INFO) << LOG_DESC("该交易为片内交易...");
+            // if(dev::rpc::innertxhash2readwriteset.count(tx_hash) != 0)
+            // {
+                // BLOCKVERIFIER_LOG(INFO) << LOG_DESC("该交易为片内交易...");
                 // std::string rwkey = dev::rpc::innertxhash2readwriteset.at(tx_hash); // 提取交易读写集
 
                 // if(_blocked_tx_pool.locking_key->count(rwkey) != 0) // 读写key已经被其他区块阻塞，被阻塞的交易统一等某个区块被提交了之后再处理
@@ -190,10 +187,10 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
                 //    block.unExecutedTxNum--; // 未执行交易数目减1
                 //    BLOCKVERIFIER_LOG(INFO) << LOG_DESC("片内交易执行结束...");
                 // }
-            }
-            else if(dev::rpc::corsstxhash2transaction_info.count(tx_hash) != 0)
-            {
-                BLOCKVERIFIER_LOG(INFO) << LOG_DESC("该交易为跨片交易，待处理...");
+            // }
+            // else if(dev::rpc::corsstxhash2transaction_info.count(tx_hash) != 0)
+            // {
+                // BLOCKVERIFIER_LOG(INFO) << LOG_DESC("该交易为跨片交易，待处理...");
                 // std::string rwkey = dev::rpc::corsstxhash2transaction_info.at(tx_hash).readwrite_key; // 提取跨片子交易读写集
 
                 // if(_blocked_tx_pool.locking_key->count(rwkey) != 0)
@@ -219,9 +216,9 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
                 // // 对跨片交易进行缓存，先假设收到的交易顺序是正确的，收到交易后直接往candidate_tx_queues中插入
                 // std::shared_ptr<dev::eth::Block> block_ptr = std::make_shared<dev::eth::Block>(block);
                 // _blocked_tx_pool.insert_candidate_cs_tx(tx, executiveContext, executive, block_ptr);
-            }
-            else // 为部署合约交易，执行，不访问读写集
-            {
+            // }
+            // else // 为部署合约交易，执行，不访问读写集
+            // {
                 // BLOCKVERIFIER_LOG(INFO) << LOG_DESC("正在执行部署合约交易...") << LOG_KV("block.blockHeader().number()", block.blockHeader().number());
                 // TransactionReceipt::Ptr resultReceipt = execute(tx, executiveContext, executive);
                 // block.setTransactionReceipt(i, resultReceipt);
@@ -229,12 +226,12 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
                 // block.unExecutedTxNum--; // 未执行交易数目减1
 
                 // dev::consensus::deploycontractBlock.insert(std::make_pair(block.blockHeader().number(), 1));
-            }
+            // }
         }
 
-        blockExecuteContent _blockExecuteContent{executiveContext, executive};
-        cached_executeContents.insert(std::make_pair(block.blockHeader().number(), _blockExecuteContent)); // 缓存区块执行变量
-        ENGINE_LOG(INFO) << LOG_KV("BlockVerifer.block->blockHeader().number()", block.blockHeader().number());
+        // blockExecuteContent _blockExecuteContent{executiveContext, executive};
+        // cached_executeContents.insert(std::make_pair(block.blockHeader().number(), _blockExecuteContent)); // 缓存区块执行变量
+        // ENGINE_LOG(INFO) << LOG_KV("BlockVerifer.block->blockHeader().number()", block.blockHeader().number());
 
         // if(block.unExecutedTxNum == 0)
         // {
@@ -573,81 +570,81 @@ dev::executive::Executive::Ptr BlockVerifier::createAndInitExecutive(
     return std::make_shared<Executive>(_s, _envInfo, m_evmFlags & EVMFlags::FreeStorageGas);
 }
 
-void blocked_tx_pool::insertIntraTx(dev::eth::Transaction::Ptr _tx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive, std::string& rwkey, std::shared_ptr<dev::eth::Block> block)
-{
-    BLOCKVERIFIER_LOG(INFO) << LOG_DESC("开始缓存交易...");
-    executableTransaction tx{_tx, executiveContext, executive, block};
-    auto tx_ptr = std::make_shared<dev::blockverifier::executableTransaction>(tx);
-    candidate_tx_queues->at(rwkey).queue.push(tx_ptr);
-}
+// void blocked_tx_pool::insertIntraTx(dev::eth::Transaction::Ptr _tx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive, std::string& rwkey, std::shared_ptr<dev::eth::Block> block)
+// {
+//     BLOCKVERIFIER_LOG(INFO) << LOG_DESC("开始缓存交易...");
+//     executableTransaction tx{_tx, executiveContext, executive, block};
+//     auto tx_ptr = std::make_shared<dev::blockverifier::executableTransaction>(tx);
+//     candidate_tx_queues->at(rwkey).queue.push(tx_ptr);
+// }
 
 
-void blocked_tx_pool::insert_candidate_cs_tx(dev::eth::Transaction::Ptr _subtx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive, std::shared_ptr<dev::eth::Block> block) // 放在RPC模块进行处理
-{
-    auto transaction_info = dev::rpc::corsstxhash2transaction_info.at(_subtx->hash());    
-    std::string rw_keys_str = transaction_info.readwrite_key;
+// void blocked_tx_pool::insert_candidate_cs_tx(dev::eth::Transaction::Ptr _subtx, ExecutiveContext::Ptr executiveContext, dev::executive::Executive::Ptr executive, std::shared_ptr<dev::eth::Block> block) // 放在RPC模块进行处理
+// {
+//     auto transaction_info = dev::rpc::corsstxhash2transaction_info.at(_subtx->hash());    
+//     std::string rw_keys_str = transaction_info.readwrite_key;
 
-    std::vector<std::string> readwrite_keys;
-    bool ret = split(rw_keys_str, readwrite_keys, "_");
-    std::string readwrite_key = readwrite_keys[0];
+//     std::vector<std::string> readwrite_keys;
+//     bool ret = split(rw_keys_str, readwrite_keys, "_");
+//     std::string readwrite_key = readwrite_keys[0];
 
-    // 判断candidate_tx_queues中是否有readwrite_key的队列，因为之前可能没有
-    // 当前片内交易的读写集（假设跨片交易的第一个读写集是当前片的读写集）, 定位读写集 readwrite_key 的交易缓存队列，_subtx 插入到 candidate_cs_tx中，更新上锁的读写集  
-    if(candidate_tx_queues->count(readwrite_key) == 0)
-    {
-        candidate_tx_queue tx_queue { readwrite_key };
-        executableTransaction tx{_subtx, executiveContext, executive, block};
-        auto tx_ptr = std::make_shared<dev::blockverifier::executableTransaction>(tx);
+//     // 判断candidate_tx_queues中是否有readwrite_key的队列，因为之前可能没有
+//     // 当前片内交易的读写集（假设跨片交易的第一个读写集是当前片的读写集）, 定位读写集 readwrite_key 的交易缓存队列，_subtx 插入到 candidate_cs_tx中，更新上锁的读写集  
+//     if(candidate_tx_queues->count(readwrite_key) == 0)
+//     {
+//         candidate_tx_queue tx_queue { readwrite_key };
+//         executableTransaction tx{_subtx, executiveContext, executive, block};
+//         auto tx_ptr = std::make_shared<dev::blockverifier::executableTransaction>(tx);
 
-        tx_queue.queue.push(tx_ptr);
-        candidate_tx_queues->insert(std::make_pair(readwrite_key, tx_queue));
-    }
-    else
-    {
-        executableTransaction tx{_subtx, executiveContext, executive, block};
-        auto tx_ptr = std::make_shared<dev::blockverifier::executableTransaction>(tx);
-        candidate_tx_queues->at(readwrite_key).queue.push(tx_ptr);
-    }
+//         tx_queue.queue.push(tx_ptr);
+//         candidate_tx_queues->insert(std::make_pair(readwrite_key, tx_queue));
+//     }
+//     else
+//     {
+//         executableTransaction tx{_subtx, executiveContext, executive, block};
+//         auto tx_ptr = std::make_shared<dev::blockverifier::executableTransaction>(tx);
+//         candidate_tx_queues->at(readwrite_key).queue.push(tx_ptr);
+//     }
     
-    // 更新 cs_txhash2blockedrwset
-    cs_txhash2blockedrwset->insert(std::make_pair(transaction_info.cross_tx_hash, readwrite_key));
+//     // 更新 cs_txhash2blockedrwset
+//     cs_txhash2blockedrwset->insert(std::make_pair(transaction_info.cross_tx_hash, readwrite_key));
 
-    // 更新 received_rwset_num
-    std::string tx_hash = transaction_info.cross_tx_hash;
-    received_rwset_num->insert(std::make_pair(tx_hash, 0)); // 未执行前，已经收到的读写集个数设置为0
+//     // 更新 received_rwset_num
+//     std::string tx_hash = transaction_info.cross_tx_hash;
+//     received_rwset_num->insert(std::make_pair(tx_hash, 0)); // 未执行前，已经收到的读写集个数设置为0
 
-    // 在 cs_readwriteset_num 中添加新的内容
-    int rwsetnum = readwrite_keys.size();
-    cs_rwset_num->insert(std::make_pair(tx_hash, rwsetnum));
+//     // 在 cs_readwriteset_num 中添加新的内容
+//     int rwsetnum = readwrite_keys.size();
+//     cs_rwset_num->insert(std::make_pair(tx_hash, rwsetnum));
 
-    // 检查 cached_cs_tx 中后继 _message_id + 1 的交易是否已经到达, 若已经到达，也插入到 candidate_cs_tx 中，更新上锁的读写集
-    // 暂时 不考虑 乱序问题，因此这部分先跳过.... 稍后补充
-}
+//     // 检查 cached_cs_tx 中后继 _message_id + 1 的交易是否已经到达, 若已经到达，也插入到 candidate_cs_tx 中，更新上锁的读写集
+//     // 暂时 不考虑 乱序问题，因此这部分先跳过.... 稍后补充
+// }
 
-bool blocked_tx_pool::split(const std::string &str, std::vector<std::string> &ret, std::string sep)  // 工具函数
-{
-    if (str.empty()) {
-        return false;
-    }
+// bool blocked_tx_pool::split(const std::string &str, std::vector<std::string> &ret, std::string sep)  // 工具函数
+// {
+//     if (str.empty()) {
+//         return false;
+//     }
 
-    std::string temp;
-    std::string::size_type begin = str.find_first_not_of(sep);
-    std::string::size_type pos = 0;
+//     std::string temp;
+//     std::string::size_type begin = str.find_first_not_of(sep);
+//     std::string::size_type pos = 0;
 
-    while (begin != std::string::npos) {
-        pos = str.find(sep, begin);
-        if (pos != std::string::npos) {
-            temp = str.substr(begin, pos - begin);
-            begin = pos + sep.length();
-        } else {
-            temp = str.substr(begin);
-            begin = pos;
-        }
+//     while (begin != std::string::npos) {
+//         pos = str.find(sep, begin);
+//         if (pos != std::string::npos) {
+//             temp = str.substr(begin, pos - begin);
+//             begin = pos + sep.length();
+//         } else {
+//             temp = str.substr(begin);
+//             begin = pos;
+//         }
 
-        if (!temp.empty()) {
-            ret.push_back(temp);
-            temp.clear();
-        }
-    }
-    return true; 
-}
+//         if (!temp.empty()) {
+//             ret.push_back(temp);
+//             temp.clear();
+//         }
+//     }
+//     return true; 
+// }

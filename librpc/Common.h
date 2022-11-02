@@ -52,8 +52,9 @@ struct transaction_info
 	long unsigned message_id;
     long int readwritesetnum;
 	dev::h256 sub_tx_hash;
-	std::string cross_tx_hash;
+	std::string crossshardtxid;
 	std::string readwrite_key; 
+    std::string participants;
 };
 
 extern std::map<dev::h256, transaction_info> corsstxhash2transaction_info;

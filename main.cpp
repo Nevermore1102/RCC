@@ -97,7 +97,7 @@ namespace dev{
         std::vector<int>latest_commit_cs_tx;
         std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
         std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
-        blocked_tx_pool _blocked_tx_pool;
+        // blocked_tx_pool _blocked_tx_pool;
         std::map<int, blockExecuteContent> cached_executeContents; // 缓存的区块执行变量
     }
 }
@@ -213,100 +213,12 @@ private:
     SecureInitializer::Ptr m_secureInitializer;
 };
 
-int main(){
-
-    std::cout<< "* * * * * * * * * HieraChain v0.0.3 * * * * * * * * *" <<std::endl;
-    dev::consensus::SHARDNUM = 3; // 初始化分片数目
-    std::cout << "SHARDNUM = " << dev::consensus::SHARDNUM << std::endl;
-
-    // 开始增加组间通信同步组
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_ini("./configgroup.ini", pt);
-
+void loadHieraInfo(boost::property_tree::ptree& pt)
+{
     std::string jsonrpc_listen_ip = pt.get<std::string>("rpc.jsonrpc_listen_ip");
     std::string jsonrpc_listen_port = pt.get<std::string>("rpc.jsonrpc_listen_port");
     std::string nearest_upper_groupId = pt.get<std::string>("layer.nearest_upper_groupId");
     std::string nearest_lower_groupId = pt.get<std::string>("layer.nearest_lower_groupId");
-
-    // 对dev::consensus::messageIDs进行初始化
-    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
-    {
-        dev::consensus::messageIds.insert(std::make_pair(i, 0));
-    }
-
-    // 对dev::consensus::latest_commit_cs_tx进行初始化
-    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
-    {
-        dev::blockverifier::latest_commit_cs_tx.push_back(0);
-    }
-
-    // 对dev::rpc::sended_tx_messageid 进行初始化
-    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
-    {
-        dev::rpc::sended_tx_messageid.insert(std::make_pair(i, 0));
-    }
-
-    GroupP2PService groupP2Pservice("./configgroup.ini");
-    auto p2pService = groupP2Pservice.p2pInitializer()->p2pService();
-    putGroupPubKeyIntoService(p2pService, pt);
-    putGroupPubKeyIntoshardNodeId(pt); // 读取全网所有节点
-    p2pService->start();
-
-    GROUP_ID groupId = std::stoi(pt.get<std::string>("group.global_group_id")); // 全局通信使用的groupid
-
-    auto nodeIdstr = asString(contents("conf/node.nodeid"));
-    NodeID nodeId = NodeID(nodeIdstr.substr(0, 128));
-    std::string nodeIdHex = toHex(nodeId);
-
-    PROTOCOL_ID syncId = getGroupProtoclID(groupId, ProtocolID::InterGroup);
-
-    std::shared_ptr<dev::initializer::Initializer> initialize = std::make_shared<dev::initializer::Initializer>();
-    // initialize->init_with_groupP2PService("./config.ini", p2pService);  // 启动3个群组
-
-    initialize->init_with_groupP2PService("./config.ini", p2pService, syncId);  // 启动3个群组
-    // initialize->init("./config.ini");  // 启动3个群组
-
-    dev::consensus::internal_groupId = std::stoi(pt.get<std::string>("group.internal_group_id")); // 片内使通信使用的groupID
-    auto secureInitializer = initialize->secureInitializer();
-    auto ledgerManager = initialize->ledgerInitializer()->ledgerManager();
-    auto consensusP2Pservice = initialize->p2pInitializer()->p2pService();
-    auto rpcService = std::make_shared<dev::rpc::Rpc>(initialize->ledgerInitializer(), consensusP2Pservice);
-    auto blockchainManager = ledgerManager->blockChain(dev::consensus::internal_groupId);
-
-    shared_ptr<dev::plugin::SyncThreadMaster> syncs = std::make_shared<dev::plugin::SyncThreadMaster>(p2pService, syncId, nodeId, dev::consensus::internal_groupId, rpcService);
-    std::shared_ptr<ConsensusPluginManager> consensusPluginManager = std::make_shared<ConsensusPluginManager>(rpcService);
-    consensusPluginManager->m_deterministExecute->start(); // 启动交易处理线程
-    syncs->setAttribute(blockchainManager);
-    syncs->setAttribute(consensusPluginManager);
-
-    // // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
-    // if(dev::consensus::internal_groupId == 1)
-    if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
-    {
-        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-        transactionInjectionTest _injectionTest(rpcService, 1);
-        _injectionTest.deployContractTransaction("./deploy.json", 1); // 向分片1部署跨片存证合约以及片内交易合约
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep 1s
-        // _injectionTest.injectionTransactions("./data.json", 1);
-    }
-
-    if(dev::consensus::internal_groupId == 2 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(1)))
-    {
-        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-        transactionInjectionTest _injectionTest(rpcService, 2);
-        _injectionTest.deployContractTransaction("./deploy2.json", 2); // 向分片2部署跨片存证合约以及片内交易合约
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        // _injectionTest.injectionTransactions("./data.json", 1);
-    }
-
-    if(dev::consensus::internal_groupId == 3 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(2)))
-    {
-        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-        transactionInjectionTest _injectionTest(rpcService, 3);
-        _injectionTest.deployContractTransaction("./deploy3.json", 3); // 向分片3部署跨片存证合约以及片内交易合约
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        // _injectionTest.injectionTransactions("./data.json", 1);
-    }
 
     PLUGIN_LOG(INFO) << LOG_KV("jsonrpc_listen_ip", jsonrpc_listen_ip)<< LOG_KV("jsonrpc_listen_port", jsonrpc_listen_port);
     if(nearest_upper_groupId != "N/A")
@@ -326,9 +238,104 @@ int main(){
     {
         PLUGIN_LOG(INFO) << LOG_DESC("it's a leaf group");
     }
+}
+
+void initGlobalVariables()
+{
+    // 对dev::consensus::messageIDs进行初始化
+    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
+    {
+        dev::consensus::messageIds.insert(std::make_pair(i, 0));
+    }
+
+    // 对dev::consensus::latest_commit_cs_tx进行初始化
+    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
+    {
+        dev::blockverifier::latest_commit_cs_tx.push_back(0);
+    }
+
+    // 对dev::rpc::sended_tx_messageid 进行初始化
+    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
+    {
+        dev::rpc::sended_tx_messageid.insert(std::make_pair(i, 0));
+    }
+}
+
+int main(){
+    dev::consensus::SHARDNUM = 3; // 初始化分片数目
+
+    // 开始增加组间通信同步组
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_ini("./configgroup.ini", pt);
+
+    loadHieraInfo(pt);
+    initGlobalVariables();
+
+    GroupP2PService groupP2Pservice("./configgroup.ini");
+    auto p2pService = groupP2Pservice.p2pInitializer()->p2pService();
+    putGroupPubKeyIntoService(p2pService, pt);
+    putGroupPubKeyIntoshardNodeId(pt); // 读取全网所有节点
+    p2pService->start();
+
+    GROUP_ID groupId = std::stoi(pt.get<std::string>("group.global_group_id")); // 全局通信使用的groupid
+    auto nodeIdstr = asString(contents("conf/node.nodeid"));
+    NodeID nodeId = NodeID(nodeIdstr.substr(0, 128));
+    std::string nodeIdHex = toHex(nodeId);
+    PROTOCOL_ID syncId = getGroupProtoclID(groupId, ProtocolID::InterGroup);
+
+    std::shared_ptr<dev::initializer::Initializer> initialize = std::make_shared<dev::initializer::Initializer>();
+    // initialize->init_with_groupP2PService("./config.ini", p2pService);  // 启动3个群组
+
+    initialize->init_with_groupP2PService("./config.ini", p2pService, syncId);  // 启动3个群组
+    // initialize->init("./config.ini");  // 启动3个群组
+
+    dev::consensus::internal_groupId = std::stoi(pt.get<std::string>("group.internal_group_id")); // 片内使通信使用的groupID
+    auto secureInitializer = initialize->secureInitializer();
+    auto ledgerManager = initialize->ledgerInitializer()->ledgerManager();
+    auto consensusP2Pservice = initialize->p2pInitializer()->p2pService();
+    auto rpcService = std::make_shared<dev::rpc::Rpc>(initialize->ledgerInitializer(), consensusP2Pservice);
+    auto blockchainManager = ledgerManager->blockChain(dev::consensus::internal_groupId);
+
+    shared_ptr<dev::plugin::SyncThreadMaster> syncs = std::make_shared<dev::plugin::SyncThreadMaster>(p2pService, syncId, nodeId, dev::consensus::internal_groupId, rpcService);
+    std::shared_ptr<ConsensusPluginManager> consensusPluginManager = std::make_shared<ConsensusPluginManager>(rpcService);
+    // consensusPluginManager->m_deterministExecute->start(); // 启动交易处理线程
+    std::thread executetxsThread(&dev::plugin::deterministExecute::deterministExecuteTx, consensusPluginManager->m_deterministExecute);
+    executetxsThread.detach();
+
+    syncs->setAttribute(blockchainManager);
+    syncs->setAttribute(consensusPluginManager);
+
+    // // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
+    if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
+    {
+        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+        transactionInjectionTest _injectionTest(rpcService, dev::consensus::internal_groupId);
+        _injectionTest.deployContractTransaction("./deploy1.json", dev::consensus::internal_groupId); // 向分片1部署跨片存证合约以及片内交易合约
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep 1s
+        _injectionTest.injectionTransactions("./data.json", dev::consensus::internal_groupId);
+    }
+
+    if(dev::consensus::internal_groupId == 2 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(1)))
+    {
+        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+        transactionInjectionTest _injectionTest(rpcService, dev::consensus::internal_groupId);
+        _injectionTest.deployContractTransaction("./deploy2.json", dev::consensus::internal_groupId); // 向分片2部署跨片存证合约以及片内交易合约
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // _injectionTest.injectionTransactions("./data.json", dev::consensus::internal_groupId);
+    }
+
+    if(dev::consensus::internal_groupId == 3 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(2)))
+    {
+        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
+        transactionInjectionTest _injectionTest(rpcService, dev::consensus::internal_groupId);
+        _injectionTest.deployContractTransaction("./deploy3.json", dev::consensus::internal_groupId); // 向分片3部署跨片存证合约以及片内交易合约
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // _injectionTest.injectionTransactions("./data.json", dev::consensus::internal_groupId);
+    }
 
     while (true)
     {
+        //std::this_thread::yield();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return 0;
