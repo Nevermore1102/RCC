@@ -28,7 +28,7 @@ namespace dev{
             public:
                 ex_SyncMsgEngine(std::shared_ptr <dev::p2p::P2PInterface> _service, PROTOCOL_ID const &_protocolId, dev::network::NodeID const &_nodeId)
                 :m_service(_service), m_protocolId(_protocolId), m_groupId(dev::eth::getGroupAndProtocol(_protocolId).first), m_nodeId(_nodeId) {
-                m_service->registerHandlerByProtoclID(m_protocolId, boost::bind(&ex_SyncMsgEngine::messageHandler, this, _1, _2, _3));
+                    m_service->registerHandlerByProtoclID(m_protocolId, boost::bind(&ex_SyncMsgEngine::messageHandler, this, _1, _2, _3));
                 }
 
                 void stop();

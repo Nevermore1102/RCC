@@ -114,3 +114,10 @@ message SubCrossShardTx
     bytes participants = 7;
     bytes crossshardtxid = 8;
 }
+
+message csTxRWset
+{
+    bytes crossshardtxid = 1;
+    bytes readwritekey = 2;
+    bytes value = 3;
+}

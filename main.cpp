@@ -297,7 +297,7 @@ int main(){
     auto blockchainManager = ledgerManager->blockChain(dev::consensus::internal_groupId);
 
     shared_ptr<dev::plugin::SyncThreadMaster> syncs = std::make_shared<dev::plugin::SyncThreadMaster>(p2pService, syncId, nodeId, dev::consensus::internal_groupId, rpcService);
-    std::shared_ptr<ConsensusPluginManager> consensusPluginManager = std::make_shared<ConsensusPluginManager>(rpcService);
+    std::shared_ptr<ConsensusPluginManager> consensusPluginManager = std::make_shared<ConsensusPluginManager>(rpcService, p2pService, syncId);
     // consensusPluginManager->m_deterministExecute->start(); // 启动交易处理线程
     std::thread executetxsThread(&dev::plugin::deterministExecute::deterministExecuteTx, consensusPluginManager->m_deterministExecute);
     executetxsThread.detach();

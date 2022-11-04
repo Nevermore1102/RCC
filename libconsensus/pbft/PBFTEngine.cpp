@@ -682,8 +682,6 @@ void PBFTEngine::broadcastMsg(dev::h512s const& _targetNodes, bytesConstRef _dat
     // set prepareWithEmptyBlock and extend prepareWithEmptyBlock into the 8th bit of ttl field
     auto pbftPacket = createPBFTMsgPacket(_data, _packetType, _ttl, forwardNodes); // std::shared_ptr<PBFTMsgPacket>
 
-    //PBFTSEALER_LOG(INFO) << LOG_KV("pbftPacket->test_label目前 ", pbftPacket->test_label);
-
     if (_pbftMsg.isEmpty)
     {
         pbftPacket->prepareWithEmptyBlock = true;
@@ -692,62 +690,7 @@ void PBFTEngine::broadcastMsg(dev::h512s const& _targetNodes, bytesConstRef _dat
     pbftPacket->encode(*encodedData); // RLP 编码
     auto p2pMessage = toP2PMessage(encodedData, _p2pPacketType); // 打包P2P消息
 
-    // // 测试现在立即解析
-    // PBFTMsgPacket::Ptr pbft_msg = m_pbftMsgFactory->createPBFTMsgPacket();
-    // pbft_msg->decode(ref(*(p2pMessage->buffer())));
-
-    // PBFTSEALER_LOG(INFO) << LOG_KV("立即解析后 pbft_msg->test_label ", pbft_msg->test_label);
-
-    //PBFTSEALER_LOG(INFO) << LOG_KV("输出测试 = ", _targetNodes.at(0)); // 所有节点不广播消息
-    // //_targetNodes.clear();
-
     m_service->asyncMulticastMessageByNodeIDList(_targetNodes, p2pMessage);
-
-
-    // // 单独再跟 node4 通信
-    // std::shared_ptr<dev::h512s> forwardNode4 = nullptr;
-
-    // dev::h512s _targetNode4;
-    // // // 从文件中读取 groupid=2 的节点nodelist
-    // std::vector<std::string> node_id;
-    // std::ifstream in("/Users/tanghaibo/fisco/groupTest/nodes/127.0.0.1/node4/conf/group.2.genesis");
-    // std::string line;
-    // if(in) // 若存在该文件
-    // {
-    //     while (getline(in, line))
-    //     {
-    //         line.erase(0,line.find_first_not_of(" "));
-    //         line.erase(line.find_last_not_of(" ") + 1);
-
-    //         //SERVICE_LOG(INFO) << LOG_KV("目标节点的ID号为 node3.id ", line.substr(0, 5));
-    //         if(line.substr(0, 6) == "node.3") {
-    //             std::string subline = line.substr(7, line.length());
-    //             //SERVICE_LOG(INFO) << LOG_KV("目标节点的ID号为 node3.id ", subline);
-    //             node_id.push_back(subline);
-    //         }
-    //     }
-    // }
-    // in.close();
-
-
-    // FixedHash<64> f2(node_id.at(0));
-    // // forwardNode4->push_back(f1);
-    // _targetNode4.push_back(f2);
-
-    // // // // set prepareWithEmptyBlock and extend prepareWithEmptyBlock into the 8th bit of ttl field
-    // auto pbftPacket2 = createPBFTMsgPacket(_data, _packetType, _ttl, forwardNode4, 88);
-
-    // // pbftPacket->packet_id = 1;
-    // std::shared_ptr<bytes> encodedData2 = std::make_shared<bytes>();
-
-    // pbftPacket2->encode(*encodedData2);
-
-    // auto p2pMessage2 = toP2PMessage(encodedData2, _p2pPacketType);
-    // //auto p2pMessage = toP2PMessage(encodedData, _p2pPacketType);
-    // m_service->asyncMulticastMessageByNodeIDList(_targetNode4, p2pMessage2);
-
-
-
 
 }
 
@@ -1365,7 +1308,7 @@ void PBFTEngine::checkAndSave(bool commitPhase)
 
             PBFTENGINE_LOG(INFO) << LOG_DESC("tanghaibo degug222");
 
-            /// drop handled transactions 
+            /// drop handled transactions
             if (ret == CommitResult::OK)
             {
                 if(commitPhase)

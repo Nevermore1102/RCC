@@ -90,6 +90,7 @@ enum SyncPacketType : byte
     DistributedTxPacket=0x13,
     PreCommittedTxPacket=0x14,
     CommittedTxPacket=0x15,
+    ReadWriteSetMsg=0X16,
     PacketCount
 };
 

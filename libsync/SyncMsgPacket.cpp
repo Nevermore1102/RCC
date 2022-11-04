@@ -222,3 +222,10 @@ void SyncCommittedTxPacket::encode(dev::bytes const& _blockRLP)
     prep(m_rlpStream, CommittedTxPacket, 1);
     m_rlpStream.append(_blockRLP);
 }
+
+void SyncReadWriteSetMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, ReadWriteSetMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}

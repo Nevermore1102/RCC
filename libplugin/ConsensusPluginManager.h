@@ -11,12 +11,13 @@
 #include <libdevcore/CommonJS.h>
 #include <libethcore/Transaction.h>
 #include <libplugin/deterministExecute.h>
+#include <libp2p/P2PInterface.h>
 
 namespace dev {
     namespace plugin {
         class ConsensusPluginManager:public std::enable_shared_from_this<ConsensusPluginManager>{
             public:
-                ConsensusPluginManager(std::shared_ptr<dev::rpc::Rpc> _service)
+                ConsensusPluginManager(std::shared_ptr<dev::rpc::Rpc> rpc_service, std::shared_ptr <dev::p2p::P2PInterface> p2p_service, dev::PROTOCOL_ID group_protocolID)
                 {
                     readSetQueue = new tbb::concurrent_queue<protos::TxWithReadSet>();
                     txs = new tbb::concurrent_queue<protos::Transaction>();
@@ -25,8 +26,8 @@ namespace dev {
                     precommit_txs = new tbb::concurrent_queue<protos::SubPreCommitedDisTx>();
                     commit_txs = new tbb::concurrent_queue<protos::CommittedRLPWithReadSet>();
                     notFinishedDAG = 0;
-                    m_rpc_service = _service;
-                    m_deterministExecute = std::make_shared<dev::plugin::deterministExecute>();
+                    m_rpc_service = rpc_service;
+                    m_deterministExecute = std::make_shared<dev::plugin::deterministExecute>(p2p_service, group_protocolID);
                 }
                 void processReceivedWriteSet(protos::TxWithReadSet _rs);
                 void processReceivedTx(protos::Transaction _tx);
@@ -37,6 +38,8 @@ namespace dev {
                 void processReceivedPreCommitedTx(protos::SubPreCommitedDisTx _txrlp);
 
                 void processReceivedCommitedTx(protos::CommittedRLPWithReadSet _txrlp);
+
+                void processRWSetMsg(protos::csTxRWset _RWSetMsg);
 
                 int numOfNotFinishedDAGs();
                 int addNotFinishedDAGs(int _num);
@@ -57,7 +60,7 @@ namespace dev {
                 /// record wait State
                 std::map<std::string,std::queue<int>> m_waitValueQueue;
 
-                tbb::concurrent_unordered_map<std::string,u256>testMap;
+                tbb::concurrent_unordered_map<std::string,u256> testMap;
 
                 /// receive writeResult from exnode
                 tbb::concurrent_queue<protos::TxWithReadSet> *readSetQueue;
@@ -73,6 +76,8 @@ namespace dev {
 
                 // receive precommit_txs from participant
                 tbb::concurrent_queue<protos::CommittedRLPWithReadSet> *commit_txs;
+
+                
 
                 /// no need so much mutex delete later
                 std::mutex x_latest_Mutex;

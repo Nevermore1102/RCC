@@ -47,7 +47,7 @@ struct TableStruct_shard_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxillaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[13]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[14]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -94,6 +94,9 @@ extern TransactionDefaultTypeInternal _Transaction_default_instance_;
 class TxWithReadSet;
 class TxWithReadSetDefaultTypeInternal;
 extern TxWithReadSetDefaultTypeInternal _TxWithReadSet_default_instance_;
+class csTxRWset;
+class csTxRWsetDefaultTypeInternal;
+extern csTxRWsetDefaultTypeInternal _csTxRWset_default_instance_;
 }  // namespace protos
 PROTOBUF_NAMESPACE_OPEN
 template<> ::protos::Block* Arena::CreateMaybeMessage<::protos::Block>(Arena*);
@@ -109,6 +112,7 @@ template<> ::protos::SubCrossShardTx* Arena::CreateMaybeMessage<::protos::SubCro
 template<> ::protos::SubPreCommitedDisTx* Arena::CreateMaybeMessage<::protos::SubPreCommitedDisTx>(Arena*);
 template<> ::protos::Transaction* Arena::CreateMaybeMessage<::protos::Transaction>(Arena*);
 template<> ::protos::TxWithReadSet* Arena::CreateMaybeMessage<::protos::TxWithReadSet>(Arena*);
+template<> ::protos::csTxRWset* Arena::CreateMaybeMessage<::protos::csTxRWset>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace protos {
 
@@ -2565,6 +2569,177 @@ class SubCrossShardTx :
   ::PROTOBUF_NAMESPACE_ID::uint64 messageid_;
   ::PROTOBUF_NAMESPACE_ID::int64 sourceshardid_;
   ::PROTOBUF_NAMESPACE_ID::int64 destinshardid_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_shard_2eproto;
+};
+// -------------------------------------------------------------------
+
+class csTxRWset :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:protos.csTxRWset) */ {
+ public:
+  csTxRWset();
+  virtual ~csTxRWset();
+
+  csTxRWset(const csTxRWset& from);
+  csTxRWset(csTxRWset&& from) noexcept
+    : csTxRWset() {
+    *this = ::std::move(from);
+  }
+
+  inline csTxRWset& operator=(const csTxRWset& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline csTxRWset& operator=(csTxRWset&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const csTxRWset& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const csTxRWset* internal_default_instance() {
+    return reinterpret_cast<const csTxRWset*>(
+               &_csTxRWset_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    13;
+
+  friend void swap(csTxRWset& a, csTxRWset& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(csTxRWset* other) {
+    if (other == this) return;
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline csTxRWset* New() const final {
+    return CreateMaybeMessage<csTxRWset>(nullptr);
+  }
+
+  csTxRWset* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<csTxRWset>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const csTxRWset& from);
+  void MergeFrom(const csTxRWset& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(csTxRWset* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "protos.csTxRWset";
+  }
+  private:
+  inline ::PROTOBUF_NAMESPACE_ID::Arena* GetArenaNoVirtual() const {
+    return nullptr;
+  }
+  inline void* MaybeArenaPtr() const {
+    return nullptr;
+  }
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_shard_2eproto);
+    return ::descriptor_table_shard_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kCrossshardtxidFieldNumber = 1,
+    kReadwritekeyFieldNumber = 2,
+    kValueFieldNumber = 3,
+  };
+  // bytes crossshardtxid = 1;
+  void clear_crossshardtxid();
+  const std::string& crossshardtxid() const;
+  void set_crossshardtxid(const std::string& value);
+  void set_crossshardtxid(std::string&& value);
+  void set_crossshardtxid(const char* value);
+  void set_crossshardtxid(const void* value, size_t size);
+  std::string* mutable_crossshardtxid();
+  std::string* release_crossshardtxid();
+  void set_allocated_crossshardtxid(std::string* crossshardtxid);
+  private:
+  const std::string& _internal_crossshardtxid() const;
+  void _internal_set_crossshardtxid(const std::string& value);
+  std::string* _internal_mutable_crossshardtxid();
+  public:
+
+  // bytes readwritekey = 2;
+  void clear_readwritekey();
+  const std::string& readwritekey() const;
+  void set_readwritekey(const std::string& value);
+  void set_readwritekey(std::string&& value);
+  void set_readwritekey(const char* value);
+  void set_readwritekey(const void* value, size_t size);
+  std::string* mutable_readwritekey();
+  std::string* release_readwritekey();
+  void set_allocated_readwritekey(std::string* readwritekey);
+  private:
+  const std::string& _internal_readwritekey() const;
+  void _internal_set_readwritekey(const std::string& value);
+  std::string* _internal_mutable_readwritekey();
+  public:
+
+  // bytes value = 3;
+  void clear_value();
+  const std::string& value() const;
+  void set_value(const std::string& value);
+  void set_value(std::string&& value);
+  void set_value(const char* value);
+  void set_value(const void* value, size_t size);
+  std::string* mutable_value();
+  std::string* release_value();
+  void set_allocated_value(std::string* value);
+  private:
+  const std::string& _internal_value() const;
+  void _internal_set_value(const std::string& value);
+  std::string* _internal_mutable_value();
+  public:
+
+  // @@protoc_insertion_point(class_scope:protos.csTxRWset)
+ private:
+  class _Internal;
+
+  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr crossshardtxid_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr readwritekey_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr value_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_shard_2eproto;
 };
@@ -5213,9 +5388,195 @@ inline void SubCrossShardTx::set_allocated_crossshardtxid(std::string* crossshar
   // @@protoc_insertion_point(field_set_allocated:protos.SubCrossShardTx.crossshardtxid)
 }
 
+// -------------------------------------------------------------------
+
+// csTxRWset
+
+// bytes crossshardtxid = 1;
+inline void csTxRWset::clear_crossshardtxid() {
+  crossshardtxid_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline const std::string& csTxRWset::crossshardtxid() const {
+  // @@protoc_insertion_point(field_get:protos.csTxRWset.crossshardtxid)
+  return _internal_crossshardtxid();
+}
+inline void csTxRWset::set_crossshardtxid(const std::string& value) {
+  _internal_set_crossshardtxid(value);
+  // @@protoc_insertion_point(field_set:protos.csTxRWset.crossshardtxid)
+}
+inline std::string* csTxRWset::mutable_crossshardtxid() {
+  // @@protoc_insertion_point(field_mutable:protos.csTxRWset.crossshardtxid)
+  return _internal_mutable_crossshardtxid();
+}
+inline const std::string& csTxRWset::_internal_crossshardtxid() const {
+  return crossshardtxid_.GetNoArena();
+}
+inline void csTxRWset::_internal_set_crossshardtxid(const std::string& value) {
+  
+  crossshardtxid_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+}
+inline void csTxRWset::set_crossshardtxid(std::string&& value) {
+  
+  crossshardtxid_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:protos.csTxRWset.crossshardtxid)
+}
+inline void csTxRWset::set_crossshardtxid(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  crossshardtxid_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:protos.csTxRWset.crossshardtxid)
+}
+inline void csTxRWset::set_crossshardtxid(const void* value, size_t size) {
+  
+  crossshardtxid_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:protos.csTxRWset.crossshardtxid)
+}
+inline std::string* csTxRWset::_internal_mutable_crossshardtxid() {
+  
+  return crossshardtxid_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* csTxRWset::release_crossshardtxid() {
+  // @@protoc_insertion_point(field_release:protos.csTxRWset.crossshardtxid)
+  
+  return crossshardtxid_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void csTxRWset::set_allocated_crossshardtxid(std::string* crossshardtxid) {
+  if (crossshardtxid != nullptr) {
+    
+  } else {
+    
+  }
+  crossshardtxid_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), crossshardtxid);
+  // @@protoc_insertion_point(field_set_allocated:protos.csTxRWset.crossshardtxid)
+}
+
+// bytes readwritekey = 2;
+inline void csTxRWset::clear_readwritekey() {
+  readwritekey_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline const std::string& csTxRWset::readwritekey() const {
+  // @@protoc_insertion_point(field_get:protos.csTxRWset.readwritekey)
+  return _internal_readwritekey();
+}
+inline void csTxRWset::set_readwritekey(const std::string& value) {
+  _internal_set_readwritekey(value);
+  // @@protoc_insertion_point(field_set:protos.csTxRWset.readwritekey)
+}
+inline std::string* csTxRWset::mutable_readwritekey() {
+  // @@protoc_insertion_point(field_mutable:protos.csTxRWset.readwritekey)
+  return _internal_mutable_readwritekey();
+}
+inline const std::string& csTxRWset::_internal_readwritekey() const {
+  return readwritekey_.GetNoArena();
+}
+inline void csTxRWset::_internal_set_readwritekey(const std::string& value) {
+  
+  readwritekey_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+}
+inline void csTxRWset::set_readwritekey(std::string&& value) {
+  
+  readwritekey_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:protos.csTxRWset.readwritekey)
+}
+inline void csTxRWset::set_readwritekey(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  readwritekey_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:protos.csTxRWset.readwritekey)
+}
+inline void csTxRWset::set_readwritekey(const void* value, size_t size) {
+  
+  readwritekey_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:protos.csTxRWset.readwritekey)
+}
+inline std::string* csTxRWset::_internal_mutable_readwritekey() {
+  
+  return readwritekey_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* csTxRWset::release_readwritekey() {
+  // @@protoc_insertion_point(field_release:protos.csTxRWset.readwritekey)
+  
+  return readwritekey_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void csTxRWset::set_allocated_readwritekey(std::string* readwritekey) {
+  if (readwritekey != nullptr) {
+    
+  } else {
+    
+  }
+  readwritekey_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), readwritekey);
+  // @@protoc_insertion_point(field_set_allocated:protos.csTxRWset.readwritekey)
+}
+
+// bytes value = 3;
+inline void csTxRWset::clear_value() {
+  value_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline const std::string& csTxRWset::value() const {
+  // @@protoc_insertion_point(field_get:protos.csTxRWset.value)
+  return _internal_value();
+}
+inline void csTxRWset::set_value(const std::string& value) {
+  _internal_set_value(value);
+  // @@protoc_insertion_point(field_set:protos.csTxRWset.value)
+}
+inline std::string* csTxRWset::mutable_value() {
+  // @@protoc_insertion_point(field_mutable:protos.csTxRWset.value)
+  return _internal_mutable_value();
+}
+inline const std::string& csTxRWset::_internal_value() const {
+  return value_.GetNoArena();
+}
+inline void csTxRWset::_internal_set_value(const std::string& value) {
+  
+  value_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+}
+inline void csTxRWset::set_value(std::string&& value) {
+  
+  value_.SetNoArena(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:protos.csTxRWset.value)
+}
+inline void csTxRWset::set_value(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  value_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:protos.csTxRWset.value)
+}
+inline void csTxRWset::set_value(const void* value, size_t size) {
+  
+  value_.SetNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:protos.csTxRWset.value)
+}
+inline std::string* csTxRWset::_internal_mutable_value() {
+  
+  return value_.MutableNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline std::string* csTxRWset::release_value() {
+  // @@protoc_insertion_point(field_release:protos.csTxRWset.value)
+  
+  return value_.ReleaseNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+inline void csTxRWset::set_allocated_value(std::string* value) {
+  if (value != nullptr) {
+    
+  } else {
+    
+  }
+  value_.SetAllocatedNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set_allocated:protos.csTxRWset.value)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

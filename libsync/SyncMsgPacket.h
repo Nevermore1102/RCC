@@ -193,5 +193,12 @@ public:
     void encode(dev::bytes const& _blockRLP);
 };
 
+class SyncReadWriteSetMsg : public SyncMsgPacket
+{
+public:
+    SyncReadWriteSetMsg() { packetType = ReadWriteSetMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
 }  // namespace sync
 }  // namespace dev

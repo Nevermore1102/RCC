@@ -40,7 +40,7 @@ void ConsensusPluginManager::processReceivedDisTx(protos::SubCrossShardTx _txrlp
     protos::SubCrossShardTx msg_txWithReadset;
     msg_txWithReadset = _txrlp;
     
-    std::cout << "接收到协调者发来跨片交易请求..." << std::endl;
+    PLUGIN_LOG(INFO) << LOG_DESC("接收到协调者发来跨片交易请求...");
     // auto rlp = msg_txWithReadset.subtxrlp();
     auto messageid = msg_txWithReadset.messageid();
     auto readwriteset = msg_txWithReadset.readwriteset();
@@ -75,6 +75,33 @@ void ConsensusPluginManager::processReceivedDisTx(protos::SubCrossShardTx _txrlp
     dev::rpc::corsstxhash2transaction_info.insert(std::make_pair(tx->hash(), _transaction_info));
 
     m_rpc_service->sendRawTransaction(destinshardid, signeddata); // 通过调用本地的RPC接口发起新的共识
+}
+
+void ConsensusPluginManager::processRWSetMsg(protos::csTxRWset _RWSetMsg)
+{
+    // 对收到的读写集消息进行处理
+    protos::csTxRWset _csTxRWset;
+    _csTxRWset = _RWSetMsg;
+    auto crossshardtxid = _csTxRWset.crossshardtxid();
+    auto readwritekey = _csTxRWset.readwritekey();
+    auto value = _csTxRWset.value();
+
+    PLUGIN_LOG(INFO) << LOG_DESC("读写集解析完毕")
+                        << LOG_KV("crossshardtxid", crossshardtxid)
+                        << LOG_KV("readwritekey", readwritekey)
+                        << LOG_KV("value", value);
+
+    std::string key = crossshardtxid + "_" + readwritekey;
+    
+    if(m_deterministExecute->m_executeTxPool->receivedTxRWsetNum->count(key) == 0)
+    {
+        m_deterministExecute->m_executeTxPool->receivedTxRWsetNum->insert(std::make_pair(key, 1));
+    }
+    else
+    {
+        int receivedNum = m_deterministExecute->m_executeTxPool->receivedTxRWsetNum->at(key);
+        m_deterministExecute->m_executeTxPool->receivedTxRWsetNum->at(key) = receivedNum + 1;
+    }
 }
 
 void ConsensusPluginManager::processReceivedPreCommitedTx(protos::SubPreCommitedDisTx _txrlp)

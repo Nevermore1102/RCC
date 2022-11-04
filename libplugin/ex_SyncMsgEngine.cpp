@@ -20,8 +20,6 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
 {
     try
     {
-        std::cout<< "tanghaibo 收到" << std::endl;
-
         SyncMsgPacket::Ptr packet = std::make_shared<SyncMsgPacket>();
         if(!packet->decode(_session, _msg))
         {
@@ -37,11 +35,11 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         if(packet->packetType == ParamRequestPacket)
         {
             RLP const& rlps = (*packet).rlp();
-            bool size = rlps.isNull();
-            std::cout << "ParamRequestPacket" << std::endl;
+            bool size = rlps.isNull();            
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive ParamRequestPacket...");
             if(size)
             {
-                std::cout << "data is null!" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -53,10 +51,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
-            std::cout << "ParamResponsePacket" << std::endl;
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive ParamResponsePacket...");
             if(size)
             {
-                std::cout << "data is null" <<std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -67,10 +65,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
-            std::cout << "CheckpointPacket" << std::endl;
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive CheckpointPacket...");
             if (size)
             {
-                std::cout << "data is null!" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -81,10 +79,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
             // std::cout << "receive readset message" << std::endl;
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
-            std::cout << "BlockForExecutePacket" << std::endl;
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive BlockForExecutePacket...");
             if (size)
             {
-                std::cout << "data is null!" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -117,10 +115,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
-            std::cout << "BlockForStoragePacket" << std::endl;
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive BlockForStoragePacket...");
             if(size)
             {
-                std::cout << "data is null" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -161,9 +159,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive DistributedTxPacket...");
             if(size)
             {
-                std::cout << "data is null" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -185,10 +184,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
-            // std::cout << "PreCommittedTxPacket" << std::endl;
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive PreCommittedTxPacket...");
             if(size)
             {
-                std::cout << "data is null" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -210,10 +209,10 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
-            // std::cout << "CommittedTxPacket" << std::endl;
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive CommittedTxPacket...");
             if(size)
             {
-                std::cout << "data is null" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
@@ -235,13 +234,40 @@ void ex_SyncMsgEngine::messageHandler(dev::p2p::NetworkException _e, std::shared
         {
             RLP const& rlps = (*packet).rlp();
             bool size = rlps.isNull();
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive CommitStatePacket...");
             if(size)
             {
-                std::cout << "data is null" << std::endl;
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
             }
             else
             {
 
+            }
+        }
+        else if(packet->packetType == ReadWriteSetMsg) // 若是分布式事务
+        {
+            RLP const& rlps = (*packet).rlp();
+            bool size = rlps.isNull();
+            PLUGIN_LOG(INFO) << LOG_DESC("Receive ReadWriteSetMsg...");
+            if(size)
+            {
+                PLUGIN_LOG(INFO) << LOG_DESC("data is null!");
+            }
+            else
+            {
+                try
+                {
+                    PLUGIN_LOG(INFO) << LOG_DESC("开始对收到的 ReadWriteSetMsg 消息进行处理");
+                    std::string str = rlps[0].toString();
+
+                    protos::csTxRWset msg_rs;
+                    msg_rs.ParseFromString(str);
+                    m_pluginManager->processRWSetMsg(msg_rs); // 存交易
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
             }
         }
     }
