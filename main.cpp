@@ -1,5 +1,3 @@
-//#include <grpcpp/grpcpp.h>
-// #include <json/json.h>
 #include <leveldb/db.h>
 #include <libblockchain/BlockChainImp.h>
 #include <libblockverifier/BlockVerifier.h>
@@ -23,12 +21,10 @@
 #include <libstorage/MemoryTableFactory.h>
 #include <libstorage/Storage.h>
 #include <libstoragestate/StorageStateFactory.h>
-
 #include <libplugin/ConsensusPluginManager.h>
 #include <libplugin/SyncThreadMaster.h>
 #include <libplugin/ex_SyncMsgEngine.h>
 #include <libplugin/Common.h>
-
 #include <stdlib.h>
 #include <sys/time.h>
 #include <tbb/concurrent_queue.h>
@@ -148,6 +144,8 @@ void putGroupPubKeyIntoshardNodeId(boost::property_tree::ptree const& _pt)
             }
         }
     }
+    // PLUGIN_LOG(INFO) << LOG_KV("dev::consensus::forwardNodeId", dev::consensus::forwardNodeId);
+    std::cout << "dev::consensus::forwardNodeId = " << dev::consensus::forwardNodeId;
 }
 
 void putGroupPubKeyIntoService(std::shared_ptr<Service> service, boost::property_tree::ptree const& _pt)
@@ -155,6 +153,7 @@ void putGroupPubKeyIntoService(std::shared_ptr<Service> service, boost::property
     std::map<GROUP_ID, h512s> groupID2NodeList;
     h512s nodelist;
     int groupid;
+    size_t index = 0;
     for (auto it : _pt.get_child("group"))
     {
         if (it.first.find("groups.") == 0)
@@ -163,7 +162,6 @@ void putGroupPubKeyIntoService(std::shared_ptr<Service> service, boost::property
             try
             {
                 boost::split(s, it.second.data(), boost::is_any_of(":"), boost::token_compress_on);
-
                 // 对分片中的所有节点id进行遍历，加入到列表中
                 int s_size = s.size();
                 for(int i = 0; i < s_size - 1; i++)
@@ -172,7 +170,20 @@ void putGroupPubKeyIntoService(std::shared_ptr<Service> service, boost::property
                     node = h512(s[i]);
                     nodelist.push_back(node);
                 }
-                groupid = (int)((s[s_size - 1])[0] - '0');
+                //groupid = (int)((s[s_size - 1])[0] - '0');
+                // groupid = (int)((s[s_size - 1]));
+
+                groupid = atoi(s.at(s_size - 1).c_str());
+
+                // index++;
+                // if(index == 4)
+                // {
+                //     groupid = (int)((s[s_size - 1])[0] - '0');
+                //     PLUGIN_LOG(INFO) << LOG_KV("groupID2NodeList[groupid]", groupID2NodeList[groupid]);
+                //     std::cout << "groupID2NodeList[groupid] = " << groupID2NodeList[groupid];
+                //     index = 0;
+                //     nodelist.clear();
+                // }
             }
             catch (std::exception& e)
             {
@@ -181,7 +192,9 @@ void putGroupPubKeyIntoService(std::shared_ptr<Service> service, boost::property
         }
     }
     groupID2NodeList.insert(std::make_pair(groupid, nodelist)); // 都是同一个groupid，所以插入一次就好了
-    std::cout << groupID2NodeList[groupid] << std::endl;
+    std::cout << "groupID2NodeList " << groupid << " " << groupID2NodeList[groupid];
+
+    // std::cout << groupID2NodeList[groupid] << std::endl;
     service->setGroupID2NodeList(groupID2NodeList);
 }
 
@@ -215,28 +228,32 @@ private:
 
 void loadHieraInfo(boost::property_tree::ptree& pt)
 {
-    std::string jsonrpc_listen_ip = pt.get<std::string>("rpc.jsonrpc_listen_ip");
-    std::string jsonrpc_listen_port = pt.get<std::string>("rpc.jsonrpc_listen_port");
+    // std::string jsonrpc_listen_ip = pt.get<std::string>("rpc.jsonrpc_listen_ip");
+    // std::string jsonrpc_listen_port = pt.get<std::string>("rpc.jsonrpc_listen_port");
     std::string nearest_upper_groupId = pt.get<std::string>("layer.nearest_upper_groupId");
     std::string nearest_lower_groupId = pt.get<std::string>("layer.nearest_lower_groupId");
 
-    PLUGIN_LOG(INFO) << LOG_KV("jsonrpc_listen_ip", jsonrpc_listen_ip)<< LOG_KV("jsonrpc_listen_port", jsonrpc_listen_port);
-    if(nearest_upper_groupId != "N/A")
+    // PLUGIN_LOG(INFO) << LOG_KV("jsonrpc_listen_ip", jsonrpc_listen_ip)<< LOG_KV("jsonrpc_listen_port", jsonrpc_listen_port);
+    if(nearest_upper_groupId != "0")
     {
-        PLUGIN_LOG(INFO) << LOG_KV("nearest_upper_groupId", nearest_upper_groupId);
+        // PLUGIN_LOG(INFO) << LOG_KV("nearest_upper_groupId", nearest_upper_groupId);
+        std::cout << "nearest_upper_groupId" << nearest_upper_groupId << std::endl;
     }
     else
     {
-        PLUGIN_LOG(INFO) << LOG_DESC("it's a root group");
+        std::cout << "it's a root group" << std::endl;
+        // PLUGIN_LOG(INFO) << LOG_DESC("it's a root group");
     }
 
-    if(nearest_lower_groupId != "N/A")
+    if(nearest_lower_groupId != "0")
     {
-        PLUGIN_LOG(INFO) << LOG_KV("nearest_lower_groupId", nearest_lower_groupId);
+        //PLUGIN_LOG(INFO) << LOG_KV("nearest_lower_groupId", nearest_lower_groupId);
+        std::cout << "nearest_lower_groupId" << nearest_lower_groupId << std::endl;
     }
     else
     {
-        PLUGIN_LOG(INFO) << LOG_DESC("it's a leaf group");
+        //PLUGIN_LOG(INFO) << LOG_DESC("it's a leaf group");
+        std::cout << "it's a leaf group" << std::endl;
     }
 }
 
@@ -262,7 +279,7 @@ void initGlobalVariables()
 }
 
 int main(){
-    dev::consensus::SHARDNUM = 3; // 初始化分片数目
+    dev::consensus::SHARDNUM = 5; // 初始化分片数目
 
     // 开始增加组间通信同步组
     boost::property_tree::ptree pt;
@@ -273,6 +290,7 @@ int main(){
 
     GroupP2PService groupP2Pservice("./configgroup.ini");
     auto p2pService = groupP2Pservice.p2pInitializer()->p2pService();
+
     putGroupPubKeyIntoService(p2pService, pt);
     putGroupPubKeyIntoshardNodeId(pt); // 读取全网所有节点
     p2pService->start();
