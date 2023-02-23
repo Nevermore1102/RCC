@@ -26,6 +26,7 @@
 #include <libethcore/Common.h>
 #include <tbb/concurrent_unordered_set.h>
 #include <boost/optional.hpp>
+#include <libplugin/Common.h>
 
 
 namespace dev
@@ -148,12 +149,17 @@ public:
     /// @returns the RLP serialisation of this transaction.
     bytes rlp(IncludeSignature _sig = WithSignature) const
     {
+        // PLUGIN_LOG(INFO) << LOG_DESC("311111...");
+
         if (m_rlpBuffer != bytes())
         {
+            // PLUGIN_LOG(INFO) << LOG_DESC("322222...");
             return m_rlpBuffer;
         }
         bytes out;
+        // PLUGIN_LOG(INFO) << LOG_DESC("333333...");
         encode(out, _sig);
+        // PLUGIN_LOG(INFO) << LOG_DESC("344444...");
         return out;
     }
 
@@ -357,6 +363,15 @@ public:
         return m_rlpBuffer;
     }
 
+    h256 get_originalhash()
+    {
+        return original_hash;
+    }
+
+    std::shared_ptr<crypto::Signature> m_vrs; // modifty by thb
+    
+    h256 original_hash; // modifty by thb
+
 protected:
     static bool isZeroSignature(u256 const& _r, u256 const& _s) { return !_r && !_s; }
 
@@ -387,7 +402,7 @@ protected:
                    ///< unused gas gets refunded once the contract is ended.
     bytes m_data;  ///< The data associated with the transaction, or the
                    ///< initialiser if it's a creation transaction.
-    std::shared_ptr<crypto::Signature> m_vrs;  ///< The signature of the transaction.
+    // std::shared_ptr<crypto::Signature> m_vrs;  ///< The signature of the transaction.
                                                ///< Encodes the sender.
     mutable h256 m_hashWith;                   ///< Cached hash of transaction with signature.
     mutable Address m_sender;                  ///< Cached sender, determined from signature.

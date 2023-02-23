@@ -229,3 +229,73 @@ void SyncReadWriteSetMsg::encode(dev::bytes const& _blockRLP)
     prep(m_rlpStream, ReadWriteSetMsg, 1);
     m_rlpStream.append(_blockRLP);
 }
+
+void SyncResponseToForwardMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, ResponseToForwardMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncCommitResponseToCoordinatorMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, CommitResponseToCoordinatorMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncRequestForMasterShardMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, RequestForMasterShardMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncMasterShardPrePrepareMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, MasterShardPrePrepareMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncMasterShardPrepareMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, MasterShardPrepareMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncMasterShardCommitMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, MasterShardCommitMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncIntraShardTxMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, IntraShardTxMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncBatchDistributedTxMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, BatchDistributedTxMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncShuffleStateValueMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, ShuffleStateValueMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}
+
+void SyncShuffleTxRlpsMsg::encode(dev::bytes const& _blockRLP)
+{
+    m_rlpStream.clear();
+    prep(m_rlpStream, ShuffleTxRlpsMsg, 1);
+    m_rlpStream.append(_blockRLP);
+}

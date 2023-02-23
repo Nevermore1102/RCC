@@ -22,16 +22,14 @@
  * @date: 2018-09-28
  */
 #include "ConsensusEngineBase.h"
-#include <libconsensus/pbft/Common.h>
-#include <libplugin/executeVM.h>
-#include <libplugin/Common.h>
-#include <libblockverifier/Common.h>
-
 using namespace dev::eth;
 using namespace dev::db;
 using namespace dev::blockverifier;
 using namespace dev::blockchain;
 using namespace dev::p2p;
+using namespace dev::plugin;
+using namespace std;
+
 namespace dev
 {
 namespace consensus
@@ -74,22 +72,10 @@ dev::blockverifier::ExecutiveContext::Ptr ConsensusEngineBase::executeBlock(Bloc
     BlockInfo parentBlockInfo{parentBlock->header().hash(), parentBlock->header().number(),
         parentBlock->header().stateRoot()};
     /// reset execute context
+    // std::cout << "准备执行区块" << std::endl;
+    // return m_blockVerifier->executeBlock(block, parentBlockInfo, m_group_protocolID, m_group_service);
     return m_blockVerifier->executeBlock(block, parentBlockInfo);
 }
-
-int ConsensusEngineBase::addTransactions(std::shared_ptr<dev::eth::Block> block)
-{
-    // ENGINE_LOG(INFO) << LOG_DESC("开始缓存交易...");
-    int txNum = 0;
-    for (size_t i = 0; i < block->transactions()->size(); i++)
-    {
-        auto& tx = (*block->transactions())[i];
-        dev::consensus::toExecute_transactions.push(tx); // 将共识完出块的交易逐个放入队列
-        txNum++;
-    }
-    ENGINE_LOG(INFO) << LOG_KV("增加的交易数目为", txNum);
-}
-
 
 void ConsensusEngineBase::checkBlockValid(Block const& block)
 {

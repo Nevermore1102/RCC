@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/boost"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/boost.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/boost-complete.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/boost-stamp/boost-build.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/boost-stamp/boost-configure.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/boost-stamp/boost-download.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/boost-stamp/boost-install.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/boost-stamp/boost-mkdir.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/boost-stamp/boost-patch.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/boost-stamp/boost-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"boost"
+		],
+		"name" : "boost"
+	}
+}

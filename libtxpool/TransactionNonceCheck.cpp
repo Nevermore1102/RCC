@@ -39,7 +39,7 @@ void TransactionNonceCheck::init()
 }
 bool TransactionNonceCheck::isBlockLimitOk(Transaction const& _tx)
 {
-    // modifyed by thb 2022.10.31
+    // EDIT BY ZH 22.11.1
     // if (_tx.blockLimit() == Invalid256 || m_blockNumber >= _tx.blockLimit() ||
     //     _tx.blockLimit() > (m_blockNumber + m_maxBlockLimit))
     // {

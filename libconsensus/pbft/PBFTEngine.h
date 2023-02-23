@@ -43,7 +43,7 @@
 #include "PBFTMsgFactory.h"
 #include <libstorage/BasicRocksDB.h>
 #include <libsync/SyncStatus.h>
-#include <libplugin/transform.h>
+// #include <libplugin/transform.h>
 #include <libprotobasic/shard.pb.h>
 #include <libsync/SyncMsgPacket.h>
 
@@ -110,7 +110,6 @@ public:
             std::make_shared<dev::ThreadPool>("PBFTAsync-" + std::to_string(m_groupId), 1);
         m_cachedForwardMsg =
             std::make_shared<std::map<dev::h256, std::pair<int64_t, PBFTMsgPacket::Ptr>>>();
-
     }
 
     PBFTEngine(std::shared_ptr<dev::p2p::P2PInterface> _service,
@@ -151,6 +150,7 @@ public:
             std::make_shared<dev::ThreadPool>("PBFTAsync-" + std::to_string(m_groupId), 1);
         m_cachedForwardMsg =
             std::make_shared<std::map<dev::h256, std::pair<int64_t, PBFTMsgPacket::Ptr>>>();
+
     }
 
 
@@ -193,7 +193,10 @@ public:
             std::make_shared<dev::ThreadPool>("PBFTAsync-" + std::to_string(m_groupId), 1);
         m_cachedForwardMsg =
             std::make_shared<std::map<dev::h256, std::pair<int64_t, PBFTMsgPacket::Ptr>>>();
+
     }
+
+    // void saveInterShardTxInfo(std::string &_crossshardtxid, int _participantNum);
 
     void forwardTx(protos::SubCrossShardTx _subCrossShardTx); // 对共识完的跨片交易进行转发，至相应分片
 
@@ -363,6 +366,7 @@ public:
     }
 
     // size_t messageIDs[SHARDNUM] = {0}; // ADD BY THB
+
 
 protected:
     virtual void registerDisconnectHandler();

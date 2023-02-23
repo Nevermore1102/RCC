@@ -1,0 +1,21 @@
+# Target labels
+ libzdb
+# Source files and their labels
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/libzdb
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/libzdb.rule
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/libzdb-complete.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/libzdb-stamp/libzdb-build.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/libzdb-stamp/libzdb-configure.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/libzdb-stamp/libzdb-download.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/libzdb-stamp/libzdb-install.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/libzdb-stamp/libzdb-mkdir.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/libzdb-stamp/libzdb-patch.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/libzdb-stamp/libzdb-update.rule
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/mysqlclient-complete.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/mysqlclient-stamp/mysqlclient-build.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/mysqlclient-stamp/mysqlclient-configure.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/mysqlclient-stamp/mysqlclient-download.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/mysqlclient-stamp/mysqlclient-install.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/mysqlclient-stamp/mysqlclient-mkdir.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/mysqlclient-stamp/mysqlclient-patch.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/mysqlclient-stamp/mysqlclient-update.rule

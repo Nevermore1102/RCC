@@ -36,6 +36,15 @@ using namespace dev::p2p;
 using namespace dev::storage;
 using namespace rocksdb;
 using namespace dev::plugin;
+using namespace std;
+
+namespace dev
+{
+    namespace plugin
+    {
+        extern std::map<std::string, int> m_interShardTxInfo;
+    }
+}
 
 namespace dev
 {
@@ -1284,12 +1293,6 @@ void PBFTEngine::checkAndSave(bool commitPhase)
                                   << LOG_KV("myNode", m_keyPair.pub().abridged());
             return;
         }
-        
-
-        /// add sign-list into the block header
-
-        PBFTENGINE_LOG(INFO) << LOG_KV("m_reqCache->prepareCache().height", m_reqCache->prepareCache().height);
-        PBFTENGINE_LOG(INFO) << LOG_KV("m_highestBlock.number()", m_highestBlock.number());
 
         if (m_reqCache->prepareCache().height > m_highestBlock.number())
         {
@@ -1300,24 +1303,21 @@ void PBFTEngine::checkAndSave(bool commitPhase)
             auto genSig_time_cost = utcTime() - record_time;
             record_time = utcTime();
             /// callback block chain to commit block
-            PBFTENGINE_LOG(INFO) << LOG_DESC("tanghaibo degug111");
 
             CommitResult ret = m_blockChain->commitBlock(p_block, std::shared_ptr<ExecutiveContext>(m_reqCache->prepareCache().p_execContext));
             auto commitBlock_time_cost = utcTime() - record_time;
             record_time = utcTime();
 
-            PBFTENGINE_LOG(INFO) << LOG_DESC("tanghaibo degug222");
-
             /// drop handled transactions
             if (ret == CommitResult::OK)
             {
-                if(commitPhase)
-                {
-                    sendParticipantsMsg();
-                    auto executedNum = addTransactions(p_block);
-                }
+                // if(commitPhase)
+                // {
+                //     // sendParticipantsMsg(); // 跨片子交易的发送流程也迁移到后面
+                //     auto executedNum = addTransactions(p_block); //为了测试纯PTFT性能
+                // }
 
-                dropHandledTransactions(p_block); // 临时取消
+                dropHandledTransactions(p_block);
 
                 auto dropTxs_time_cost = utcTime() - record_time;
                 record_time = utcTime();
@@ -1882,7 +1882,7 @@ void PBFTEngine::workLoop()
             {
                 waitSignal();
             }
-            checkTimeout();
+            checkTimeout(); //modify by thb
             handleFutureBlock();
             collectGarbage();
         }
@@ -2229,7 +2229,7 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
     }
     // decode the partiallyBlock
     _prepareReq->pBlock->decodeProposal(ref(*_prepareReq->block), true);
-    _prepareReq->pBlock->unExecutedTxNum = _prepareReq->pBlock->getTransactionSize();  // 转发区块前设置 unExecutedTxNum, ADD BY THB
+    // _prepareReq->pBlock->unExecutedTxNum = _prepareReq->pBlock->getTransactionSize();  // 转发区块前设置 unExecutedTxNum, ADD BY THB
     bool allHit = m_txPool->initPartiallyBlock(_prepareReq->pBlock);
     // hit all transactions
     if (allHit)
@@ -2559,8 +2559,6 @@ void PBFTEngine::sendParticipantsMsg()
     std::shared_ptr<Transactions> transactions = tmp_block->transactions();
     size_t txSize = transactions->size();
 
-    // PBFTENGINE_LOG(INFO) << LOG_KV("transactions->size()", transactions->size()); 
-
     for(size_t i = 0; i < txSize; i++)
     {
         bytes m_data = (*transactions)[i]->get_data();
@@ -2576,115 +2574,202 @@ void PBFTEngine::sendParticipantsMsg()
             hex_m_data_str += temp;
         }
 
-        // PBFTENGINE_LOG(INFO) << LOG_KV("hex_m_data_str", hex_m_data_str)
-        //                      << LOG_KV("m_data_size", m_data_size);
-
         int n = hex_m_data_str.find("0x111222333", 0);
         int m = hex_m_data_str.find("0x444555666", 0);
 
         if( n != -1 )
         {
             PBFTENGINE_LOG(INFO) << LOG_DESC("协调者发现原始跨片交易...");
-            std::vector<std::string> dataItems;
-            try
-            {
-                boost::split(dataItems, hex_m_data_str, boost::is_any_of("|"), boost::token_compress_on); // 对分片中的所有节点id进行遍历, 加入到列表中
-                int itemNum = dataItems.size();
-                string crosstxId = dataItems.at(1);
-                int participantNum = (itemNum - 1) / 3;
+            // std::vector<std::string> dataItems;
+            // try
+            // {
+            //     boost::split(dataItems, hex_m_data_str, boost::is_any_of("|"), boost::token_compress_on); // 对分片中的所有节点id进行遍历, 加入到列表中
+            //     int itemNum = dataItems.size();
+            //     string crosstxId = dataItems.at(1);
+            //     int participantNum = (itemNum - 1) / 3;
 
-                string participantGroupId[participantNum];
-                protos::SubCrossShardTx subTxs[participantNum];
+            //     string participantGroupId[participantNum];
 
-                PBFTENGINE_LOG(INFO) << LOG_KV("crosstxId", crosstxId)
-                                     << LOG_KV("participantNum", participantNum);
+            //     PBFTENGINE_LOG(INFO) << LOG_KV("crosstxId", crosstxId)
+            //                          << LOG_KV("participantNum", participantNum)
+            //                          << LOG_KV("hex_m_data_str", hex_m_data_str);
 
-                int participantIndex = 2;
-                for(size_t j = 0; j < participantNum; j++)
-                {
-                    participantGroupId[j] = dataItems[participantIndex];
-                    participantIndex += 3;
-                    PBFTENGINE_LOG(INFO) << LOG_KV("participantGroupId", participantGroupId[j]);
-                }
+            //     int participantIndex = 2;
+            //     for(size_t j = 0; j < participantNum; j++)
+            //     {
+            //         participantGroupId[j] = dataItems[participantIndex];
+            //         participantIndex += 3;
+            //         PBFTENGINE_LOG(INFO) << LOG_KV("participantGroupId", participantGroupId[j]);
+            //     }
 
-                string participants = "";
-                for(size_t i = 0; i < participantNum; i++)
-                {
-                    if(i == 0)
-                    {
-                        participants += participantGroupId[i];
-                    }
-                    else
-                    {
-                        participants = participants + "|" + participantGroupId[i];
-                    }
-                }
+            //     string participants = "";
+            //     for(size_t i = 0; i < participantNum; i++)
+            //     {
+            //         if(i == 0)
+            //         {
+            //             participants += participantGroupId[i];
+            //         }
+            //         else
+            //         {
+            //             participants = participants + "|" + participantGroupId[i];
+            //         }
+            //     }
 
-                participantIndex = 2;
-                for(size_t j = 0; j < participantNum; j++)
-                {
-                    int destinShardId = atoi(dataItems.at(participantIndex).c_str()); // 目标分片ID
-                    string signedTx = dataItems.at(participantIndex + 1); // 发向目标分片的跨片交易子交易
-                    string rwSet = dataItems.at(participantIndex + 2);
+            //     // 检查现在所有的key写权限是否指向同一个分片，如果是则只需要发起片内交易即可
+            //     participantIndex = 2;
+            //     std::vector<int> latestParticipantGroupId;
+            //     for(size_t j = 0; j < participantNum; j++)
+            //     {
+            //         int destinShardId = atoi(dataItems.at(participantIndex).c_str()); // 目标分片ID
+            //         string rwSet = dataItems.at(participantIndex + 2).c_str();
+            //         if(m_masterChangedKey->count(rwSet) != 0)
+            //         {
+            //             destinShardId = m_masterChangedKey->at(rwSet);
+            //         }
+            //         latestParticipantGroupId.push_back(destinShardId);
+            //     }
 
-                    int messageId = messageIds[destinShardId];
-                    messageId = messageId + 1;
-                    messageIds[destinShardId]= messageId;
+            //     // if(latestParticipantGroupId.at(0) == latestParticipantGroupId.at(1)) // 跨片交易已经转成片内交易
+            //     // {
+            //     //     protos::IntraShardTxMsg intraTxs[participantNum];
 
-                    PBFTENGINE_LOG(INFO) << LOG_KV("destinShardId", destinShardId)
-                                         << LOG_KV("signedTx", signedTx)
-                                         << LOG_KV("rwSet", rwSet)
-                                         << LOG_KV("messageId", messageId)
-                                         << LOG_KV("participants", participants);
+            //     //     int destinShardId = latestParticipantGroupId.at(0);
+            //     //     // saveInterShardTxInfo(crosstxId, participantNum); // 所有节点在内存中缓存本分片即将转发出去的跨片交易信息
 
-                    participantIndex += 3;
+            //     //     participantIndex = 2;
+            //     //     for(size_t j = 0; j < participantNum; j++)
+            //     //     {
+            //     //         string signedTx = dataItems.at(participantIndex + 1); // 发向目标分片的跨片交易子交易
+            //     //         string rwSet = dataItems.at(participantIndex + 2).c_str();
 
-                    // 准备给参与者发送的数据
-                    subTxs[i].set_signeddata(signedTx);
-                    subTxs[i].set_messageid(messageId);
-                    subTxs[i].set_sourceshardid(internal_groupId);
-                    subTxs[i].set_destinshardid(destinShardId);
-                    subTxs[i].set_readwriteset(rwSet);
-                    subTxs[i].set_participants(participants);
-                    subTxs[i].set_crossshardtxid(crosstxId);
+            //     //         int messageId = messageIds[destinShardId];
+            //     //         messageId = messageId + 1;
+            //     //         messageIds[destinShardId]= messageId;
 
-                    string serializedsubCrossShardTx;
-                    subTxs[i].SerializeToString(&serializedsubCrossShardTx);
-                    auto txBytes = asBytes(serializedsubCrossShardTx);
+            //     //         PBFTENGINE_LOG(INFO) << LOG_KV("destinShardId", destinShardId)
+            //     //                             << LOG_KV("signedTx", signedTx)
+            //     //                             << LOG_KV("rwSet", rwSet)
+            //     //                             << LOG_KV("messageId", messageId)
+            //     //                             << LOG_KV("participants", participants);
 
-                    dev::sync::SyncDistributedTxPacket retPacket;
-                    retPacket.encode(txBytes);
-                    auto msg = retPacket.toMessage(m_group_protocolID);
-      
-                    PBFTENGINE_LOG(INFO) << LOG_DESC("开始向参与者分片发送跨片交易....")
-                                         << LOG_KV("m_group_protocolID", m_group_protocolID);
+            //     //         participantIndex += 3;
+            //     //         // 准备给参与者发送的数据
+            //     //         intraTxs[j].set_signeddata(signedTx);
+            //     //         intraTxs[j].set_messageid(messageId);
+            //     //         intraTxs[j].set_sourceshardid(dev::consensus::internal_groupId);
+            //     //         intraTxs[j].set_destinshardid(destinShardId);
+            //     //         intraTxs[j].set_readwriteset(rwSet);
+            //     //         intraTxs[j].set_participants(participants);
+            //     //         intraTxs[j].set_crossshardtxid(crosstxId);
 
-                    std::string nodeIdStr = toHex(m_keyPair.pub());
+            //     //         string serializedsubCrossShardTx;
+            //     //         intraTxs[j].SerializeToString(&serializedsubCrossShardTx);
+            //     //         auto txBytes = asBytes(serializedsubCrossShardTx);
 
-                    for(size_t l = 0; l < forwardNodeId.size(); l++)
-                    {
-                        // 判断当前节点是否为转发人
-                        if(nodeIdStr == toHex(forwardNodeId.at(l)))
-                        {
-                            for(size_t k = 0; k < 4; k++)
-                            {
-                                PBFTENGINE_LOG(INFO) << LOG_KV("正在发送给", shardNodeId.at((destinShardId - 1) * 4 + k));
-                                m_group_service->asyncSendMessageByNodeID(shardNodeId.at((destinShardId - 1) * 4 + k), msg, CallbackFuncWithSession(), dev::network::Options());
-                            }
-                        }
-                    }
-                }
-                PBFTENGINE_LOG(INFO) << LOG_DESC("跨片消息消息转发完毕...");
-            }
-            catch (std::exception& e)
-            {
-                exit(1);
-            }
+            //     //         dev::sync::SyncIntraShardTxMsg retPacket;
+            //     //         retPacket.encode(txBytes);
+            //     //         auto msg = retPacket.toMessage(m_group_protocolID);
+        
+            //     //         PBFTENGINE_LOG(INFO) << LOG_DESC("开始向参与者分片发送片内交易....")
+            //     //                              << LOG_KV("m_group_protocolID", m_group_protocolID);
+
+            //     //         std::string nodeIdStr = toHex(m_keyPair.pub());
+
+            //     //         for(size_t l = 0; l < forwardNodeId.size(); l++)
+            //     //         {
+            //     //             // 判断当前节点是否为转发人
+            //     //             if(nodeIdStr == toHex(forwardNodeId.at(l)))
+            //     //             {
+            //     //                 for(size_t k = 0; k < 4; k++)
+            //     //                 {
+            //     //                     PBFTENGINE_LOG(INFO) << LOG_KV("正在向参与者发送跨片子交易", shardNodeId.at((destinShardId - 1) * 4 + k));
+            //     //                     m_group_service->asyncSendMessageByNodeID(shardNodeId.at((destinShardId - 1) * 4 + k), msg, CallbackFuncWithSession(), dev::network::Options());
+            //     //                 }
+            //     //             }
+            //     //         }
+            //     //     }
+            //     // }
+            //     // else
+            //     // {
+            //         protos::SubCrossShardTx subTxs[participantNum];
+
+            //         saveInterShardTxInfo(crosstxId, participantNum); // 所有节点在内存中缓存本分片即将转发出去的跨片交易信息
+
+            //         participantIndex = 2;
+            //         for(size_t j = 0; j < participantNum; j++)
+            //         {
+            //             int destinShardId = atoi(dataItems.at(participantIndex).c_str()); // 目标分片ID
+            //             string signedTx = dataItems.at(participantIndex + 1); // 发向目标分片的跨片交易子交易
+            //             string rwSet = dataItems.at(participantIndex + 2).c_str();
+
+            //             // 协调者检查当前Key所在的分片是否发生转移
+            //             if(m_masterChangedKey->count(rwSet) != 0)
+            //             {
+            //                 destinShardId = m_masterChangedKey->at(rwSet); // destinShardId 定位到当前具有主写权限的分片
+            //             }
+
+            //             int messageId = messageIds[destinShardId];
+            //             messageId = messageId + 1;
+            //             messageIds[destinShardId]= messageId;
+
+            //             PBFTENGINE_LOG(INFO) << LOG_KV("destinShardId", destinShardId)
+            //                                 << LOG_KV("signedTx", signedTx)
+            //                                 << LOG_KV("rwSet", rwSet)
+            //                                 << LOG_KV("messageId", messageId)
+            //                                 << LOG_KV("participants", participants);
+
+            //             participantIndex += 3;
+
+            //             // 准备给参与者发送的数据
+            //             subTxs[j].set_signeddata(signedTx);
+            //             subTxs[j].set_messageid(messageId);
+            //             subTxs[j].set_sourceshardid(dev::consensus::internal_groupId);
+            //             subTxs[j].set_destinshardid(destinShardId);
+            //             subTxs[j].set_readwriteset(rwSet);
+            //             subTxs[j].set_participants(participants);
+            //             subTxs[j].set_crossshardtxid(crosstxId);
+
+            //             string serializedsubCrossShardTx;
+            //             subTxs[j].SerializeToString(&serializedsubCrossShardTx);
+            //             auto txBytes = asBytes(serializedsubCrossShardTx);
+
+            //             dev::sync::SyncDistributedTxPacket retPacket;
+            //             retPacket.encode(txBytes);
+            //             auto msg = retPacket.toMessage(m_group_protocolID);
+        
+            //             PBFTENGINE_LOG(INFO) << LOG_DESC("开始向参与者分片发送跨片交易....")
+            //                                 << LOG_KV("m_group_protocolID", m_group_protocolID);
+
+            //             std::string nodeIdStr = toHex(m_keyPair.pub());
+
+            //             for(size_t l = 0; l < forwardNodeId.size(); l++)
+            //             {
+            //                 // 判断当前节点是否为转发人
+            //                 if(nodeIdStr == toHex(forwardNodeId.at(l)))
+            //                 {
+            //                     for(size_t k = 0; k < 4; k++)
+            //                     {
+            //                         PBFTENGINE_LOG(INFO) << LOG_KV("正在向参与者发送跨片子交易", shardNodeId.at((destinShardId - 1) * 4 + k));
+            //                         m_group_service->asyncSendMessageByNodeID(shardNodeId.at((destinShardId - 1) * 4 + k), msg, CallbackFuncWithSession(), dev::network::Options());
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     // }
+            //     PBFTENGINE_LOG(INFO) << LOG_DESC("跨片消息消息转发完毕...");
+            // }
+            // catch (std::exception& e)
+            // {
+            //     exit(1);
+            // }
         }
     }
 }
 
-
+// void PBFTEngine::saveInterShardTxInfo(std::string &_crossshardtxid, int _participantNum)
+// {
+//     dev::plugin::m_interShardTxInfo.insert(std::make_pair(_crossshardtxid, _participantNum*3)); // 收齐大多数即可
+// }
 
 }  // namespace consensus
 }  // namespace dev

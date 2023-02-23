@@ -76,15 +76,15 @@ struct blockExecuteContent
 };
 
     // 已经提交的来自不同分片的最新跨片交易编号
-    extern std::vector<int>latest_commit_cs_tx; 
+    // extern std::vector<int>latest_commit_cs_tx; 
 
     // 因前序交易未完成而被阻塞的交易 std::map<SHARDID_MESSAGEID, std::make_shared<Transaction>>
-    extern std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
+    // extern std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
 
     // 因前序交易未完成而被阻塞的区块 std::map<SHARDID_MESSAGEID, std::make_shared<Block>>
-    extern std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
+    // extern std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
 
-    extern std::map<int, blockExecuteContent> cached_executeContents; // 缓存的区块执行变量
+    // extern std::map<int, blockExecuteContent> cached_executeContents; // 缓存的区块执行变量
 
 }  // namespace blockverifier
 }  // namespace dev

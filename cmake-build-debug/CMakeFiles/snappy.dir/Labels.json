@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/snappy"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/snappy.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/snappy-complete.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/snappy-stamp/snappy-build.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/snappy-stamp/snappy-configure.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/snappy-stamp/snappy-download.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/snappy-stamp/snappy-install.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/snappy-stamp/snappy-mkdir.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/snappy-stamp/snappy-patch.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/snappy-stamp/snappy-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"snappy"
+		],
+		"name" : "snappy"
+	}
+}

@@ -1,14 +1,29 @@
 #pragma once
 
-#include <libplugin/ex_SyncMsgEngine.h>
-#include <libplugin/transform.h>
+#include <libplugin/PluginMsgBase.h>
 #include <librpc/Rpc.h>
+#include <libprotobasic/shard.pb.h>
 
 using namespace dev::rpc;
 using namespace dev::plugin;
 
+namespace dev
+{
+    namespace eth
+    {
+        class Transaction;
+    }
+}
+
 namespace dev{
     namespace plugin {
+
+        struct cachedDistributedTxPacket
+        {
+            int sendedCrossshardTxId = 0;
+            std::map<int, protos::SubCrossShardTx> cachedDistributedTxPacket;
+        };
+
         /*
         * m_service: 网络传输接口
         * m_protocolId: 同一个group内，m_protocolId相同
@@ -20,27 +35,30 @@ namespace dev{
         */
        class SyncThreadMaster{
            public:
-                SyncThreadMaster(std::shared_ptr<dev::p2p::P2PInterface> _service, PROTOCOL_ID const & _protocolId, dev::network::NodeID const& _nodeId, dev::GROUP_ID const& _interal_groupId, std::shared_ptr<dev::rpc::Rpc> _rpc_service)
-                :m_service(_service), m_protocolId(_protocolId), m_nodeId(_nodeId)
+                SyncThreadMaster(std::shared_ptr<dev::rpc::Rpc> _rpc_service, std::shared_ptr<dev::p2p::P2PInterface> group_p2p_service, std::shared_ptr <dev::p2p::P2PInterface> p2p_service, 
+                    PROTOCOL_ID const & group_protocolID, dev::PROTOCOL_ID protocolID, dev::network::NodeID const& _nodeId, std::shared_ptr<dev::ledger::LedgerManager> ledgerManager, 
+                        std::string& nearest_upper_groupId, std::string& lower_shardids)
+                        :m_service(group_p2p_service), m_protocolId(group_protocolID), m_nodeId(_nodeId)
                 {
-                    m_groupId = dev::eth::getGroupAndProtocol(_protocolId).first;
-                    interal_groupId = _interal_groupId;
-                    std::string threadName = "Sync-" + std::to_string(m_groupId);
-                    counter = 0;
-                    m_msgEngine = std::make_shared<ex_SyncMsgEngine>(_service, _protocolId, _nodeId);
                     m_rpc_service = _rpc_service;
+                    m_transactionExecuter = std::make_shared<dev::plugin::TransactionExecuter>(group_p2p_service, p2p_service, group_protocolID, protocolID, nearest_upper_groupId, lower_shardids);
+                    m_msgEngine = std::make_shared<PluginMsgBase>(group_p2p_service, group_protocolID, _nodeId);
+                    m_ledgerManager = ledgerManager;
+                    m_receivedResponseNum = std::make_shared<std::map<std::string, int>>();
+                    m_receivedCommitResponseNum = std::make_shared<std::map<std::string, int>>();
                 }
 
                 void dowork(dev::sync::SyncPacketType const& packettype, byte const& data);
 
                 void dowork(dev::sync::SyncPacketType const& packettype, byte const& data, dev::network::NodeID const& destnodeId);
 
-                void listenWorker();
-
                 void receiveWorker();
 
-                // ADD BY THB, 启动队列监听线程
-                bool startThread();
+                void receiveRemoteReadWriteSet();
+
+                void receiveRemoteBatchIntershardTxs();
+
+                bool startP2PThread();
 
                 void sendMessage(bytes const& _blockRLP, dev::sync::SyncPacketType const& packetreadytype);
 
@@ -52,36 +70,44 @@ namespace dev{
 
                 void setAttribute(std::shared_ptr <dev::blockchain::BlockChainInterface> m_blockchainManager);
 
-                void setAttribute(std::shared_ptr <ConsensusPluginManager> _plugin);
+                void setAttribute(std::shared_ptr <PluginMsgManager> _plugin);
 
                 std::map <u256, std::string> contractMap;
-                // std::map<std::string, std::string> read_write_sets;
 
-                void cacheCrossShardTx(std::string _rlpstr, protos::SubCrossShardTx _subcrossshardtx);
+                void submitTransactionToTxPool(Transaction::Ptr tx);
+
+                std::shared_ptr<dev::plugin::TransactionExecuter> getdeterministExecute();
+
+                void startExecuteThreads();
+
+                std::shared_ptr<dev::ledger::LedgerManager> m_ledgerManager;
 
             private:
+                shared_ptr<queue<string>> m_remoteAccessedKeys; // 最近100个访问的其他分片的状态key
                 std::string m_name;
                 std::unique_ptr <std::thread> m_work;
                 std::shared_ptr <dev::p2p::P2PInterface> m_service;
-                std::shared_ptr <ex_SyncMsgEngine> m_msgEngine;
+                std::shared_ptr <PluginMsgBase> m_msgEngine;
                 dev::PROTOCOL_ID m_protocolId;
-                dev::GROUP_ID m_groupId;
+                // dev::GROUP_ID m_groupId;
                 dev::GROUP_ID interal_groupId;
                 dev::h512 m_nodeId;
                 int counter = 0;
-                std::mutex x_map_Mutex;
 
-                /// listen block thread
                 pthread_t listenthread;
-                /// process receive workers
                 pthread_t receivethread;
-                /// get block info
-                std::shared_ptr <dev::blockchain::BlockChainInterface> m_blockchainManager;
-                std::shared_ptr <ConsensusPluginManager> m_pluginManager;
-                std::shared_ptr<dev::rpc::Rpc> m_rpc_service;
 
+                std::shared_ptr <dev::blockchain::BlockChainInterface> m_blockchainManager;
+                std::shared_ptr <PluginMsgManager> m_pluginManager;
+                std::shared_ptr<dev::rpc::Rpc> m_rpc_service;
+                std::shared_ptr<dev::plugin::TransactionExecuter> m_transactionExecuter;
+                set<string> m_sendedStateChangeCommit;
+                
                 // ADD BY THB cacheCrossShardTxMap
-                std::map<std::string, protos::SubCrossShardTx> m_cacheCrossShardTxMap;
+                std::shared_ptr<std::map<std::string, int>> m_receivedResponseNum;
+                std::shared_ptr<std::map<std::string, int>> m_receivedCommitResponseNum; 
+                cachedDistributedTxPacket _cachedDistributedTxPacket;   
+                std::mutex x_map_Mutex;
        };
     }
 }

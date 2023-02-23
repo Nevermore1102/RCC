@@ -21,9 +21,9 @@
 #include <libstorage/MemoryTableFactory.h>
 #include <libstorage/Storage.h>
 #include <libstoragestate/StorageStateFactory.h>
-#include <libplugin/ConsensusPluginManager.h>
+#include <libplugin/PluginMsgManager.h>
 #include <libplugin/SyncThreadMaster.h>
-#include <libplugin/ex_SyncMsgEngine.h>
+#include <libplugin/PluginMsgBase.h>
 #include <libplugin/Common.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -36,7 +36,7 @@
 #include <string>
 #include <unistd.h>
 #include <thread>
-#include <libplugin/benchmark.h>
+// #include <libplugin/Benchmark.h>
 #include <libethcore/Block.h>
 #include <libconsensus/pbft/Common.h>
 
@@ -57,57 +57,34 @@ using namespace dev::plugin;
 
 namespace dev {
     namespace plugin {
-        std::map<std::string, std::string> txRWSet;
-        std::map<int, std::vector<std::string>> processingTxD;
-        std::map<std::string, int> subTxRlp2ID;
-        tbb::concurrent_queue<std::vector<std::string>> receCommTxRlps;
-        std::map<std::string, std::vector<std::string>> conAddress2txrlps;
-        std::vector<std::string> disTxDepositAddrs;
-        std::map<std::string, int> subTxNum;
-        std::map<std::string, std::vector<std::string>> resendTxs;
-        std::vector<std::string> committedDisTxRlp;
-        std::vector<std::string> preCommittedDisTxRlp;
-        std::map<std::string, std::string>txRlp2ConAddress;
-        std::vector<std::string> coordinatorRlp;
-        std::shared_ptr<ExecuteVMTestFixture> executiveContext;
+        shared_ptr<ExecuteVM> executiveContext;
+        string nodeIdHex;
+        shared_ptr<map<string, bool>> m_validStateKey = make_shared<map<string, bool>>();
+        shared_ptr<map<string, bool>> m_masterStateKey = make_shared<map<string, bool>>();
+        shared_ptr<map<string, int>> m_masterRequestVotes = make_shared<map<string, int>>();
+        shared_ptr<map<string, int>> m_masterChangedKey = make_shared<map<string, int>>();
+        shared_ptr<map<h256, string>> intrashardtxhash2rwkeys = make_shared<map<h256, string>>(); // txhash - > readwriteset
+        shared_ptr<set<string>> m_lockedStateKey = make_shared<set<string>>();
+        Address depositAddress;
     }
 }
 
-namespace dev{
-    namespace consensus{
+namespace dev {
+    namespace consensus {
         int internal_groupId; // 当前分片所在的groupID
-        int SHARDNUM; // 分片总数
-        int NODENUM; // 所有节点数目
-        std::vector<dev::h512>forwardNodeId;
-        std::vector<dev::h512>shardNodeId;
-        std::map<int, int> messageIds;
-        std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
-        std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks;
-        std::map<int, int> deploycontractBlock;
-        tbb::concurrent_queue<dev::eth::Transaction::Ptr> toExecute_transactions; // 缓存共识完的交易，按顺序存放在队列中，等待执行
+        int hiera_shard_number; // 分片总数
+        vector<h512>forwardNodeId;
+        vector<h512>shardNodeId;
     }
 }
 
-namespace dev{
+namespace dev {
     namespace blockverifier{
-        std::vector<int>latest_commit_cs_tx;
-        std::map<std::string, std::shared_ptr<dev::eth::Transaction>> blocked_txs;
-        std::map<std::string, std::shared_ptr<dev::eth::Block>> blocked_blocks;
-        // blocked_tx_pool _blocked_tx_pool;
-        std::map<int, blockExecuteContent> cached_executeContents; // 缓存的区块执行变量
     }
 }
 
 namespace dev{
     namespace rpc{
-        std::vector<dev::h256> subcrosstxhash; // 记录所有待处理的跨片子交易hash
-        std::map<dev::h256, int> txhash2sourceshardid; // txhash - > sourceshardid
-        std::map<dev::h256, int> txhash2messageid; // txhash - > messageid
-        std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
-        std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
-        std::map<dev::h256, transaction_info> corsstxhash2transaction_info; // txhash - > readwriteset
-        std::map<int, int> sended_tx_messageid;
-        std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions;
     }
 }
 
@@ -141,11 +118,11 @@ void putGroupPubKeyIntoshardNodeId(boost::property_tree::ptree const& _pt)
             catch (std::exception& e)
             {
                 exit(1);
+                
             }
         }
     }
     // PLUGIN_LOG(INFO) << LOG_KV("dev::consensus::forwardNodeId", dev::consensus::forwardNodeId);
-    std::cout << "dev::consensus::forwardNodeId = " << dev::consensus::forwardNodeId;
 }
 
 void putGroupPubKeyIntoService(std::shared_ptr<Service> service, boost::property_tree::ptree const& _pt)
@@ -226,67 +203,85 @@ private:
     SecureInitializer::Ptr m_secureInitializer;
 };
 
-void loadHieraInfo(boost::property_tree::ptree& pt)
+void loadHieraInfo(boost::property_tree::ptree& pt, std::string& nearest_upper_groupId, std::string& lower_groupIds)
 {
-    // std::string jsonrpc_listen_ip = pt.get<std::string>("rpc.jsonrpc_listen_ip");
-    // std::string jsonrpc_listen_port = pt.get<std::string>("rpc.jsonrpc_listen_port");
-    std::string nearest_upper_groupId = pt.get<std::string>("layer.nearest_upper_groupId");
-    std::string nearest_lower_groupId = pt.get<std::string>("layer.nearest_lower_groupId");
+                                    //     
+                                    //                              分片9
+                                    //            
 
-    // PLUGIN_LOG(INFO) << LOG_KV("jsonrpc_listen_ip", jsonrpc_listen_ip)<< LOG_KV("jsonrpc_listen_port", jsonrpc_listen_port);
-    if(nearest_upper_groupId != "0")
-    {
-        // PLUGIN_LOG(INFO) << LOG_KV("nearest_upper_groupId", nearest_upper_groupId);
-        std::cout << "nearest_upper_groupId" << nearest_upper_groupId << std::endl;
-    }
-    else
-    {
-        std::cout << "it's a root group" << std::endl;
-        // PLUGIN_LOG(INFO) << LOG_DESC("it's a root group");
+                                    //                 分片4                        分片8
+                                    //       
+
+                                    //         分片1    分片2   分片3          分片5   分片6   分片7
+                                    //       
+                                    //     
+
+    /*
+    // 九分片架构
+    if(shardid == 1) {
+        nearest_upper_groupId = "4";
+        nearest_lower_groupId = "N/A";
     }
 
-    if(nearest_lower_groupId != "0")
-    {
-        //PLUGIN_LOG(INFO) << LOG_KV("nearest_lower_groupId", nearest_lower_groupId);
-        std::cout << "nearest_lower_groupId" << nearest_lower_groupId << std::endl;
+    if(shardid == 2) {
+        nearest_upper_groupId = "4";
+        nearest_lower_groupId = "N/A";
     }
-    else
-    {
-        //PLUGIN_LOG(INFO) << LOG_DESC("it's a leaf group");
-        std::cout << "it's a leaf group" << std::endl;
+
+    if(shardid == 3) {
+        nearest_upper_groupId = "4";
+        nearest_lower_groupId = "N/A";
     }
+
+    if(shardid == 4) {
+        nearest_upper_groupId = "9";
+        nearest_lower_groupId = "1,2,3";
+    }
+
+    if(shardid == 5) {
+        nearest_upper_groupId = "8";
+        nearest_lower_groupId = "N/A";
+    }
+
+    if(shardid == 6) {
+        nearest_upper_groupId = "8";
+        nearest_lower_groupId = "N/A";
+    }
+
+    if(shardid == 7) {
+        nearest_upper_groupId = "8";
+        nearest_lower_groupId = "N/A";
+    }
+
+    if(shardid == 8) {
+        nearest_upper_groupId = "9";
+        nearest_lower_groupId = "5,6,7";
+    }
+
+    if(shardid == 9) {
+        nearest_upper_groupId = "N/A";
+        nearest_lower_groupId = "1,2,3,4,5,6,7,8";
+    }
+    */
+
+    nearest_upper_groupId = pt.get<std::string>("layer.nearest_upper_groupId"); // 
+    lower_groupIds = pt.get<std::string>("layer.lower_groupIds");
 }
 
-void initGlobalVariables()
-{
-    // 对dev::consensus::messageIDs进行初始化
-    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
-    {
-        dev::consensus::messageIds.insert(std::make_pair(i, 0));
-    }
+int main() {
 
-    // 对dev::consensus::latest_commit_cs_tx进行初始化
-    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
-    {
-        dev::blockverifier::latest_commit_cs_tx.push_back(0);
-    }
-
-    // 对dev::rpc::sended_tx_messageid 进行初始化
-    for(int i = 0; i < dev::consensus::SHARDNUM; i++)
-    {
-        dev::rpc::sended_tx_messageid.insert(std::make_pair(i, 0));
-    }
-}
-
-int main(){
-    dev::consensus::SHARDNUM = 5; // 初始化分片数目
+    dev::consensus::hiera_shard_number = 9; // 初始化分片数目
 
     // 开始增加组间通信同步组
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini("./configgroup.ini", pt);
 
-    loadHieraInfo(pt);
-    initGlobalVariables();
+    std::string nearest_upper_groupId = "";
+    std::string lower_groupIds = "";
+    loadHieraInfo(pt, nearest_upper_groupId, lower_groupIds);
+
+    // cout << "nearest_upper_groupId = " << nearest_upper_groupId << std::endl;
+    // cout << "lower_groupIds = " << lower_groupIds << std::endl;
 
     GroupP2PService groupP2Pservice("./configgroup.ini");
     auto p2pService = groupP2Pservice.p2pInitializer()->p2pService();
@@ -298,62 +293,43 @@ int main(){
     GROUP_ID groupId = std::stoi(pt.get<std::string>("group.global_group_id")); // 全局通信使用的groupid
     auto nodeIdstr = asString(contents("conf/node.nodeid"));
     NodeID nodeId = NodeID(nodeIdstr.substr(0, 128));
-    std::string nodeIdHex = toHex(nodeId);
-    PROTOCOL_ID syncId = getGroupProtoclID(groupId, ProtocolID::InterGroup);
+    dev::plugin::nodeIdHex = toHex(nodeId);
+
+    PROTOCOL_ID group_protocol_id = getGroupProtoclID(groupId, ProtocolID::InterGroup);
 
     std::shared_ptr<dev::initializer::Initializer> initialize = std::make_shared<dev::initializer::Initializer>();
     // initialize->init_with_groupP2PService("./config.ini", p2pService);  // 启动3个群组
 
-    initialize->init_with_groupP2PService("./config.ini", p2pService, syncId);  // 启动3个群组
+    std::shared_ptr<Service> intra_p2pService; // 片内P2P通信指针
+    
+    initialize->init_with_groupP2PService("./config.ini", p2pService, intra_p2pService, group_protocol_id);  // 启动3个群组
     // initialize->init("./config.ini");  // 启动3个群组
 
     dev::consensus::internal_groupId = std::stoi(pt.get<std::string>("group.internal_group_id")); // 片内使通信使用的groupID
+    PROTOCOL_ID protocol_id = getGroupProtoclID(dev::consensus::internal_groupId, ProtocolID::PBFT);
+
     auto secureInitializer = initialize->secureInitializer();
     auto ledgerManager = initialize->ledgerInitializer()->ledgerManager();
     auto consensusP2Pservice = initialize->p2pInitializer()->p2pService();
     auto rpcService = std::make_shared<dev::rpc::Rpc>(initialize->ledgerInitializer(), consensusP2Pservice);
     auto blockchainManager = ledgerManager->blockChain(dev::consensus::internal_groupId);
 
-    shared_ptr<dev::plugin::SyncThreadMaster> syncs = std::make_shared<dev::plugin::SyncThreadMaster>(p2pService, syncId, nodeId, dev::consensus::internal_groupId, rpcService);
-    std::shared_ptr<ConsensusPluginManager> consensusPluginManager = std::make_shared<ConsensusPluginManager>(rpcService, p2pService, syncId);
-    // consensusPluginManager->m_deterministExecute->start(); // 启动交易处理线程
-    std::thread executetxsThread(&dev::plugin::deterministExecute::deterministExecuteTx, consensusPluginManager->m_deterministExecute);
-    executetxsThread.detach();
-
+    shared_ptr<dev::plugin::SyncThreadMaster> syncs = 
+                std::make_shared<dev::plugin::SyncThreadMaster>(rpcService, p2pService, intra_p2pService, group_protocol_id, protocol_id, nodeId, ledgerManager, nearest_upper_groupId, lower_groupIds);
+    std::shared_ptr<PluginMsgManager> pluginManager = 
+                std::make_shared<PluginMsgManager>(rpcService, p2pService, intra_p2pService, group_protocol_id, protocol_id);
     syncs->setAttribute(blockchainManager);
-    syncs->setAttribute(consensusPluginManager);
+    syncs->setAttribute(pluginManager);
+    
+    syncs->startP2PThread(); // 启动跨片P2P通信线程
+    syncs->startExecuteThreads(); // 启动执行线程
 
-    // // 测试发送交易（分片1的node1向本分片1发送一笔片内交易
-    if(dev::consensus::internal_groupId == 1 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(0)))
-    {
-        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-        transactionInjectionTest _injectionTest(rpcService, dev::consensus::internal_groupId);
-        _injectionTest.deployContractTransaction("./deploy1.json", dev::consensus::internal_groupId); // 向分片1部署跨片存证合约以及片内交易合约
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep 1s
-        _injectionTest.injectionTransactions("./data.json", dev::consensus::internal_groupId);
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50000)); // 暂停10秒，等所有服务启动完毕
 
-    if(dev::consensus::internal_groupId == 2 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(1)))
-    {
-        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-        transactionInjectionTest _injectionTest(rpcService, dev::consensus::internal_groupId);
-        _injectionTest.deployContractTransaction("./deploy2.json", dev::consensus::internal_groupId); // 向分片2部署跨片存证合约以及片内交易合约
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        // _injectionTest.injectionTransactions("./data.json", dev::consensus::internal_groupId);
-    }
+    // PLUGIN_LOG(INFO) << LOG_DESC("开始注入交易...");
+    // injectTransactions(rpcService, ledgerManager);
 
-    if(dev::consensus::internal_groupId == 3 && nodeIdHex == toHex(dev::consensus::forwardNodeId.at(2)))
-    {
-        PLUGIN_LOG(INFO) << LOG_DESC("准备发送交易...")<< LOG_KV("nodeIdHex", nodeIdHex);
-        transactionInjectionTest _injectionTest(rpcService, dev::consensus::internal_groupId);
-        _injectionTest.deployContractTransaction("./deploy3.json", dev::consensus::internal_groupId); // 向分片3部署跨片存证合约以及片内交易合约
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        // _injectionTest.injectionTransactions("./data.json", dev::consensus::internal_groupId);
-    }
-
-    while (true)
-    {
-        //std::this_thread::yield();
+    while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return 0;

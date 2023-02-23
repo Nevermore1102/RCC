@@ -44,8 +44,8 @@ public:
     using Ptr = std::shared_ptr<Block>;
 
     //ADD BY THB 
-    size_t unExecutedTxNum; // 区块中还未处理的交易数目 
-    bool isFirstExecute = true; // 标记区块是否第一次执，默认为true
+    // size_t unExecutedTxNum; // 区块中还未处理的交易数目 
+    // bool isFirstExecute = true; // 标记区块是否第一次执，默认为true
     std::shared_ptr<std::map<std::string, int>> m_blockLockedRwKey; // 被区块第一次执行时锁住的读写集信息，当区块最终提交时将里面所有读写集释放    
 
     ///-----constructors of Block

@@ -104,7 +104,7 @@ void MPTState::createContract(Address const& _address)
 
 void MPTState::setCode(Address const& _address, bytes&& _code)
 {
-    // MPTSTATE_LOG(INFO) << LOG_KV("_address", _address) << LOG_KV("_code", toHex(_code));
+    // MPTSTATE_LOG(INFO) << LOG_KV("setCode address", _address) << LOG_KV("_code", toHex(_code));
     m_state.setCode(_address, std::move(_code));
 }
 

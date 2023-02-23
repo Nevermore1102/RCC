@@ -52,14 +52,14 @@ evmc_bytes32 getStorage(
     auto& env = static_cast<EVMHostContext&>(*_context);
 
     // programming assert for debug
-    assert(fromEvmC(*_addr) == env.myAddress());
-    auto addr = fromEvmC(*_addr);
+    // assert(fromEvmC(*_addr) == env.myAddress()); modify by thb
+    // auto addr = fromEvmC(*_addr);
     u256 key = fromEvmC(*_key);
 
-    EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage") 
-                        << LOG_KV("addr", addr)
-                        << LOG_KV("key", key)
-                        << LOG_KV("value", env.store(key));
+    // EXECUTIVE_LOG(INFO) << LOG_DESC("getStorage") 
+    //                     << LOG_KV("addr", addr)
+    //                     << LOG_KV("key", key)
+    //                     << LOG_KV("value", env.store(key));
 
     return toEvmC(env.store(key));
 }
@@ -72,8 +72,8 @@ evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* 
     {
         BOOST_THROW_EXCEPTION(eth::PermissionDenied());
     }
-    assert(fromEvmC(*_addr) == env.myAddress());
-    auto addr = fromEvmC(*_addr);
+    // assert(fromEvmC(*_addr) == env.myAddress());
+    // auto addr = fromEvmC(*_addr);
     u256 index = fromEvmC(*_key);
     u256 value = fromEvmC(*_value);
 
@@ -92,10 +92,10 @@ evmc_storage_status setStorage(evmc_host_context* _context, const evmc_address* 
     }
     env.setStore(index, value);  // Interface uses native endianness
 
-    EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage") 
-                        << LOG_KV("addr", addr)
-                        << LOG_KV("index", index)
-                        << LOG_KV("value", value);
+    // EXECUTIVE_LOG(INFO) << LOG_DESC("setStorage") 
+    //                     << LOG_KV("addr", addr)
+    //                     << LOG_KV("index", index)
+    //                     << LOG_KV("value", value);
 
     return status;
 }

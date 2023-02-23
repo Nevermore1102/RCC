@@ -1378,12 +1378,9 @@ void BlockChainImp::writeTotalTransactionCount(
             tb->insert(SYS_KEY_TOTAL_TRANSACTION_COUNT, entry);
         }
 
-        BLOCKCHAIN_LOG(INFO) << LOG_KV("block.unExecutedTxNum111", block.unExecutedTxNum);
-        BLOCKCHAIN_LOG(INFO) << LOG_KV("block.getTransactionSize()111", block.getTransactionSize());
-
-        // 如果区块中有交易执行过，再启动写回执操作(最多只提交两次) EDIT BY THB
-        if(block.unExecutedTxNum < block.getTransactionSize())
-        {
+        // // 如果区块中有交易执行过，再启动写回执操作(最多只提交两次) EDIT BY THB
+        // if(block.unExecutedTxNum < block.getTransactionSize())
+        // {
             auto receipts = block.transactionReceipts();
             int32_t failedTransactions = 0;
             for (auto& receipt : *receipts)
@@ -1410,7 +1407,7 @@ void BlockChainImp::writeTotalTransactionCount(
                 entry->setField(SYS_VALUE, lexical_cast<std::string>(failedTransactions));
                 tb->insert(SYS_KEY_TOTAL_FAILED_TRANSACTION, entry);
             }
-        }
+        // }
     }
     else
     {

@@ -34,8 +34,8 @@ bool CommonTransactionNonceCheck::isNonceOk(dev::eth::Transaction const& _trans,
         if (m_cache.count(key))
         {
             // duplicated transaction sync may cause duplicated nonce
-            LOG(TRACE) << LOG_DESC("CommonTransactionNonceCheck: isNonceOk: duplicated nonce")
-                       << LOG_KV("nonce", key) << LOG_KV("transHash", _trans.hash().abridged());
+            LOG(DEBUG) << LOG_DESC("CommonTransactionNonceCheck: isNonceOk: duplicated nonce")
+                      << LOG_KV("nonce", key) << LOG_KV("transHash", _trans.hash().abridged());
 
             return false;
         }

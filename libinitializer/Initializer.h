@@ -48,7 +48,7 @@ public:
     virtual ~Initializer();
     void init(std::string const& _path);
     void init_with_groupP2PService(std::string const& _path, std::shared_ptr<Service> _p2pService);
-    void init_with_groupP2PService(std::string const& _path, std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID);
+    void init_with_groupP2PService(std::string const& _path, std::shared_ptr<Service> _p2pService, std::shared_ptr<Service> intra_p2pService, PROTOCOL_ID _group_protocolID);
     
     std::shared_ptr<SecureInitializer> secureInitializer() { return m_secureInitializer; }
     std::shared_ptr<P2PInitializer> p2pInitializer() { return m_p2pInitializer; }

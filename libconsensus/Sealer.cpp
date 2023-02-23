@@ -68,16 +68,20 @@ bool Sealer::shouldSeal()
 
 void Sealer::reportNewBlock()
 {
+    //声明一个flag
     bool t = true;
     if (m_syncBlock.compare_exchange_strong(t, false))
     {
+        //获block number
         shared_ptr<dev::eth::Block> p_block =
             m_blockChain->getBlockByNumber(m_blockChain->number());
+        //如果是空块,打印log日志
         if (!p_block)
         {
             LOG(ERROR) << "[reportNewBlock] empty block";
             return;
         }
+        //不是空块就报告(???)
         m_consensusEngine->reportBlock(*p_block);
         WriteGuard l(x_sealing);
         {
@@ -91,7 +95,7 @@ void Sealer::reportNewBlock()
         }
     }
 }
-
+// 是否需要等待?
 bool Sealer::shouldWait(bool const& wait) const
 {
     return !m_syncBlock && wait;
@@ -102,7 +106,8 @@ void Sealer::doWork(bool wait)
     reportNewBlock();
     if (shouldSeal() && m_startConsensus.load())
     {
-        // SEAL_LOG(INFO) << LOG_DESC("111111111111111111111111111"); 
+        // SEAL_LOG(INFO) << LOG_DESC("111111111111111111111111111");
+        //x_sealing是unique_lock,简化了 Mutex 对象的上锁和解锁操作，方便线程对互斥量上锁
         WriteGuard l(x_sealing);
         {
             /// get current transaction num
@@ -120,7 +125,11 @@ void Sealer::doWork(bool wait)
             auto maxTxsPerBlock = maxBlockCanSeal();
             /// load transaction from transaction queue
             if (maxTxsPerBlock > tx_num && m_syncTxPool == true && !reachBlockIntervalTime())
+            {
+                // SEAL_LOG(INFO) << LOG_DESC("交易数不够,loading...");
                 loadTransactions(maxTxsPerBlock - tx_num);
+            }
+                
             /// check enough or reach block interval
             if (!checkTxsEnough(maxTxsPerBlock))
             {
@@ -131,8 +140,12 @@ void Sealer::doWork(bool wait)
             }
             if (shouldHandleBlock())
             {
-                
+                // transactionNum += m_sealing.block->getTransactionSize();
+                // SEAL_LOG(INFO) << LOG_KV("Seal_transactionNum", transactionNum); 
+
+                m_txPool->dropBlockTrans(m_sealing.block);
                 handleBlock();
+
             }
         }
     }

@@ -132,6 +132,7 @@ public:
     Json::Value getTotalTransactionCount(int _groupID) override;
     Json::Value call(int _groupID, const Json::Value& request) override;
     std::string sendRawTransaction(int _groupID, const std::string& _rlp) override;
+    std::string sendRawTransaction(int _groupID, const std::string& _rlp, int cross_tx);
     std::string sendRawTransactionAndGetProof(int _groupID, const std::string& _rlp) override;
     // std::string sendSubCsRawTransaction(int _groupID, const std::string& _rlp, int _iscrosstx); // ADD BY THB, 节点重载一个rpc接口用于接收跨片子交易
     // std::string sendSubCsRawTransaction(int _groupID, const std::string& _rlp, int _iscrosstx, int sourceshardid, int messageid, std::string& readwriteset);
@@ -179,6 +180,13 @@ protected:
     std::shared_ptr<dev::p2p::P2PInterface> service();
 
     std::string sendRawTransaction(int _groupID, const std::string& _rlp,
+        std::function<std::shared_ptr<Json::Value>(
+            std::weak_ptr<dev::blockchain::BlockChainInterface> _blockChain,
+            LocalisedTransactionReceipt::Ptr receipt, dev::bytesConstRef input,
+            dev::eth::Block::Ptr _blockPtr)>
+            _notifyCallback);
+
+    std::string sendRawTransaction(int _groupID, const std::string& _rlp, int cross_tx,
         std::function<std::shared_ptr<Json::Value>(
             std::weak_ptr<dev::blockchain::BlockChainInterface> _blockChain,
             LocalisedTransactionReceipt::Ptr receipt, dev::bytesConstRef input,

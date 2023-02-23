@@ -302,14 +302,30 @@ bool Transaction::checkChainId(u256 _chainId)
     }
 }
 
-bool Transaction::checkGroupId(u256 _groupId)
+bool Transaction::checkGroupId(u256 _groupId) // modify by thb
 {
-    if (g_BCOSConfig.version() >= RC2_VERSION)
+    // if (g_BCOSConfig.version() >= RC2_VERSION)
+    // {
+    //     return (_groupId == m_groupId);
+    // }
+    // else
+    // {
+    //     return true;
+    // }
+
+    if(_groupId == m_groupId) // 若当前分片ID与部署的合约ID相同，则当前分片为合约状态的主，其余为副本
     {
-        return (_groupId == m_groupId);
+        
+
+
+
+
+
+
     }
-    else
-    {
-        return true;
-    }
+
+
+
+
+    return true;
 }

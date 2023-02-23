@@ -34,15 +34,6 @@ namespace dev
 {
 namespace rpc
 {
-    
-extern std::vector<dev::h256> subcrosstxhash; // 记录所有待处理的跨片子交易hash
-extern std::map<dev::h256, int> txhash2sourceshardid; // txhash - > sourceshardid
-extern std::map<dev::h256, int> txhash2messageid; // txhash - > messageid
-extern std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
-extern std::map<dev::h256, std::string> innertxhash2readwriteset; // txhash - > readwriteset
-extern std::map<int, int> sended_tx_messageid; // source_shard_id - > message_id
-extern std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions; // sourceshard_id_message_id --> sharded_ptr<Transaction>
-
 
 struct transaction_info
 {
@@ -57,7 +48,18 @@ struct transaction_info
     std::string participants;
 };
 
-extern std::map<dev::h256, transaction_info> corsstxhash2transaction_info;
+// extern std::vector<dev::h256> subcrosstxhash; // 记录所有待处理的跨片子交易hash
+// extern std::map<dev::h256, int> txhash2sourceshardid; // txhash - > sourceshardid
+// extern std::map<dev::h256, int> txhash2messageid; // txhash - > messageid
+// extern std::map<dev::h256, std::string> txhash2readwriteset; // txhash - > readwriteset
+// extern std::map<int, int> sended_tx_messageid; // source_shard_id - > message_id
+// extern std::map<std::string, std::shared_ptr<dev::eth::Transaction>> cachedTransactions; // sourceshard_id_message_id --> sharded_ptr<Transaction>
+// extern std::map<dev::h256, transaction_info> corsstxhash2transaction_info;
+
+// extern std::set<dev::h256> requestForMasterShardTxHash;
+// extern std::set<dev::h256> masterShardPrePrepareTxHash;
+// extern std::set<dev::h256> masterShardPrepareTxHash;
+// extern std::set<dev::h256> masterShardCommitTxHash;
 
 ///< RPCExceptionCode
 enum RPCExceptionType : int

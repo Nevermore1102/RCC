@@ -200,5 +200,76 @@ public:
     void encode(dev::bytes const& _blockRLP);
 };
 
+class SyncResponseToForwardMsg : public SyncMsgPacket
+{
+public:
+    SyncResponseToForwardMsg() { packetType = ResponseToForwardMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncCommitResponseToCoordinatorMsg : public SyncMsgPacket
+{
+public:
+    SyncCommitResponseToCoordinatorMsg() { packetType = CommitResponseToCoordinatorMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncRequestForMasterShardMsg : public SyncMsgPacket
+{
+public:
+    SyncRequestForMasterShardMsg() { packetType = RequestForMasterShardMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncMasterShardPrePrepareMsg : public SyncMsgPacket
+{
+    public:
+    SyncMasterShardPrePrepareMsg() { packetType = MasterShardPrePrepareMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncMasterShardPrepareMsg : public SyncMsgPacket
+{
+    public:
+    SyncMasterShardPrepareMsg() { packetType = MasterShardPrepareMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncMasterShardCommitMsg : public SyncMsgPacket
+{
+    public:
+    SyncMasterShardCommitMsg() { packetType = MasterShardCommitMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncIntraShardTxMsg : public SyncMsgPacket
+{
+public:
+    SyncIntraShardTxMsg() { packetType = IntraShardTxMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncBatchDistributedTxMsg : public SyncMsgPacket
+{
+public:
+    SyncBatchDistributedTxMsg() { packetType = BatchDistributedTxMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncShuffleStateValueMsg : public SyncMsgPacket
+{
+public:
+    SyncShuffleStateValueMsg() { packetType = ShuffleStateValueMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+class SyncShuffleTxRlpsMsg : public SyncMsgPacket
+{
+public:
+    SyncShuffleTxRlpsMsg() { packetType = ShuffleTxRlpsMsg; }
+    void encode(dev::bytes const& _blockRLP);
+};
+
+
 }  // namespace sync
 }  // namespace dev

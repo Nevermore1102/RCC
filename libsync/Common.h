@@ -91,6 +91,17 @@ enum SyncPacketType : byte
     PreCommittedTxPacket=0x14,
     CommittedTxPacket=0x15,
     ReadWriteSetMsg=0X16,
+    ResponseToForwardMsg=0X17,
+    CommitResponseToCoordinatorMsg=0X18,
+    RequestForMasterShardMsg=0X19,
+    MasterShardPrePrepareMsg=0X1A,
+    MasterShardPrepareMsg=0X1B,
+    MasterShardCommitMsg=0X1C,
+    IntraShardTxMsg=0X1D,
+    BatchDistributedTxMsg=0x1E,
+    ShuffleStateValueMsg=0x1F,
+    ShuffleTxRlpsMsg=0x20,
+
     PacketCount
 };
 

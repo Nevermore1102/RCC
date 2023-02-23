@@ -86,7 +86,7 @@ void Initializer::init_with_groupP2PService(std::string const& _path, std::share
     }
 }
 
-void Initializer::init_with_groupP2PService(std::string const& _path, std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)
+void Initializer::init_with_groupP2PService(std::string const& _path, std::shared_ptr<Service> _p2pService, std::shared_ptr<Service> intra_p2pService, PROTOCOL_ID _group_protocolID)
 {
     try
     {
@@ -117,6 +117,9 @@ void Initializer::init_with_groupP2PService(std::string const& _path, std::share
 
         m_rpcInitializer = std::make_shared<RPCInitializer>();
         m_rpcInitializer->setP2PService(m_p2pInitializer->p2pService());
+
+        intra_p2pService = m_p2pInitializer->p2pService(); // modified by thb
+
         m_rpcInitializer->setSSLContext(
             m_secureInitializer->SSLContext(SecureInitializer::Usage::ForRPC));
         /// must start RPC server here for Ledger initializer depends on AMDB, AMDB depends on RPC

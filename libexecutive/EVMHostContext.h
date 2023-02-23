@@ -111,7 +111,12 @@ public:
         m_sub.logs.push_back(eth::LogEntry(m_myAddress, std::move(_topics), _data.toBytes()));
     }
     /// ------ get interfaces related to EVMHostContext------
-    virtual Address const& myAddress() { return m_myAddress; }
+    virtual Address const& myAddress() {
+        // lock_guard<mutex> lock(addressLock);
+        return m_myAddress; 
+    }
+
+
     virtual Address const& caller() { return m_caller; }
     virtual Address const& origin() { return m_origin; }
     virtual u256 const& value() { return m_value; }
@@ -143,6 +148,9 @@ protected:
     EnvInfo const& m_envInfo;
 
 private:
+
+    mutex addressLock;
+
     Address m_myAddress;  ///< Address associated with executing code (a contract, or
                           ///< contract-to-be).
     Address m_caller;  ///< Address which sent the message (either equal to origin or a contract).

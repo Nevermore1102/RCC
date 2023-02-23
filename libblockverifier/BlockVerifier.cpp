@@ -30,7 +30,7 @@
 #include <tbb/parallel_for.h>
 #include <exception>
 #include <thread>
-#include <libplugin/executeVM.h>
+#include <libplugin/ExecuteVM.h>
 
 using namespace dev;
 using namespace std;
@@ -82,31 +82,32 @@ ExecutiveContext::Ptr BlockVerifier::executeBlock(Block& block, BlockInfo const&
 ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
     Block& block, BlockInfo const& parentBlockInfo)
 {
-    if(block.isFirstExecute) // 若该区块是第一次处理，对unExecutedTxNum进行初始化 ADD BY THB
-    {
-        block.unExecutedTxNum = block.getTransactionSize();
-        block.isFirstExecute = false;
-    }
+    // if(block.isFirstExecute) // 若该区块是第一次处理，对unExecutedTxNum进行初始化 ADD BY THB
+    // {
+    //     block.unExecutedTxNum = block.getTransactionSize();
+    //     block.isFirstExecute = false;
+    // }
 
-    BLOCKVERIFIER_LOG(INFO) << LOG_DESC("executeBlock]Executing block")
-                            << LOG_KV("txNum", block.transactions()->size())
-                            << LOG_KV("num", block.blockHeader().number())
-                            << LOG_KV("hash", block.header().hash().abridged())
-                            << LOG_KV("height", block.header().number())
-                            << LOG_KV("receiptRoot", block.header().receiptsRoot())
-                            << LOG_KV("stateRoot", block.header().stateRoot())
-                            << LOG_KV("dbHash", block.header().dbHash())
-                            << LOG_KV("parentHash", parentBlockInfo.hash.abridged())
-                            << LOG_KV("parentNum", parentBlockInfo.number)
-                            << LOG_KV("parentStateRoot", parentBlockInfo.stateRoot);
+    // BLOCKVERIFIER_LOG(INFO) << LOG_DESC("executeBlock]Executing block")
+    //                         << LOG_KV("txNum", block.transactions()->size())
+    //                         << LOG_KV("num", block.blockHeader().number())
+    //                         << LOG_KV("hash", block.header().hash().abridged())
+    //                         << LOG_KV("height", block.header().number())
+    //                         << LOG_KV("receiptRoot", block.header().receiptsRoot())
+    //                         << LOG_KV("stateRoot", block.header().stateRoot())
+    //                         << LOG_KV("dbHash", block.header().dbHash())
+    //                         << LOG_KV("parentHash", parentBlockInfo.hash.abridged())
+    //                         << LOG_KV("parentNum", parentBlockInfo.number)
+    //                         << LOG_KV("parentStateRoot", parentBlockInfo.stateRoot);
 
     uint64_t startTime = utcTime();
 
     ExecutiveContext::Ptr executiveContext = std::make_shared<ExecutiveContext>();
+    
     try
     {
         m_executiveContextFactory->initExecutiveContext(
-            parentBlockInfo, parentBlockInfo.stateRoot, executiveContext);
+            parentBlockInfo, h256(0), executiveContext);
 
         // m_executiveContextFactory->initExecutiveContext(
         //     parentBlockInfo, h256(0), executiveContext);
@@ -121,26 +122,26 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
                               << errinfo_comment("Error during initExecutiveContext"));
     }
 
-    BlockHeader tmpHeader = block.blockHeader();
-    block.clearAllReceipts();
-    block.resizeTransactionReceipt(block.transactions()->size());
+    // BlockHeader tmpHeader = block.blockHeader();
+    // block.clearAllReceipts();
+    // block.resizeTransactionReceipt(block.transactions()->size());
 
-    BLOCKVERIFIER_LOG(DEBUG) << LOG_BADGE("executeBlock") << LOG_DESC("Init env takes")
-                             << LOG_KV("time(ms)", utcTime() - startTime)
-                             << LOG_KV("txNum", block.transactions()->size())
-                             << LOG_KV("num", block.blockHeader().number());
-    uint64_t pastTime = utcTime();
+    // BLOCKVERIFIER_LOG(DEBUG) << LOG_BADGE("executeBlock") << LOG_DESC("Init env takes")
+    //                          << LOG_KV("time(ms)", utcTime() - startTime)
+    //                          << LOG_KV("txNum", block.transactions()->size())
+    //                          << LOG_KV("num", block.blockHeader().number());
+    // uint64_t pastTime = utcTime();
 
-    try
-    {
-        EnvInfo envInfo(block.blockHeader(), m_pNumberHash, 0);
-        envInfo.setPrecompiledEngine(executiveContext);
-        auto executive = createAndInitExecutive(executiveContext->getState(), envInfo);
+    // try
+    // {
+    //     EnvInfo envInfo(block.blockHeader(), m_pNumberHash, 0);
+    //     envInfo.setPrecompiledEngine(executiveContext);
+        // auto executive = createAndInitExecutive(executiveContext->getState(), envInfo);
 
         // 交易全部不执行
-        for (size_t i = 0; i < block.transactions()->size(); i++)
-        {
-            auto& tx = (*block.transactions())[i];
+        // for (size_t i = 0; i < block.transactions()->size(); i++)
+        // {
+        //     auto& tx = (*block.transactions())[i];
 
             //检查交易hash, 根据 dev::rpc::innertxhash2readwriteset 判断交易是否为片内交易
             // 若交易的读写集没有被阻塞，那么交易可以立即执行，并将读写key放入阻塞队列，直到区块被提交key才可以出队列
@@ -227,7 +228,7 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
 
                 // dev::consensus::deploycontractBlock.insert(std::make_pair(block.blockHeader().number(), 1));
             // }
-        }
+        // }
 
         // blockExecuteContent _blockExecuteContent{executiveContext, executive};
         // cached_executeContents.insert(std::make_pair(block.blockHeader().number(), _blockExecuteContent)); // 缓存区块执行变量
@@ -245,23 +246,23 @@ ExecutiveContext::Ptr BlockVerifier::serialExecuteBlock(
         //     // return nullptr; // 交易未执行完，返回 nullptr // ADD BY THB
         // }
         
-    }
-    catch (exception& e)
-    {
-        BLOCKVERIFIER_LOG(ERROR) << LOG_BADGE("executeBlock")
-                                 << LOG_DESC("Error during serial block execution")
-                                 << LOG_KV("blkNum", block.blockHeader().number())
-                                 << LOG_KV("EINFO", boost::diagnostic_information(e));
+    // }
+    // catch (exception& e)
+    // {
+    //     BLOCKVERIFIER_LOG(ERROR) << LOG_BADGE("executeBlock")
+    //                              << LOG_DESC("Error during serial block execution")
+    //                              << LOG_KV("blkNum", block.blockHeader().number())
+    //                              << LOG_KV("EINFO", boost::diagnostic_information(e));
 
-        BOOST_THROW_EXCEPTION(
-            BlockExecutionFailed() << errinfo_comment("Error during serial block execution"));
-    }
+    //     BOOST_THROW_EXCEPTION(
+    //         BlockExecutionFailed() << errinfo_comment("Error during serial block execution"));
+    // }
 
     
-    BLOCKVERIFIER_LOG(DEBUG) << LOG_BADGE("executeBlock") << LOG_DESC("Run serial tx takes")
-                             << LOG_KV("time(ms)", utcTime() - pastTime)
-                             << LOG_KV("txNum", block.transactions()->size())
-                             << LOG_KV("num", block.blockHeader().number());
+    // BLOCKVERIFIER_LOG(DEBUG) << LOG_BADGE("executeBlock") << LOG_DESC("Run serial tx takes")
+    //                          << LOG_KV("time(ms)", utcTime() - pastTime)
+    //                          << LOG_KV("txNum", block.transactions()->size())
+    //                          << LOG_KV("num", block.blockHeader().number());
 
     // if(block.unExecutedTxNum < block.getTransactionSize()) // 若第一次处理区块有交易顺利执行，则写缓存
     // {

@@ -1,0 +1,13 @@
+# Target labels
+ leveldb
+# Source files and their labels
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/leveldb
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/leveldb.rule
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/leveldb-complete.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/leveldb-stamp/leveldb-build.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/leveldb-stamp/leveldb-configure.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/leveldb-stamp/leveldb-download.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/leveldb-stamp/leveldb-install.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/leveldb-stamp/leveldb-mkdir.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/leveldb-stamp/leveldb-patch.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/leveldb-stamp/leveldb-update.rule

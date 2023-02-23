@@ -55,6 +55,7 @@ void Executive::accrueSubState(SubState& _parentContext)
 void Executive::initialize(Transaction::Ptr _transaction)
 {
     m_t = _transaction;
+    m_enableFreeStorage = true; // modify by thb
     if (m_enableFreeStorage)
     {
         m_baseGasRequired = 20000;
@@ -64,7 +65,7 @@ void Executive::initialize(Transaction::Ptr _transaction)
         m_baseGasRequired = m_t->baseGasRequired(g_BCOSConfig.evmSchedule());
     }
 
-    verifyTransaction(ImportRequirements::Everything, m_t, m_envInfo.header(), m_envInfo.gasUsed());
+    // verifyTransaction(ImportRequirements::Everything, m_t, m_envInfo.header(), m_envInfo.gasUsed()); // thb
 
     if (!m_t->hasZeroSignature())
     {
@@ -139,6 +140,7 @@ bool Executive::execute()
     }
     else
     {
+        // EXECUTIVE_LOG(INFO) << LOG_KV("m_t->receiveAddress()", m_t->receiveAddress());
         return call(m_t->receiveAddress(), m_t->sender(), m_t->value(), m_t->gasPrice(),
             bytesConstRef(&m_t->data()), txGasLimit - (u256)m_baseGasRequired);
     }
@@ -259,115 +261,122 @@ bool Executive::callRC2(CallParameters const& _p, u256 const& _gasPrice, Address
     m_tableFactorySavepoint = m_envInfo.precompiledEngine()->getMemoryTableFactory()->savepoint();
     m_gas = _p.gas;
 
-    if (g_BCOSConfig.version() >= V2_5_0 && m_t && m_s->frozen(_origin))
-    {
-        EXECUTIVE_LOG(DEBUG) << LOG_DESC("execute transaction failed for account frozen")
-                             << LOG_KV("account", _origin);
-        writeErrInfoToOutput("Frozen account:0x" + _origin.hex());
-        revert();
-        m_excepted = TransactionException::AccountFrozen;
-        return !m_ext;
-    }
+    // if (g_BCOSConfig.version() >= V2_5_0 && m_t && m_s->frozen(_origin))
+    // {
+    //     EXECUTIVE_LOG(DEBUG) << LOG_DESC("execute transaction failed for account frozen")
+    //                          << LOG_KV("account", _origin);
+    //     writeErrInfoToOutput("Frozen account:0x" + _origin.hex());
 
-    if (m_envInfo.precompiledEngine() &&
-        m_envInfo.precompiledEngine()->isEthereumPrecompiled(_p.codeAddress))
-    {
-        if (g_BCOSConfig.version() >= V2_5_0)
-        {
-            auto gas = m_envInfo.precompiledEngine()->costOfPrecompiled(_p.codeAddress, _p.data);
-            if (m_gas < gas)
-            {
-                m_excepted = TransactionException::OutOfGasBase;
-                // true actually means "all finished - nothing more to be done regarding go().
-                return true;
-            }
-            else
-            {
-                m_gas = (u256)(_p.gas - gas);
-            }
-        }
-        bytes output;
-        bool success;
-        tie(success, output) =
-            m_envInfo.precompiledEngine()->executeOriginPrecompiled(_p.codeAddress, _p.data);
-        size_t outputSize = output.size();
-        m_output = owning_bytes_ref{std::move(output), 0, outputSize};
-        if (g_BCOSConfig.version() >= V2_6_0 && !success)
-        {
-            m_gas = 0;
-            m_excepted = TransactionException::RevertInstruction;
-            return true;  // true means no need to run go().
-        }
-    }
-    else if (m_envInfo.precompiledEngine() &&
-             m_envInfo.precompiledEngine()->isPrecompiled(_p.codeAddress))
-    {
-        try
-        {
-            auto callResult = m_envInfo.precompiledEngine()->call(
-                _p.codeAddress, _p.data, _origin, _p.senderAddress);
-            // only calculate gas for the precompiled contract after v2.4.0
-            if (g_BCOSConfig.version() >= V2_4_0)
-            {
-                updateGas(callResult);
-            }
-            size_t outputSize = callResult->execResult().size();
-            auto output = callResult->execResult();
-            m_output = owning_bytes_ref{std::move(output), 0, outputSize};
-        }
-        catch (dev::precompiled::PrecompiledException& e)
-        {
-            revert();
-            m_excepted = TransactionException::PrecompiledError;
-            auto output = e.ToOutput();
-            m_output = owning_bytes_ref{std::move(output), 0, output.size()};
-        }
-        catch (dev::Exception& e)
-        {
-            if (g_BCOSConfig.version() >= V2_3_0)
-            {
-                writeErrInfoToOutput(e.what());
-            }
-            revert();
-            m_excepted = toTransactionException(e);
-        }
-        catch (std::exception& e)
-        {
-            if (g_BCOSConfig.version() >= V2_3_0)
-            {
-                writeErrInfoToOutput(e.what());
-            }
-            revert();
-            m_excepted = TransactionException::Unknown;
-        }
-    }
-    else if (m_s->frozen(_p.codeAddress))
-    {
-        EXECUTIVE_LOG(DEBUG) << LOG_DESC("execute transaction failed for ContractFrozen")
-                             << LOG_KV("contractAddr", _p.codeAddress);
-        writeErrInfoToOutput("Frozen contract:" + _p.codeAddress.hex());
-        revert();
-        m_excepted = TransactionException::ContractFrozen;
-    }
-    else if (m_s->addressHasCode(_p.codeAddress))
-    {
-        bytes const& c = m_s->code(_p.codeAddress);
-        h256 codeHash = m_s->codeHash(_p.codeAddress);
-        m_ext = make_shared<EVMHostContext>(m_s, m_envInfo, _p.receiveAddress, _p.senderAddress,
-            _origin, _p.apparentValue, _gasPrice, _p.data, c, codeHash, m_depth, false,
-            _p.staticCall, m_enableFreeStorage);
-    }
-    else
-    {
-        if (g_BCOSConfig.version() >= V2_3_0)
-        {
-            writeErrInfoToOutput("Error address:" + _p.codeAddress.hex());
-            revert();
-        }
+    //     revert();
+    //     m_excepted = TransactionException::AccountFrozen;
+    //     return !m_ext;
+    // }
 
-        EXECUTIVE_LOG(INFO) << LOG_DESC("TransactionException::CallAddressError");
-        m_excepted = TransactionException::CallAddressError;
-    }
+    // if (m_envInfo.precompiledEngine() &&
+    //     m_envInfo.precompiledEngine()->isEthereumPrecompiled(_p.codeAddress))
+    // {
+    //     if (g_BCOSConfig.version() >= V2_5_0)
+    //     {
+    //         auto gas = m_envInfo.precompiledEngine()->costOfPrecompiled(_p.codeAddress, _p.data);
+    //         if (m_gas < gas)
+    //         {
+    //             m_excepted = TransactionException::OutOfGasBase;
+    //             // true actually means "all finished - nothing more to be done regarding go().
+    //             return true;
+    //         }
+    //         else
+    //         {
+    //             m_gas = (u256)(_p.gas - gas);
+    //         }
+    //     }
+    //     bytes output;
+    //     bool success;
+    //     tie(success, output) =
+    //         m_envInfo.precompiledEngine()->executeOriginPrecompiled(_p.codeAddress, _p.data);
+    //     size_t outputSize = output.size();
+    //     m_output = owning_bytes_ref{std::move(output), 0, outputSize};
+    //     if (g_BCOSConfig.version() >= V2_6_0 && !success)
+    //     {
+    //         m_gas = 0;
+    //         m_excepted = TransactionException::RevertInstruction;
+    //         return true;  // true means no need to run go().
+    //     }
+    // }
+    // else if (m_envInfo.precompiledEngine() &&
+    //          m_envInfo.precompiledEngine()->isPrecompiled(_p.codeAddress))
+    // {
+    //     try
+    //     {
+    //         auto callResult = m_envInfo.precompiledEngine()->call(
+    //             _p.codeAddress, _p.data, _origin, _p.senderAddress);
+    //         // only calculate gas for the precompiled contract after v2.4.0
+    //         if (g_BCOSConfig.version() >= V2_4_0)
+    //         {
+    //             updateGas(callResult);
+    //         }
+    //         size_t outputSize = callResult->execResult().size();
+    //         auto output = callResult->execResult();
+    //         m_output = owning_bytes_ref{std::move(output), 0, outputSize};
+    //     }
+    //     catch (dev::precompiled::PrecompiledException& e)
+    //     {
+    //         revert();
+    //         m_excepted = TransactionException::PrecompiledError;
+    //         auto output = e.ToOutput();
+    //         m_output = owning_bytes_ref{std::move(output), 0, output.size()};
+    //     }
+    //     catch (dev::Exception& e)
+    //     {
+    //         if (g_BCOSConfig.version() >= V2_3_0)
+    //         {
+    //             EXECUTIVE_LOG(INFO) << LOG_DESC("111");
+    //             writeErrInfoToOutput(e.what());
+    //         }
+    //         revert();
+    //         m_excepted = toTransactionException(e);
+    //     }
+    //     catch (std::exception& e)
+    //     {
+    //         if (g_BCOSConfig.version() >= V2_3_0)
+    //         {
+    //             // EXECUTIVE_LOG(INFO) << LOG_DESC("222");
+    //             writeErrInfoToOutput(e.what());
+    //         }
+    //         revert();
+    //         m_excepted = TransactionException::Unknown;
+    //     }
+    // }
+    // else if (m_s->frozen(_p.codeAddress))
+    // {
+    //     EXECUTIVE_LOG(DEBUG) << LOG_DESC("execute transaction failed for ContractFrozen")
+    //                          << LOG_KV("contractAddr", _p.codeAddress);
+    //     // EXECUTIVE_LOG(INFO) << LOG_DESC("333");
+    //     writeErrInfoToOutput("Frozen contract:" + _p.codeAddress.hex());
+    //     revert();
+    //     m_excepted = TransactionException::ContractFrozen;
+    // }
+    // else if (m_s->addressHasCode(_p.codeAddress))
+    // {
+    //     bytes const& c = m_s->code(_p.codeAddress);
+    //     h256 codeHash = m_s->codeHash(_p.codeAddress);
+    //     m_ext = make_shared<EVMHostContext>(m_s, m_envInfo, _p.receiveAddress, _p.senderAddress,
+    //         _origin, _p.apparentValue, _gasPrice, _p.data, c, codeHash, m_depth, false,
+    //         _p.staticCall, m_enableFreeStorage);
+    // }
+    // else
+    // {
+    //     if (g_BCOSConfig.version() >= V2_3_0)
+    //     {
+    //         // EXECUTIVE_LOG(INFO) << LOG_DESC("444");
+    //         writeErrInfoToOutput("Error address:" + _p.codeAddress.hex());
+    //         revert();
+    //     }
+
+    //     // EXECUTIVE_LOG(INFO) << LOG_DESC("TransactionException::CallAddressError"); // 临时注释
+    //     m_excepted = TransactionException::CallAddressError;
+    // }
+
+    m_excepted = TransactionException::CallAddressError;
 
     // no balance transfer
     return !m_ext;
@@ -483,7 +492,7 @@ void Executive::grantContractStatusManager(TableFactory::Ptr memoryTableFactory,
 
     if (!table)
     {
-        EXECUTIVE_LOG(ERROR) << LOG_DESC("grantContractStatusManager get newAddress table error!");
+        // EXECUTIVE_LOG(ERROR) << LOG_DESC("grantContractStatusManager get newAddress table error!"); // thb
         return;
     }
 
@@ -544,6 +553,10 @@ bool Executive::go()
 #endif
         try
         {
+            // EXECUTIVE_LOG(INFO) << LOG_DESC("1---1");
+            // EXECUTIVE_LOG(INFO) << LOG_KV("m_ext->myAddress()", m_ext->myAddress().hex());
+            // EXECUTIVE_LOG(INFO) << LOG_DESC("2---2");
+
             auto getEVMCMessage = [=]() -> shared_ptr<evmc_message> {
                 // the block number will be larger than 0,
                 // can be controlled by the programmers
@@ -562,6 +575,8 @@ bool Executive::go()
                 // this is ensured by solidity compiler
                 assert(flags != EVMC_STATIC || kind == EVMC_CALL);  // STATIC implies a CALL.
                 auto leftGas = static_cast<int64_t>(m_gas);
+                
+                // EXECUTIVE_LOG(INFO) << LOG_DESC("111111");
                 return shared_ptr<evmc_message>(
                     new evmc_message{kind, flags, static_cast<int32_t>(m_ext->depth()), leftGas,
                         toEvmC(m_ext->myAddress()), toEvmC(m_ext->caller()), m_ext->data().data(),
@@ -569,12 +584,14 @@ bool Executive::go()
             };
             // Create VM instance.
 
-            auto vm = VMFactory::create();// MODIFTED BY THB
+            //auto vm = VMFactory::create();// MODIFTED BY THB
             
-            //auto vm = m_vminstance;
+            auto vm = m_vminstance;
 
             if (m_isCreation)
             {
+                // EXECUTIVE_LOG(INFO) << LOG_DESC("222222");
+
                 m_s->clearStorage(m_ext->myAddress());
                 auto mode = toRevision(m_ext->evmSchedule());
                 auto emvcMessage = getEVMCMessage();
@@ -612,6 +629,8 @@ bool Executive::go()
                         outputRef = {};
                     }
                 }
+
+                // EXECUTIVE_LOG(INFO) << LOG_DESC("333333");
                 m_s->setCode(m_ext->myAddress(),
                     bytes(outputRef.data(), outputRef.data() + outputRef.size()));
             }
@@ -619,6 +638,8 @@ bool Executive::go()
             {
                 // EXECUTIVE_LOG(INFO) << LOG_DESC("发现调用合约交易......");
                 // std::cout << "发现调用合约交易......" << std::endl;
+                EXECUTIVE_LOG(INFO) << LOG_DESC("444444");
+
                 auto mode = toRevision(m_ext->evmSchedule());
                 auto emvcMessage = getEVMCMessage();
                 auto ret = vm->exec(*m_ext, mode, emvcMessage.get(), m_ext->code().data(), m_ext->code().size());

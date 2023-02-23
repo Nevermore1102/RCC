@@ -178,6 +178,7 @@ public:
 
     void reset()
     {
+        EXECUTIVE_LOG(INFO) << LOG_DESC("In rest() function()...");
         m_ext = nullptr;
         m_output = owning_bytes_ref();
         m_depth = 0;
@@ -197,6 +198,7 @@ public:
 
     void setVM(std::shared_ptr<dev::eth::EVMInterface> vm) { m_vminstance = vm; }
 
+    std::shared_ptr<EVMHostContext> getExt() { return m_ext; }
 
 private:
     void parseEVMCResult(std::shared_ptr<eth::Result> _result);
@@ -243,7 +245,8 @@ private:
     size_t m_tableFactorySavepoint = 0;
 
     // determine whether the freeStorageVMSchedule enabled or not
-    bool m_enableFreeStorage = false;
+    // bool m_enableFreeStorage = false;
+    bool m_enableFreeStorage = true;
 
     std::shared_ptr<dev::eth::EVMInterface> m_vminstance;
 

@@ -21,7 +21,6 @@ message CommittedRLPWithReadSet
     bytes contractAddress = 3;
 }
 
-
 message KV
 {
     bytes key=1;
@@ -115,9 +114,96 @@ message SubCrossShardTx
     bytes crossshardtxid = 8;
 }
 
+message BatchDistributedTxMsg
+{
+    uint64 id = 1;
+    bytes txContents = 2;
+    bytes intrashard_txcontents = 3;
+    bytes toSendreadwriteset = 4;
+}
+
+
 message csTxRWset
 {
     bytes crossshardtxid = 1;
     bytes readwritekey = 2;
     bytes value = 3;
+    int64 accessnum = 4;
+    bytes contentionrate = 5;
+    int64 sourceshardid = 6;
+}
+
+message ResponseToForward
+{
+	bytes crossshardtxid = 1;
+    bytes result = 2;
+}
+
+message CommitResponseToCoordinator
+{
+	bytes crossshardtxid = 1;
+    bytes result = 2;
+}
+
+message RequestForMasterShardMsg
+{
+    int64 sourceShardId = 1;
+    int64 destinShardId = 2;
+    bytes readwritekey = 4;
+    bytes requestmessageId = 3;
+}
+
+message MasterShardPrePrepareMsg
+{
+    int64 sourceShardId = 1;
+    int64 destinShardId = 2;
+    bytes readwritekey = 3;
+    bytes requestmessageId = 4;
+    int64 coordinatorShardId = 5;
+
+    bytes sourceshardids = 6;
+    bytes destinshardids = 7;
+    bytes readwritekeys = 8;
+    bytes requestmessageids = 9;
+}
+
+message MasterShardPrepareMsg
+{
+    bytes sourceshardids = 1;
+    bytes destinshardids = 2;
+    bytes readwritekeys = 3;
+    bytes requestmessageids = 4; 
+    int64 coordinatorshardid = 5;
+}
+
+message MasterShardCommitMsg
+{
+    bytes sourceshardids = 1;
+    bytes destinshardids = 2;
+    bytes readwritekeys = 3;
+    bytes requestmessageids = 4; 
+    int64 coordinatorshardid = 5;
+}
+
+message IntraShardTxMsg
+{
+    bytes subTxRlp = 1;
+    uint64 messageId = 2;
+    int64 sourceShardId = 3;
+    int64 destinShardId = 4;
+    bytes signeddata = 5;
+    bytes readwriteset = 6;
+    bytes participants = 7;
+    bytes crossshardtxid = 8;
+}
+
+message ShuffleStateValue
+{
+    string stateAddresses = 1;
+    string values = 2;
+}
+
+message ShuffleTxRlps
+{
+    string txrlps = 1;
 }

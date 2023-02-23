@@ -36,6 +36,14 @@ namespace dev
 {
 namespace consensus
 {
+    // // ADD BY THB
+    extern int internal_groupId; // 当前分片所在的groupID
+    extern int SHARDNUM; // 分片总数
+    extern int NODENUM; // 所有节点数目
+    extern std::vector<dev::h512>forwardNodeId;
+    extern std::vector<dev::h512>shardNodeId;
+    extern std::map<unsigned long, unsigned long> messageIDs;
+    extern tbb::concurrent_queue<dev::eth::Transaction::Ptr> toExecute_transactions; // 缓存共识完的交易，按顺序存放在队列中，等待执行
 
 // for bip152: packetType for partiallyBlock
 enum P2PPacketType : uint32_t
@@ -560,18 +568,5 @@ struct ViewChangeReq : public PBFTMsg
         sig2 = signHash(fieldsWithoutBlock(), keyPair);
     }
 };
-
-    // // ADD BY THB
-    extern int internal_groupId; // 当前分片所在的groupID
-    extern int SHARDNUM; // 分片总数
-    extern int NODENUM; // 所有节点数目
-    extern std::vector<dev::h512>forwardNodeId;
-    extern std::vector<dev::h512>shardNodeId;
-    extern std::map<int, int> messageIds;
-    extern std::set<std::string> sendedcrossshardtxhash; //记录已经发送的跨片子交易
-    extern std::queue<std::shared_ptr<dev::eth::Block>> cachedBlocks; // 缓存的未执行完的区块指针
-    extern std::map<int, int> deploycontractBlock;
-    extern tbb::concurrent_queue<dev::eth::Transaction::Ptr> toExecute_transactions; // 缓存共识完的交易，按顺序存放在队列中，等待执行
-
 }  // namespace consensus
 }  // namespace dev
