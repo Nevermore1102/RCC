@@ -39,6 +39,11 @@ void dev::setThreadName(std::string const& _n)
 
 void Worker::startWorking()
 {
+    /*
+     * compare_exchange_strong 入参是3个，expect，desire，memoryorder
+     * 意思是如果当前的变量this的值==expect值，则将this值改为desire，并返回true
+     * 否则，返回false，不进行修改，即进行一个读的操作。
+     * */
     std::unique_lock<std::mutex> l(x_work);
     if (m_work)
     {

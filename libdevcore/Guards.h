@@ -36,6 +36,11 @@ namespace dev
 using Mutex = std::mutex;
 using RecursiveMutex = std::recursive_mutex;
 using SharedMutex = boost::shared_mutex;
+//
+/*
+ * lock_guard 对象通常用于管理某个锁(Lock)对象
+   mutex对象传入之后,会被当前线程锁住,look_guard被析构之后,所管理的mutex对象会自动解锁
+ * */
 
 using Guard = std::lock_guard<std::mutex>;
 using UniqueGuard = std::unique_lock<std::mutex>;

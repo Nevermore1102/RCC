@@ -37,6 +37,10 @@ using namespace dev::p2p;
 using namespace dev::consensus;
 
 /// start the Sealer module
+/*
+ * 交易打包线程，负责从交易池取交易，并基于节点最高块打包交易，产生新区块，产生的新区块交给Engine线程处理
+ * PBFT和Raft的交易打包线程分别为PBFTSealer和RaftSealer。
+ * */
 void Sealer::start()
 {
     if (m_startConsensus)
@@ -45,19 +49,23 @@ void Sealer::start()
         return;
     }
     SEAL_LOG(INFO) << "[Start sealer module]";
+    //开始以后初始化SealingBlock,默认h256Hash const& filter = h256Hash(), bool resetNextLeader = false
     resetSealingBlock();
+    //报告
     m_consensusEngine->reportBlock(*(m_blockChain->getBlockByNumber(m_blockChain->number())));
+    //得到最多可以封装的区块数
     m_maxBlockCanSeal = m_consensusEngine->maxBlockTransactions();
     m_syncBlock = false;
     /// start  a thread to execute doWork()&&workLoop()
     startWorking();
     m_startConsensus = true;
 }
-
+//
 bool Sealer::shouldSeal()
 {
     bool sealed = false;
     {
+        // ReadGuard是共享锁
         ReadGuard l(x_sealing);
         sealed = m_sealing.block->isSealed();
     }
@@ -83,8 +91,10 @@ void Sealer::reportNewBlock()
         }
         //不是空块就报告(???)
         m_consensusEngine->reportBlock(*p_block);
+        //unique_lock 类型, Guards是什么
         WriteGuard l(x_sealing);
         {
+
             if (shouldResetSealing())
             {
                 SEAL_LOG(DEBUG) << "[reportNewBlock] Reset sealing: [number]:  "
@@ -107,7 +117,7 @@ void Sealer::doWork(bool wait)
     if (shouldSeal() && m_startConsensus.load())
     {
         // SEAL_LOG(INFO) << LOG_DESC("111111111111111111111111111");
-        //x_sealing是unique_lock,简化了 Mutex 对象的上锁和解锁操作，方便线程对互斥量上锁
+        //WriteGuard 是unique_lock,简化了 x_sealing 对象的上锁和解锁操作，方便线程对互斥量上锁
         WriteGuard l(x_sealing);
         {
             /// get current transaction num
@@ -122,11 +132,13 @@ void Sealer::doWork(bool wait)
             {
                 m_syncTxPool = true;
             }
+            // 默认1000,是可变类型
             auto maxTxsPerBlock = maxBlockCanSeal();
             /// load transaction from transaction queue
             if (maxTxsPerBlock > tx_num && m_syncTxPool == true && !reachBlockIntervalTime())
             {
                 // SEAL_LOG(INFO) << LOG_DESC("交易数不够,loading...");
+                //从交易池中装载交易,装载数量为 maxTxsPerBlock - tx_num
                 loadTransactions(maxTxsPerBlock - tx_num);
             }
                 
@@ -142,10 +154,8 @@ void Sealer::doWork(bool wait)
             {
                 // transactionNum += m_sealing.block->getTransactionSize();
                 // SEAL_LOG(INFO) << LOG_KV("Seal_transactionNum", transactionNum); 
-
                 m_txPool->dropBlockTrans(m_sealing.block);
                 handleBlock();
-
             }
         }
     }
@@ -159,6 +169,7 @@ void Sealer::doWork(bool wait)
 /**
  * @brief: load transactions from the transaction pool
  * @param transToFetch: max transactions to fetch
+ * 从交易池加载交易信息
  */
 void Sealer::loadTransactions(uint64_t const& transToFetch)
 {
@@ -176,14 +187,13 @@ bool Sealer::isBlockSyncing()
 
 /**
  * @brief : reset specified sealing block by generating an empty block
- *
+ * 通过生成一个空块来重置指定的密封块
  * @param sealing :  the block should be resetted
- * @param filter : the tx hashes of transactions that should't be packeted into sealing block when
- * loadTransactions(used to set m_transactionSet)
+ * @param filter : the tx hashes of transactions that shouldn't be packed into sealing block when
+loadTransactions(used to set m_transactionSet)
  * @param resetNextLeader : reset realing for the next leader or not ? default is false.
- *                          true: reset sealing for the next leader; the block number of the sealing
- * header should be reset to the current block number add 2 false: reset sealing for the current
- * leader; the sealing header should be populated from the current block
+ *                          true: reset sealing for the next leader; the block number of the sealing header should be reset to the current block number add 2
+ *                          false: reset sealing for the current leader; the sealing header should be populated from the current block
  */
 void Sealer::resetSealingBlock(Sealing& sealing, h256Hash const& filter, bool resetNextLeader)
 {
@@ -197,9 +207,8 @@ void Sealer::resetSealingBlock(Sealing& sealing, h256Hash const& filter, bool re
  *
  * @param block : the block that should be resetted
  * @param resetNextLeader: reset the block for the next leader or not ? default is false.
- *                         true: reset block for the next leader; the block number of the block
- * header should be reset to the current block number add 2 false: reset block for the current
- * leader; the block header should be populated from the current block
+ *                         true: reset block for the next leader; the block number of the block header should be reset to the current block number add 2
+ *                         false: reset block for the current leader; the block header should be populated from the current block
  */
 void Sealer::resetBlock(std::shared_ptr<dev::eth::Block> block, bool resetNextLeader)
 {
@@ -207,7 +216,7 @@ void Sealer::resetBlock(std::shared_ptr<dev::eth::Block> block, bool resetNextLe
     /// 1. clear the block; 2. set the block number to current block number add 2
     if (resetNextLeader)
     {
-        SEAL_LOG(DEBUG) << "reset nextleader number to:" << (m_blockChain->number() + 2);
+        SEAL_LOG(DEBUG) << "reset next leader number to:" << (m_blockChain->number() + 2);
         block->resetCurrentBlock();
         block->header().setNumber(m_blockChain->number() + 2);
     }
