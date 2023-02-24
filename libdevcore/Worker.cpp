@@ -41,17 +41,19 @@ void Worker::startWorking()
 {
     /*
      * compare_exchange_strong 入参是3个，expect，desire，memoryorder
-     * 意思是如果当前的变量this的值==expect值，则将this值改为desire，并返回true
-     * 否则，返回false，不进行修改，即进行一个读的操作。
+     当前值与期望值(expect)相等时，修改当前值为设定值(desired)，返回true
+     当前值与期望值(expect)不等时，将期望值(expect)修改为当前值，返回false
      * */
+    //对work上锁
     std::unique_lock<std::mutex> l(x_work);
-    if (m_work)
+    if (m_work)//如果线程指针存在
     {
+        //如果当前 state = Stopped,就把其改为Starting,如果当前值为Starting,则把ex改为Starting
         WorkerState ex = WorkerState::Stopped;
         m_state.compare_exchange_strong(ex, WorkerState::Starting);
         m_state_notifier.notify_all();
     }
-    else
+    else//如果线程不存在,就要初始化一个线程,给线程命名
     {
         m_state = WorkerState::Starting;
         m_state_notifier.notify_all();
@@ -68,6 +70,7 @@ void Worker::startWorking()
                 }
             }
             setThreadName(m_name.c_str());
+            //当线程状态不为killing的时候
             while (m_state != WorkerState::Killing)
             {
                 WorkerState ex = WorkerState::Starting;
@@ -78,7 +81,7 @@ void Worker::startWorking()
                 }
 
                 m_state_notifier.notify_all();
-
+                //让线程开始工作
                 try
                 {
                     startedWorking();
@@ -93,9 +96,11 @@ void Worker::startWorking()
                 }
 
                 {
+                    //对x_work上锁
                     // the condition variable-related lock
                     unique_lock<mutex> l(x_work);
                     ex = m_state.exchange(WorkerState::Stopped);
+                    //如果ex为killing或者ex为Starting,就
                     if (ex == WorkerState::Killing || ex == WorkerState::Starting)
                         m_state.exchange(ex);
                 }
@@ -118,15 +123,19 @@ void Worker::startWorking()
 
 void Worker::stopWorking()
 {
+    //对互斥量x_work上锁
     std::unique_lock<Mutex> l(x_work);
+    //如果线程存在
     if (m_work)
     {
         WorkerState ex = WorkerState::Started;
+        //返回值为True,代表当前状态和期望值Started相等,那么就改当前指为Stopping,并返回
         if (!m_state.compare_exchange_strong(ex, WorkerState::Stopping))
             return;
         m_state_notifier.notify_all();
 
         DEV_TIMED_ABOVE("Stop worker", 100)
+        //当前状态不为Stopped的时候,就持续等待线程结束
         while (m_state != WorkerState::Stopped)
         {
             m_state_notifier.wait(l);
@@ -153,6 +162,7 @@ void Worker::terminate()
 
 void Worker::workLoop()
 {
+    //当状态为Started的时候,就开始调用 doWork()
     while (m_state == WorkerState::Started)
     {
         if (m_idleWaitMs)
