@@ -36,6 +36,7 @@ namespace consensus
 {
 void ConsensusEngineBase::start()
 {
+    //如果线程存在,打印已经存在,返回
     if (m_startConsensusEngine)
     {
         ENGINE_LOG(WARNING) << "[ConsensusEngineBase has already been started]";
@@ -43,19 +44,23 @@ void ConsensusEngineBase::start()
     }
     ENGINE_LOG(INFO) << "[Start ConsensusEngineBase]";
     /// start  a thread to execute doWork()&&workLoop()
+    //调用worker.cpp中的startWorking
     startWorking();
     m_startConsensusEngine = true;
 }
 
 void ConsensusEngineBase::stop()
 {
+    //如果未启动,直接return
     if (m_startConsensusEngine == false)
     {
         return;
     }
     ENGINE_LOG(INFO) << "[Stop ConsensusEngineBase]";
     m_startConsensusEngine = false;
+    //调用 worker.cpp中的doneWorking
     doneWorking();
+    //如果正在工作的话,就终止
     if (isWorking())
     {
         stopWorking();
@@ -79,6 +84,7 @@ dev::blockverifier::ExecutiveContext::Ptr ConsensusEngineBase::executeBlock(Bloc
 
 void ConsensusEngineBase::checkBlockValid(Block const& block)
 {
+    //获取区块哈希
     h256 block_hash = block.blockHeader().hash();
     /// check transaction num
     if (block.getTransactionSize() > maxBlockTransactions())
@@ -160,6 +166,7 @@ void ConsensusEngineBase::checkBlockTimeStamp(dev::eth::Block const& _block)
     }
 }
 
+//更新共识节点的列表(重点)
 void ConsensusEngineBase::updateConsensusNodeList()
 {
     try
@@ -170,7 +177,12 @@ void ConsensusEngineBase::updateConsensusNodeList()
         auto sealerList = m_blockChain->sealerList();
         std::sort(sealerList.begin(), sealerList.end());
         {
+            //上锁
+            /*
+             * upgrade_lock将可将读锁（shared_lock）升级为upgrade_lock，与shared_lock不互斥，与别的upgrade_lock和unique_lock互斥。也就是说线程A获得mutex的upgrade_lock后，线程B、C等还可以获得mutex的share_mutex，反之亦然。
+             * */
             UpgradableGuard l(m_sealerListMutex);
+            //
             if (sealerList != m_sealerList)
             {
                 UpgradeGuard ul(l);
@@ -185,11 +197,12 @@ void ConsensusEngineBase::updateConsensusNodeList()
             for (dev::h512 node : m_sealerList)
                 s2 << node.abridged() << ",";
         }
+        //输出观察者节点列表
         s2 << "Observers:";
         dev::h512s observerList = m_blockChain->observerList();
         for (dev::h512 node : observerList)
             s2 << node.abridged() << ",";
-
+        //如果
         if (m_lastNodeList != s2.str())
         {
             ENGINE_LOG(DEBUG) << LOG_DESC(
@@ -230,6 +243,7 @@ void ConsensusEngineBase::resetConfig()
     auto node_idx = MAXIDX;
     m_accountType = NodeAccountType::ObserverAccount;
     size_t nodeNum = 0;
+    //更新共识节点列表
     updateConsensusNodeList();
     {
         ReadGuard l(m_sealerListMutex);
