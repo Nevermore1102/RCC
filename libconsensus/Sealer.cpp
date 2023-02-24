@@ -69,6 +69,13 @@ bool Sealer::shouldSeal()
         ReadGuard l(x_sealing);
         sealed = m_sealing.block->isSealed();
     }
+    //判断条件:
+    /*
+     * 1. sealed 为 false
+     * 2. m_startConsensus为true,代表开始共识
+     * 3. 共识引擎的中的节点为Sealer
+     * 4. isBlockSyncing为false,即尚未同步
+     * */
     return (!sealed && m_startConsensus &&
             m_consensusEngine->accountType() == NodeAccountType::SealerAccount &&
             !isBlockSyncing());
@@ -182,6 +189,7 @@ void Sealer::loadTransactions(uint64_t const& transToFetch)
 bool Sealer::isBlockSyncing()
 {
     SyncStatus state = m_blockSync->status();
+    //只要状态不是空闲.就返回true
     return (state.state != SyncState::Idle);
 }
 
@@ -249,8 +257,10 @@ void Sealer::resetBlock(std::shared_ptr<dev::eth::Block> block, bool resetNextLe
 void Sealer::resetSealingHeader(BlockHeader& header)
 {
     /// import block
-    resetCurrentTime();
+    resetCurrentTime();//重新设置时间
+    //设置封装节点列表
     header.setSealerList(m_consensusEngine->consensusList());
+    //设置封装节点,nodeIdx返回sealer节点的编号
     header.setSealer(m_consensusEngine->nodeIdx());
     header.setLogBloom(LogBloom());
     header.setGasUsed(u256(0));

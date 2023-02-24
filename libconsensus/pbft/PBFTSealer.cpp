@@ -72,9 +72,12 @@ void PBFTSealer::handleBlock()
 }
 void PBFTSealer::setBlock()
 {
+    //根据父区块生成区块头
     m_sealing.block->header().populateFromParent(
         m_blockChain->getBlockByNumber(m_blockChain->number())->header());
+    //重新设置SealingHeader,包括时间,sealer list,sealer(生成该区块的节点)
     resetSealingHeader(m_sealing.block->header());
+    //默认true
     hookAfterHandleBlock();
     // calculate transactionRoot before execBlock
     m_sealing.block->calTransactionRoot();
@@ -87,6 +90,7 @@ void PBFTSealer::setBlock()
  */
 bool PBFTSealer::shouldSeal()
 {
+    //判读条件是,父类Sealer中的shouldSeal返回真且pbftEngine中的shouldSeal返回真
     return Sealer::shouldSeal() && m_pbftEngine->shouldSeal();
 }
 void PBFTSealer::start()
@@ -110,30 +114,38 @@ void PBFTSealer::stop()
 /// attempt to increase m_lastTimeoutTx when m_lastTimeoutTx is no large than m_maxNoTimeoutTx
 void PBFTSealer::attempIncreaseTimeoutTx()
 {
-    // boundary processing:
+    // boundary processing:边界处理
+    //当导致超时的最小交易数足够大(比当前块所包含的交易数更大)
     // 1. m_lastTimeoutTx or m_maxNoTimeoutTx is large enough, return directly
     if (m_lastTimeoutTx >= m_pbftEngine->maxBlockTransactions())
     {
+        //把导致超时的最小交易数改为一个块中最大能包含的交易数量,并返回
         m_lastTimeoutTx = m_pbftEngine->maxBlockTransactions();
         return;
     }
+    //在没有超时的情况下，能达成共识的最大交易数 与 前块所包含的交易数 相等
     if (m_maxNoTimeoutTx == m_pbftEngine->maxBlockTransactions())
     {
+        //另两者相等,返回
         m_lastTimeoutTx = m_maxNoTimeoutTx;
         return;
     }
     // attempt to increase m_lastTimeoutTx in case of cpu-fluctuation
     // if m_maxNoTimeoutTx * 0.1 is large than 1, reset m_lastTimeoutTx to 110% of m_maxNoTimeoutTx
+    // 2.如果不满足上述条件,说明导致超时的最小交易数比当前区块包含的交易数还要少,
+    // 那么就尝试增加导致超时的最小交易数,如果m_maxNoTimeoutTx大于10,那么m_lastTimeoutTx为其1.1倍
     if (m_maxNoTimeoutTx * 0.1 > 1)
     {
         m_lastTimeoutTx = m_maxNoTimeoutTx * (1 + 0.1);
     }
+    //如果m_maxNoTimeoutTx小于10,那么m_lastTimeoutTx为其2倍
     // if m_maxNoTimoutTx*0.1 is little than 1(m_lastTimeoutTx is little than 10), double
     // m_lastTimeoutTx(doubled m_lastTimeoutTx is little than 20)
     else
     {
         m_lastTimeoutTx *= 2;
     }
+    //再进行判断,并修改 m_lastTimeoutTx
     if (m_lastTimeoutTx >= m_pbftEngine->maxBlockTransactions())
     {
         m_lastTimeoutTx = m_pbftEngine->maxBlockTransactions();
@@ -143,6 +155,7 @@ void PBFTSealer::attempIncreaseTimeoutTx()
 }
 
 /// decrease maxBlockCanSeal to half when timeout
+// 当超时的时候,将maxBlockCanSeal,即一个区块中可封存的最大交易数减半
 void PBFTSealer::onTimeout(uint64_t const& sealingTxNumber)
 {
     // fix the case that maxBlockTransactions of pbftEngine has been decreased through sysconfig
@@ -158,14 +171,19 @@ void PBFTSealer::onTimeout(uint64_t const& sealingTxNumber)
     }
     m_timeoutCount++;
     /// update the last minimum transaction number that lead to timeout
+    /*
+     * 减少导致超时的最小交易数的值,令其为封装在区块中的交易数
+     * */
     if (sealingTxNumber > 0 && (m_lastTimeoutTx == 0 || (m_lastTimeoutTx > sealingTxNumber &&
                                                             sealingTxNumber > m_maxNoTimeoutTx)))
     {
         m_lastTimeoutTx = sealingTxNumber;
     }
-    /// update the maxBlockCanSeal
+    /// update the maxBlockCanSeal 更新操作
     {
+        //上锁
         UpgradableGuard l(x_maxBlockCanSeal);
+        //如果一个区块中可封存的最大交易数 > 2,则将其减半
         if (m_maxBlockCanSeal > 2)
         {
             UpgradeGuard ul(l);
@@ -180,9 +198,11 @@ void PBFTSealer::onTimeout(uint64_t const& sealingTxNumber)
 }
 
 /// increase maxBlockCanSeal when commitBlock with no-timeout
+// 在没有超时的情况下,增加一个区块中可封存的最大交易数
 void PBFTSealer::onCommitBlock(
     uint64_t const& blockNumber, uint64_t const& sealingTxNumber, unsigned const& changeCycle)
 {
+    //如果一个区块中可封存的最大交易数 > 引擎所能容纳的区块最大交易数
     if (maxBlockCanSeal() >= m_pbftEngine->maxBlockTransactions())
     {
         m_maxBlockCanSeal = m_pbftEngine->maxBlockTransactions();
@@ -199,12 +219,14 @@ void PBFTSealer::onCommitBlock(
     }
     m_lastBlockNumber = m_blockChain->number();
     /// sealing more transactions when no timeout
+    // 在没有超时的情况下,尽可能封装更多的交易
     if (m_timeoutCount > 0)
     {
         m_timeoutCount--;
         return;
     }
     /// update the maximum number of transactions that has been consensused without timeout
+    //增加不导致超时的最大交易数的值,令其为封装在区块中的交易数
     if (sealingTxNumber > 0 && (m_maxNoTimeoutTx == 0 || m_maxNoTimeoutTx < sealingTxNumber))
     {
         m_maxNoTimeoutTx = sealingTxNumber;
@@ -219,27 +241,33 @@ void PBFTSealer::onCommitBlock(
         return;
     }
     // if m_lastTimeoutTx is no large than to m_maxNoTimeoutTx, try to increase m_TimeoutTx
+    //当导致超时的最小交易数小于不导致超时的最大交易数,我们要增加前者
     if (m_lastTimeoutTx <= m_maxNoTimeoutTx)
     {
         attempIncreaseTimeoutTx();
     }
     /// if the current maxBlockCanSeal is larger than m_lastTimeoutTx, return directly
+    // 当导致超时的最小交易数的值不为0,且区块能封装的最大交易数比其更大时,直接返回
     if (m_lastTimeoutTx != 0 && maxBlockCanSeal() >= m_lastTimeoutTx)
     {
         return;
     }
     /// increase the maxBlockCanSeal when its current value is smaller than the
     /// last-timeout-tx-number
+    // 当区块能封装的最大交易数的值小于m_lastTimeoutTx,增加其值
     increaseMaxTxsCanSeal();
 }
 
 /// add this function to pass the codeFactor
 void PBFTSealer::increaseMaxTxsCanSeal()
 {
+    //对x_maxBlockCanSeal上写锁
     WriteGuard l(x_maxBlockCanSeal);
     /// in case of no increase when m_maxBlockCanSeal is smaller than 2
+    //0.5*m_maxBlockCanSeal>1
     if (m_blockSizeIncreaseRatio * m_maxBlockCanSeal > 1)
     {
+        //相当于乘以(1+m_blockSizeIncreaseRatio)倍
         m_maxBlockCanSeal += (m_blockSizeIncreaseRatio * m_maxBlockCanSeal);
     }
     else
@@ -250,12 +278,14 @@ void PBFTSealer::increaseMaxTxsCanSeal()
     // m_lastTimeoutTx
     if (m_lastTimeoutTx > 0 && m_maxBlockCanSeal > m_lastTimeoutTx)
     {
+        //减小
         m_maxBlockCanSeal = m_lastTimeoutTx;
     }
-    // increased m_maxBlockCanSeal is little than m_maxNoTimeoutTx, reset m_maxBlockCanSeal to
+    // increased m_maxBlockCanSeal is less than m_maxNoTimeoutTx, reset m_maxBlockCanSeal to
     // m_maxNoTimeoutTx
     if (m_maxNoTimeoutTx > 0 && m_maxBlockCanSeal < m_maxNoTimeoutTx)
     {
+        // 增大
         m_maxBlockCanSeal = m_maxNoTimeoutTx;
     }
     if (m_maxBlockCanSeal > m_pbftEngine->maxBlockTransactions())

@@ -176,12 +176,14 @@ void PBFTEngine::initPBFTEnv(unsigned view_timeout)
 
 bool PBFTEngine::shouldSeal()
 {
+    //如果当前线程不为Sealer线程
     if (m_cfgErr || m_accountType != NodeAccountType::SealerAccount)
     {
         return false;
     }
     /// check leader
     std::pair<bool, IDXTYPE> ret = getLeader();
+    //如果得不到返回的Leader
     if (!ret.first)
     {
         return false;
@@ -190,12 +192,16 @@ bool PBFTEngine::shouldSeal()
     {
         /// if current node is the next leader
         /// and it has been notified to seal new block, return true
+        /*
+         * 如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true
+         * */
         if (m_notifyNextLeaderSeal && getNextLeader() == nodeIdx())
         {
             return true;
         }
         return false;
     }
+    //如果
     if (m_reqCache->committedPrepareCache().height == m_consensusBlockNumber)
     {
         if (m_reqCache->rawPrepareCacheHeight() != m_consensusBlockNumber)
@@ -450,6 +456,7 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
     // Solution:
     // if the sealer execute step1 (m_generatePrepare is equal to true), won't trigger notifySeal
     m_generatePrepare = true;
+    //先上锁
     Guard l(m_mutex);
     // the leader has been changed
     if (!getLeader().first || getLeader().second != nodeIdx())
@@ -458,10 +465,12 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
         return true;
     }
     m_notifyNextLeaderSeal = false;
+    //构造prepare信息
     auto prepareReq = constructPrepareReq(_block);
-
+    // 如果prepare中的pBlock的交易数为0且设定为排除空块
     if (prepareReq->pBlock->getTransactionSize() == 0 && m_omitEmptyBlock)
     {
+        //换主失败
         m_leaderFailed = true;
         changeViewForFastViewChange();
         m_timeManager.m_changeCycle = 0;

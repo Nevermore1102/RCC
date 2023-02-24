@@ -319,6 +319,7 @@ public:
         {
             return std::make_pair(false, MAXIDX);
         }
+        //返回Leader的编号
         return std::make_pair(true, (m_view + m_highestBlock.number()) % m_nodeNum);
     }
 
