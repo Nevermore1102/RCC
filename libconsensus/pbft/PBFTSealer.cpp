@@ -123,7 +123,7 @@ void PBFTSealer::attempIncreaseTimeoutTx()
         m_lastTimeoutTx = m_pbftEngine->maxBlockTransactions();
         return;
     }
-    //在没有超时的情况下，能达成共识的最大交易数 与 前块所包含的交易数 相等
+    //在没有超时的情况下能达成共识的最大交易数 与 前块所包含的交易数 相等
     if (m_maxNoTimeoutTx == m_pbftEngine->maxBlockTransactions())
     {
         //另两者相等,返回
