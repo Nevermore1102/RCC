@@ -1388,10 +1388,18 @@ void PBFTEngine::reportBlock(Block const& block)
 /// 5. clear all caches related to prepareReq and signReq
 void PBFTEngine::reportBlockWithoutLock(Block const& block)
 {
+    //更新最新区块值为新提交的blockHeader
     if (m_blockChain->number() == 0 || m_highestBlock.number() < block.blockHeader().number())
     {
         /// update the highest block
         m_highestBlock = block.blockHeader();
+        // 同步了新块,因此要修改:
+        /*
+         * m_view 当前视图编号
+         * m_toView ???
+         * m_lastConsensusTime 最近共识时间
+         * m_consensusBlockNumber, 要共识区块号 = 当前最高块+1
+         * */
         if (m_highestBlock.number() >= m_consensusBlockNumber)
         {
             m_view = m_toView = 0;
@@ -1400,14 +1408,18 @@ void PBFTEngine::reportBlockWithoutLock(Block const& block)
             m_timeManager.m_changeCycle = 0;
             m_consensusBlockNumber = m_highestBlock.number() + 1;
             /// delete invalid view change requests from the cache
+            //根据新的最高块值删除无效的视图改变请求
             m_reqCache->delInvalidViewChange(m_highestBlock);
         }
+        //重置配置
         resetConfig();
+        //如果是要提交一个区块到链上
         if (m_onCommitBlock)
         {
             m_onCommitBlock(block.blockHeader().number(), block.getTransactionSize(),
                 m_timeManager.m_changeCycle);
         }
+        // 清除所有与prepareReq和signReq相关的缓存
         m_reqCache->delCache(m_highestBlock);
         PBFTENGINE_LOG(INFO) << LOG_DESC("^^^^^^^^Report") << LOG_KV("num", m_highestBlock.number())
                              << LOG_KV("sealerIdx", m_highestBlock.sealer())
