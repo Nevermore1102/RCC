@@ -174,9 +174,10 @@ void PBFTEngine::initPBFTEnv(unsigned view_timeout)
     
 }
 
+//判断是否应该封装
 bool PBFTEngine::shouldSeal()
 {
-    //如果当前线程不为Sealer线程
+    //如果当前线程不为Sealer线程, 则返回false
     if (m_cfgErr || m_accountType != NodeAccountType::SealerAccount)
     {
         return false;
@@ -217,6 +218,7 @@ bool PBFTEngine::shouldSeal()
  * @brief: rehandle the unsubmitted committedPrepare
  * @param req: the unsubmitted committed prepareReq
  */
+
 void PBFTEngine::rehandleCommitedPrepareCache(PrepareReq const& req)
 {
     Guard l(m_mutex);
@@ -254,6 +256,7 @@ void PBFTEngine::rehandleCommitedPrepareCache(PrepareReq const& req)
 }
 
 /// init pbftMsgBackup
+// 初始化 信息池
 void PBFTEngine::initBackupDB()
 {
     /// try-catch has already been considered by Initializer::init and RPC calls startByGroupID
@@ -470,7 +473,7 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
     // 如果prepare中的pBlock的交易数为0且设定为排除空块
     if (prepareReq->pBlock->getTransactionSize() == 0 && m_omitEmptyBlock)
     {
-        //换主失败
+
         m_leaderFailed = true;
         changeViewForFastViewChange();
         m_timeManager.m_changeCycle = 0;
@@ -623,7 +626,7 @@ bool PBFTEngine::sendMsg(dev::network::NodeID const& nodeId, unsigned const& pac
                                   << LOG_KV("remote_endpoint", session.nodeIPEndpoint)
                                   << LOG_KV("nodeIdx", nodeIdx())
                                   << LOG_KV("myNode", m_keyPair.pub().abridged());
-            broadcastMark(session.nodeID(), packetType, key);
+            broadcastMm_fastViewChangeark(session.nodeID(), packetType, key);
             return true;
         }
     }

@@ -1374,7 +1374,195 @@ std::string Rpc::sendRawTransaction(int _groupID, const std::string& _rlp,
             JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, boost::diagnostic_information(e)));
     }
 }
+//!!!产生未签名交易
+dev::eth::Transaction::Ptr Rpc::generateTransactionWithoutSig4sharper(dev::eth::Transaction::Ptr input_tx)
+{
+    dev::eth::Transaction::Ptr generatedTx = std::make_shared<dev::eth::Transaction>();
+    generatedTx->setReceiveAddress(input_tx->receiveAddress());
+    generatedTx->setData(std::make_shared<const dev::bytes>(input_tx->get_data()));
+    //LOG(INFO)<<LOG_KV("**********查看data",generatedTx->get_data_tostring());
+    // std::string hex_m_data_str=generatedTx->get_data_tostring();
+    // std::string flag4sharper = "0x111222333";
+    // std::string c1="|";
+    // std::string res="0xf"+flag4sharper+c1+"2"+c1+hex_m_data_str+c1+"3"+c1+hex_m_data_str;
+    // LOG(INFO)<<LOG_KV("**********查看data","0");
+    // dev::bytes tempbytes2=jsToBytes(hex_m_data_str, OnFailed::Throw);
+    // //generatedTx->setData(std::make_shared<const dev::bytes>(tempbytes2));
+    // LOG(INFO)<<LOG_KV("**********查看data","1");
 
+    // generatedTx->setData(std::make_shared<const dev::bytes>(input_tx->get_data()));
+    // LOG(INFO)<<LOG_KV("**********查看data","2");
+
+    generatedTx->setChainId(1);
+    generatedTx->setGroupId(2);
+    //设置相关groupId信息
+    //generatedTx->setGroupId(2);
+    // LOG(INFO)<<LOG_DESC("生成交易")<<LOG_KV("ChainId",generatedTx->chainId() )
+    // <<LOG_KV("GroupId",generatedTx->groupId());
+    generatedTx->setBlockLimit(input_tx->blockLimit());
+    generatedTx->setType(input_tx->type());
+    //random nonce 4 sharper cache logic
+    generatedTx->setNonce(generateRandomValue4sharper());
+    generatedTx->setImportTime(utcTime());
+    return generatedTx;
+}
+//!!!返回随机值
+dev::u256 Rpc::generateRandomValue4sharper()
+{
+    auto randomValue = h256::random();
+    return u256(randomValue);
+}
+//!!!产生签名后交易
+dev::eth::Transaction::Ptr Rpc::generateTransactionWithSig4sharper(dev::eth::Transaction::Ptr input_tx, dev::KeyPair const& _keyPair,const dev::GROUP_ID& groupId)
+{
+    auto generatedTx =generateTransactionWithoutSig4sharper(input_tx);
+    //重新设置id
+    generatedTx->setGroupId(groupId);
+    auto hashToSign = generatedTx->hash(dev::eth::IncludeSignature::WithoutSignature);
+    auto sign = dev::crypto::Sign(_keyPair, hashToSign);
+    generatedTx->updateSignature(sign);
+    return generatedTx;
+}
+//!!!发送交易:调用此函数
+std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::string& _rlp,int32_t num_randomtx)
+{
+    return sendRandomRawTransaction4sharper(_groupID, _rlp,num_randomtx,
+        boost::bind(&Rpc::notifyReceipt, this, boost::placeholders::_1, boost::placeholders::_2,
+            boost::placeholders::_3, boost::placeholders::_4));
+}
+//!!!发送交易
+//wait to modify :1.add para num_randomtx
+std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::string& _rlp,int32_t num_randomtx,
+    std::function<std::shared_ptr<Json::Value>(
+        std::weak_ptr<dev::blockchain::BlockChainInterface> _blockChain,
+        LocalisedTransactionReceipt::Ptr receipt, dev::bytesConstRef input,
+        dev::eth::Block::Ptr _blockPtr)>
+        _notifyCallback)
+{
+    try
+    {
+#if 0
+        RPC_LOG(TRACE) << LOG_BADGE("sendRawTransaction") << LOG_DESC("request")
+                       << LOG_KV("groupID", _groupID) << LOG_KV("rlp", _rlp);
+#endif
+
+        RPC_LOG(INFO) << LOG_DESC("sharper::RPC::开始随机发送交易")
+                      <<LOG_KV("随机交易数量", num_randomtx);
+
+        auto txPool = ledgerManager()->txPool(_groupID);
+        // only check txPool here
+        if (!txPool)
+        {
+            BOOST_THROW_EXCEPTION(
+                JsonRpcException(RPCExceptionType::GroupID, RPCMsg[RPCExceptionType::GroupID]));
+        }
+        auto blockChain = ledgerManager()->blockChain(_groupID);
+        Transaction::Ptr input_tx = std::make_shared<Transaction>(
+            jsToBytes(_rlp, OnFailed::Throw), CheckTransaction::Everything);
+        //生成key用于签名
+        auto keyPair=KeyPair::create();
+
+        for(int i=0;i<num_randomtx;i++)
+        {
+            Transaction::Ptr tx=generateTransactionWithSig4sharper(input_tx,keyPair,_groupID);
+
+
+            // receive transaction from channel or rpc
+            tx->setRpcTx(true);
+            auto currentTransactionCallback = m_currentTransactionCallback.get();
+
+            uint32_t clientProtocolversion = ProtocolVersion::v1;
+            if (currentTransactionCallback)
+            {
+                auto transactionCallback = *currentTransactionCallback;
+                clientProtocolversion = (*m_transactionCallbackVersion)();
+                std::weak_ptr<dev::blockchain::BlockChainInterface> weakedBlockChain(blockChain);
+                // Note: Since blockChain has a transaction cache, that is,
+                //       BlockChain holds transactions, in order to prevent circular references,
+                //       the callback of the transaction cannot hold the blockChain of shared_ptr,
+                //       must be weak_ptr
+                tx->setRpcCallback(
+                    [weakedBlockChain, _notifyCallback, transactionCallback, clientProtocolversion,
+                        _groupID](LocalisedTransactionReceipt::Ptr receipt, dev::bytesConstRef input,
+                        dev::eth::Block::Ptr _blockPtr) {
+                        std::shared_ptr<Json::Value> response = std::make_shared<Json::Value>();
+                        if (clientProtocolversion > 0)
+                        {
+                            response = _notifyCallback(weakedBlockChain, receipt, input, _blockPtr);
+                        }
+
+                        auto receiptContent = response->toStyledString();
+                        transactionCallback(receiptContent, _groupID);
+                    });
+            }
+            // calculate the keccak256 before submit into the transaction pool
+            tx->hash();
+
+            //type为创建合约时该地址为0x0
+            FixedHash<20> contractAddress;
+            //不要log了
+            // RPC_LOG(INFO) << LOG_DESC("将随机交易投递到交易池")
+            //     //<< LOG_KV("signedData", _rlp)
+            //     //<< LOG_KV("txhash", tx->hash())
+            //     << LOG_KV("tx_nonce", tx->nonce());
+            // <<LOG_KV("tx->receiveAddress()", tx->receiveAddress())
+            // <<LOG_KV("is  contract tx?", tx->receiveAddress()==contractAddress?"true":"faslse");
+            //<< LOG_KV("_K", tx->data())
+            //<< LOG_KV("vrs", toHex(tx->vrs()->asBytes()))
+            //<< LOG_KV("_K", tx->data());
+            // RPC_LOG(INFO) << LOG_DESC("解析交易")
+            //             <<LOG_KV("v", tx->vrs().use_count())
+            //             <<LOG_KV("r", tx->vrs()->r.abridged())
+            //             <<LOG_KV("s", tx->vrs()->s.abridged());
+
+            std::pair<h256, Address> ret;
+            switch (clientProtocolversion)
+            {
+            // the oldest SDK: submit transactions sync
+            case ProtocolVersion::v1:
+            case ProtocolVersion::v2:
+                checkRequest(_groupID);
+                checkSyncStatus(_groupID);
+                //RPC_LOG(INFO)<<LOG_DESC("投递交易1");
+                ret = txPool->submitTransactions(tx);
+                //RPC_LOG(INFO)<<LOG_DESC("交易投递结束1");
+                break;
+            // the v2 submit transactions sync
+            // and v3 submit transactions async
+            case ProtocolVersion::v3:
+                //RPC_LOG(INFO)<<LOG_DESC("投递交易2");
+                ret = txPool->submit(tx);
+                //RPC_LOG(INFO)<<LOG_DESC("交易投递结束2") << LOG_KV("toJS(ret.first)", ret.first) << LOG_KV("toJS(ret.second)", ret.second);
+                break;
+            // default submit transactions sync
+            default:
+                checkRequest(_groupID);
+                checkSyncStatus(_groupID);
+                //RPC_LOG(INFO)<<LOG_DESC("投递交易3");
+                ret = txPool->submitTransactions(tx);
+                //RPC_LOG(INFO)<<LOG_DESC("交易投递结束3");
+                break;
+            }
+            //return toJS(ret.first);
+        }
+
+    }
+    catch (JsonRpcException& e)
+    {
+        RPC_LOG(WARNING) << LOG_BADGE("sendRawTransaction") << LOG_DESC("response")
+                         << LOG_KV("groupID", _groupID) << LOG_KV("errorCode", e.GetCode())
+                         << LOG_KV("errorMessage", e.GetMessage());
+        throw e;
+    }
+    catch (std::exception& e)
+    {
+        RPC_LOG(ERROR) << LOG_DESC("sendRawTransaction exceptioned") << LOG_KV("groupID", _groupID)
+                       << LOG_KV("errorMessage", boost::diagnostic_information(e));
+        BOOST_THROW_EXCEPTION(
+            JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, boost::diagnostic_information(e)));
+    }
+    return "";
+}
 
 // Get transaction with merkle proof by hash
 Json::Value Rpc::getTransactionByHashWithProof(int _groupID, const std::string& _transactionHash)

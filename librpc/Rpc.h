@@ -136,7 +136,18 @@ public:
     std::string sendRawTransactionAndGetProof(int _groupID, const std::string& _rlp) override;
     // std::string sendSubCsRawTransaction(int _groupID, const std::string& _rlp, int _iscrosstx); // ADD BY THB, 节点重载一个rpc接口用于接收跨片子交易
     // std::string sendSubCsRawTransaction(int _groupID, const std::string& _rlp, int _iscrosstx, int sourceshardid, int messageid, std::string& readwriteset);
-
+    //!!!
+    dev::eth::Transaction::Ptr generateTransactionWithoutSig4sharper(dev::eth::Transaction::Ptr input_tx);
+    u256 generateRandomValue4sharper();
+    dev::eth::Transaction::Ptr generateTransactionWithSig4sharper(dev::eth::Transaction::Ptr input_tx, dev::KeyPair const& _keyPair,const dev::GROUP_ID& groupId);
+    std::string sendRandomRawTransaction4sharper(int _groupID, const std::string& _rlp,int32_t num_randomtx);
+    std::string sendRandomRawTransaction4sharper(int _groupID, const std::string& _rlp,int32_t num_randomtx,
+        std::function<std::shared_ptr<Json::Value>(
+            std::weak_ptr<dev::blockchain::BlockChainInterface> _blockChain,
+            LocalisedTransactionReceipt::Ptr receipt, dev::bytesConstRef input,
+            dev::eth::Block::Ptr _blockPtr)>
+            _notifyCallback);
+    //!!!
     // Get transaction with merkle proof by hash
     Json::Value getTransactionByHashWithProof(
         int _groupID, const std::string& _transactionHash) override;
