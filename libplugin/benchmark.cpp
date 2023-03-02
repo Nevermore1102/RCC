@@ -38,22 +38,22 @@ void transactionInjectionTest::injectionTxin9shards()
     LOG(INFO)<<LOG_KV("*********进行4分片实验,分片号为",m_internal_groupId);
     //if(m_internal_groupId>2) return ;
     //片内比例
-    if(m_internal_groupId==1)
-    {
-        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(0.6,m_internal_groupId,getRlps4fourShards(),12500);
-    }
-    else if(m_internal_groupId==2)
-    {
-        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(1,m_internal_groupId,getRlps4fourShards(),7500);
-    }
-    else if(m_internal_groupId==3)
-    {
-        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(0.6,m_internal_groupId,getRlps4fourShards(),12500);
-    }
-    else if(m_internal_groupId==4)
-    {
-        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(1,m_internal_groupId,getRlps4fourShards(),7500);
-    }
+//    if(m_internal_groupId==1)
+//    {
+//        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(0.6,m_internal_groupId,getRlps4fourShards(),12500);
+//    }
+//    else if(m_internal_groupId==2)
+//    {
+//        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(1,m_internal_groupId,getRlps4fourShards(),7500);
+//    }
+//    else if(m_internal_groupId==3)
+//    {
+//        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(0.6,m_internal_groupId,getRlps4fourShards(),12500);
+//    }
+//    else if(m_internal_groupId==4)
+//    {
+//        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(1,m_internal_groupId,getRlps4fourShards(),7500);
+//    }
     //if(m_internal_groupId==9) return;
     if(!m_isleader) return ;
     // std::string signedTransaction =createIntraTx4sharper();
