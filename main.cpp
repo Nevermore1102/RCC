@@ -271,6 +271,7 @@ void loadHieraInfo(boost::property_tree::ptree& pt, std::string& nearest_upper_g
 int main() {
 
     dev::consensus::hiera_shard_number = 9; // 初始化分片数目
+//    dev::consensus::hiera_shard_number = 1; // 初始化分片数目, 单分片
 
     // 开始增加组间通信同步组
     boost::property_tree::ptree pt;
@@ -328,7 +329,10 @@ int main() {
 
     // PLUGIN_LOG(INFO) << LOG_DESC("开始注入交易...");
     // injectTransactions(rpcService, ledgerManager);
-
+    //!!! 发送片内交易
+    transactionInjectionTest test(rpcService, dev::consensus::internal_groupId
+        ,dev::consensus::SHARDNUM,ledgerManager,consensus::isShardLeader);
+    test.injectionIntraTxin1shards(2000);
     while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
