@@ -1792,11 +1792,11 @@ void PBFTEngine::checkTimeout()
 
             checkAndChangeView(m_toView);
             //TODO :计算主节点
-//            int leader = (m_highestBlock.number()+ m_toView)%4;
+            int leader = (m_highestBlock.number()+ m_toView)%4;
 
             PBFTENGINE_LOG(INFO) << LOG_DESC("checkTimeout Succ") << LOG_KV("view", m_view)
                                  << LOG_KV("toView", m_toView) << LOG_KV("本线程nodeIdx", nodeIdx())
-//                                 <<LOG_KV("Leader",leader)
+                                 <<LOG_KV("Leader",leader)
                                  << LOG_KV("changeCycle", m_timeManager.m_changeCycle)
                                  << LOG_KV("myNode", m_keyPair.pub().abridged())
                                  << LOG_KV("timecost", t.elapsed() * 1000);

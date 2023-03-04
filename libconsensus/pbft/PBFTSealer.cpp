@@ -62,6 +62,7 @@ void PBFTSealer::handleBlock()
                          << LOG_KV("tx", m_sealing.block->getTransactionSize())
                          << LOG_KV("nodeIdx", m_pbftEngine->nodeIdx())
                          << LOG_KV("hash", m_sealing.block->header().hash().abridged());
+    //只有生成的合法的block之后,编号才能网上加,一开始节点都生成的是空块,所以blk_num一直是1
     m_pbftEngine->generatePrepare(m_sealing.block);
     if (m_pbftEngine->shouldReset(*(m_sealing.block)))
     {
