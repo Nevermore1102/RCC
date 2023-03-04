@@ -1937,6 +1937,7 @@ void PBFTEngine::workLoop()
                     << LOG_KV("myNode", m_keyPair.pub().abridged());
                 handleMsg(ret.second);
             }
+            //handleMsg结束
             /// to avoid of cpu problem
             else if (m_reqCache->futurePrepareCacheSize() == 0)
             {
