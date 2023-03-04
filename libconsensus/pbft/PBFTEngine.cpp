@@ -189,8 +189,8 @@ bool PBFTEngine::shouldSeal()
     //如果得不到返回的Leader
     if (!ret.first)
     {
-        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.first是否为false")
-                             << LOG_KV(nodeIdx(),"不可打包");
+//        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.first是否为false")
+//                             << LOG_KV(nodeIdx(),"不可打包");
         return false;
     }
     if (ret.second != nodeIdx())
@@ -202,12 +202,12 @@ bool PBFTEngine::shouldSeal()
          * */
         if (m_notifyNextLeaderSeal && getNextLeader() == nodeIdx())
         {
-            PBFTSEALER_LOG(INFO)<<LOG_DESC("如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true")
-                                 << LOG_KV(nodeIdx(),"可以打包");
+//            PBFTSEALER_LOG(INFO)<<LOG_DESC("如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true")
+//                                 << LOG_KV(nodeIdx(),"可以打包");
             return true;
         }
-        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.second 是否为当前节点nodeIdx()")
-                             << LOG_KV(nodeIdx(),"不是,不可打包");
+//        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.second 是否为当前节点nodeIdx()")
+//                             << LOG_KV(nodeIdx(),"不是,不可打包");
         return false;
     }
     //如果
@@ -218,12 +218,12 @@ bool PBFTEngine::shouldSeal()
         {
             rehandleCommitedPrepareCache(m_reqCache->committedPrepareCache());
         }
-        PBFTSEALER_LOG(INFO)<<LOG_DESC("当前节点是否可以打包")
-                             << LOG_KV(nodeIdx(),"不是,不可打包");
+//        PBFTSEALER_LOG(INFO)<<LOG_DESC("当前节点是否可以打包")
+//                             << LOG_KV(nodeIdx(),"不是,不可打包");
         return false;
     }
-    PBFTSEALER_LOG(INFO)<<LOG_DESC("当前节点是否可以打包")
-                         << LOG_KV(nodeIdx(),"可以打包");
+//    PBFTSEALER_LOG(INFO)<<LOG_DESC("当前节点是否可以打包")
+//                         << LOG_KV(nodeIdx(),"可以打包");
     return true;
 }
 
@@ -387,6 +387,7 @@ void PBFTEngine::backupMsg(std::string const& _key, std::shared_ptr<bytes> _msg)
 
 PrepareReq::Ptr PBFTEngine::constructPrepareReq(dev::eth::Block::Ptr _block)
 {
+
     dev::eth::Block::Ptr engineBlock = m_blockFactory->createBlock();
     *engineBlock = std::move(*_block);
     PrepareReq::Ptr prepareReq = std::make_shared<PrepareReq>(
@@ -396,6 +397,7 @@ PrepareReq::Ptr PBFTEngine::constructPrepareReq(dev::eth::Block::Ptr _block)
         prepareReq->isEmpty = true;
     }
     // the non-empty block only broadcast hash when enable-prepare-with-txs-hash
+    //当区块非空的时候
     if (m_enablePrepareWithTxsHash && prepareReq->pBlock->transactions()->size() > 0)
     {
         // addPreRawPrepare to response to the request-sealers
@@ -425,6 +427,7 @@ PrepareReq::Ptr PBFTEngine::constructPrepareReq(dev::eth::Block::Ptr _block)
         prepareReq->pBlock->encode(*prepareReq->block);
     }
     // not enable-prepare-with-txs-hash or the empty block
+    //当区块为空
     else
     {
         auto self = std::weak_ptr<PBFTEngine>(shared_from_this());
@@ -471,10 +474,11 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
     // 5. since the x_sealing is stucked at step 1, the PBFTEngine has been stucked at notifySeal
     // Solution:
     // if the sealer execute step1 (m_generatePrepare is equal to true), won't trigger notifySeal
+
     m_generatePrepare = true;
     //先上锁
     Guard l(m_mutex);
-    // the leader has been changed
+    // 需要判断当前节点是否为Leader,如果不为Leader,就会返回
     if (!getLeader().first || getLeader().second != nodeIdx())
     {
         m_generatePrepare = false;
@@ -488,13 +492,18 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
     {
 
         m_leaderFailed = true;
-        changeViewForFastViewChange();
+        changeViewForFastViewChange();//触发视图切换
         m_timeManager.m_changeCycle = 0;
+        PBFTENGINE_LOG(INFO) << LOG_DESC("此区块封装交易数为0,不调用handlePrepareMsg");
         return true;
     }
     handlePrepareMsg(prepareReq);
+    /*
+     * handlePrepareMsg会打印 addRawPrepare, execBlock, handlePrepareMsg Succ
+     * */
 
     /// reset the block according to broadcast result
+    //只有当前节点生成的块要被提交,才会记录
     PBFTENGINE_LOG(INFO) << LOG_DESC("generateLocalPrepare")
                          << LOG_KV("hash", prepareReq->block_hash.abridged())
                          << LOG_KV("H", prepareReq->height) << LOG_KV("nodeIdx", nodeIdx())
@@ -947,7 +956,7 @@ void PBFTEngine::execBlock(Sealing& sealing, PrepareReq::Ptr _req, std::ostrings
     {
         sealing.block = _req->pBlock;
     }
-    /// decode the network received prepare packet
+    /// decode the network received prepare packet, 网络上来的block要decode一下
     else
     {
         // without receipt, with transaction hash(parallel calc txs' hash)
@@ -958,7 +967,7 @@ void PBFTEngine::execBlock(Sealing& sealing, PrepareReq::Ptr _req, std::ostrings
 
     m_sealingNumber = sealing.block->getTransactionSize();
 
-    /// return directly if it's an empty block
+    /// return directly if it's an empty block, 因此日志中只有addRawPrepare,没有execBlock
     if (sealing.block->getTransactionSize() == 0 && m_omitEmptyBlock)
     {
         sealing.p_execContext = nullptr;
@@ -1078,6 +1087,7 @@ void PBFTEngine::onRecvPBFTMessage(dev::p2p::NetworkException _exception,
 
 bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepare_req, PBFTMsgPacket const& pbftMsg)
 {
+    //解码
     bool valid = decodeToRequests(*prepare_req, ref(pbftMsg.data));
     // set isEmpty flag for the prepareReq
     if (pbftMsg.prepareWithEmptyBlock)
@@ -1110,6 +1120,13 @@ void PBFTEngine::clearPreRawPrepare()
  * @param prepare_req: the prepare request need to be handled
  * @param self: if generated-prepare-request need to handled, then set self to be true;
  *              else this function will filter the self-generated prepareReq
+ *1. 检查prepareReq是否有效
+* 2. 如果prepareReq是有效的。
+* (1) 将pareReq添加到raw-prepare-cache中
+* (2) 执行该块
+* (3) 对prepareReq进行签名，并广播签名的prepareReq
+* (4) 回调checkAndCommit函数以确定是否可以提交该块
+ *
  */
 bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepareReq, std::string const& endpoint)
 {
@@ -1125,6 +1142,7 @@ bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepareReq, std::string const&
     auto valid_ret = isValidPrepare(*prepareReq, oss);
     if (valid_ret == CheckResult::INVALID)
     {
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("PrepareMsg invalid,清除preRawPrepare,返回false");
         clearPreRawPrepare();
         return false;
     }
@@ -1133,15 +1151,16 @@ bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepareReq, std::string const&
 
     if (valid_ret == CheckResult::FUTURE)
     {
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("PrepareMsg FUTURE,清除preRawPrepare,调用addFuturePrepareCache,返回True");
         clearPreRawPrepare();
         m_reqCache->addFuturePrepareCache(prepareReq);
         return true;
     }
     // clear preRawPrepare before addRawPrepare when enable_block_with_txs_hash
     clearPreRawPrepare();
-    /// add raw prepare request
+    /// add raw prepare request, 把rawPrepare加入cache,并打印日志
     addRawPrepare(prepareReq);
-
+    //执行PrepareMsg并生成签名
     return execPrepareAndGenerateSignMsg(prepareReq, oss);
 }
 
@@ -1160,7 +1179,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
     {
         // update the latest time of receiving the rawPrepare and ready to execute the block
         m_timeManager.m_lastAddRawPrepareTime = utcSteadyTime();
-
+        // 执行区块
         execBlock(workingSealing, _prepareReq, _oss);
 
         // update the latest execution time when processed the block execution
@@ -1199,7 +1218,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
     m_destructorThread->enqueue(std::move(holder));
 
     m_reqCache->addPrepareReq(sign_prepare);
-    PBFTENGINE_LOG(DEBUG) << LOG_DESC("handlePrepareMsg: add prepare cache and broadcastSignReq")
+    PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg: add prepare cache and broadcastSignReq")
                           << LOG_KV("reqNum", sign_prepare->height)
                           << LOG_KV("hash", sign_prepare->block_hash.abridged())
                           << LOG_KV("nodeIdx", nodeIdx())
@@ -1207,7 +1226,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
                           << LOG_KV("myNode", m_keyPair.pub().abridged());
 
     /// broadcast the re-generated signReq(add the signReq to cache)
-    broadcastSignReq(*sign_prepare);
+    broadcastSignReq(*sign_prepare); //广播签名信息
 
     checkAndCommit();
     PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg Succ")
