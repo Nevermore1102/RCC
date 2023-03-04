@@ -121,6 +121,7 @@ bool Sealer::shouldWait(bool const& wait) const
 void Sealer::doWork(bool wait)
 {
     reportNewBlock();
+
     if (shouldSeal() && m_startConsensus.load())
     {
         // SEAL_LOG(INFO) << LOG_DESC("111111111111111111111111111");
