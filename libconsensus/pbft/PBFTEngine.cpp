@@ -183,25 +183,27 @@ bool PBFTEngine::shouldSeal()
         return false;
     }
     /// check leader
-    std::pair<bool, IDXTYPE> ret = getLeader();
-    //如果得不到返回的Leader
-    if (!ret.first)
-    {
-        return false;
-    }
-    if (ret.second != nodeIdx())
-    {
-        /// if current node is the next leader
-        /// and it has been notified to seal new block, return true
-        /*
-         * 如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true
-         * */
-        if (m_notifyNextLeaderSeal && getNextLeader() == nodeIdx())
-        {
-            return true;
-        }
-        return false;
-    }
+    //TODO: 禁用Leader的判断
+
+//    std::pair<bool, IDXTYPE> ret = getLeader();
+//    //如果得不到返回的Leader
+//    if (!ret.first)
+//    {
+//        return false;
+//    }
+//    if (ret.second != nodeIdx())
+//    {
+//        /// if current node is the next leader
+//        /// and it has been notified to seal new block, return true
+//        /*
+//         * 如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true
+//         * */
+//        if (m_notifyNextLeaderSeal && getNextLeader() == nodeIdx())
+//        {
+//            return true;
+//        }
+//        return false;
+//    }
     //如果
     if (m_reqCache->committedPrepareCache().height == m_consensusBlockNumber)
     {
@@ -626,7 +628,7 @@ bool PBFTEngine::sendMsg(dev::network::NodeID const& nodeId, unsigned const& pac
                                   << LOG_KV("remote_endpoint", session.nodeIPEndpoint)
                                   << LOG_KV("nodeIdx", nodeIdx())
                                   << LOG_KV("myNode", m_keyPair.pub().abridged());
-            broadcastMm_fastViewChangeark(session.nodeID(), packetType, key);
+            broadcastMark(session.nodeID(), packetType, key);
             return true;
         }
     }
