@@ -618,29 +618,6 @@ std::string transactionInjectionTest::createCrossTransactions4sharper(int32_t co
 }
 
 
-
-void transactionInjectionTest::injectionTransactions4sharper(std::string filename, int32_t groupId)
-{
-    PLUGIN_LOG(INFO) << LOG_DESC("进入injectionTransactions");
-
-    ifstream infile(filename, ios::binary); // signedtxs.json
-
-    Json::Reader reader;
-    Json::Value root;
-    int64_t number = 0;
-
-    if(reader.parse(infile, root))
-    {
-        number = root.size();
-        for(int i = 0; i < number; i++)
-        {
-            std::string signedTransaction = root[i].asString();
-            m_rpcService->sendRawTransaction4sharper(groupId, signedTransaction);
-        }
-    }
-    infile.close();
-    PLUGIN_LOG(INFO) << LOG_DESC("普通交易发送完成...");
-}
 void transactionInjectionTest::injectionRandomTransactions4sharper(std::string filename, int32_t groupId,int32_t num_randomtx)
 {
     PLUGIN_LOG(INFO) << LOG_DESC("开始injectionRandomTransactions4sharper");
@@ -665,29 +642,6 @@ void transactionInjectionTest::injectionRandomTransactions4sharper(std::string f
 }
 // @ratio_intra_cross :片内交易比例 
 // @num_randomtx : 交易总数
-void transactionInjectionTest::injectionRandomTransactions4sharperWithMixedTxs(std::string filename, int32_t groupId,int32_t num_randomtx,double ratio_intra_cross)
-{
-    PLUGIN_LOG(INFO) << LOG_DESC("开始injectionRandomTransactions4sharper");
-
-    ifstream infile(filename, ios::binary); // signedtxs.json
-
-    Json::Reader reader;
-    Json::Value root;
-    int64_t number = 0;
-     std::vector<std::string> rlps;
-    if(reader.parse(infile, root))
-    {
-        number = root.size();
-        for(int i = 0; i < number; i++)
-        {
-            std::string signedTransaction = root[i].asString();
-            rlps.push_back(signedTransaction);
-        }
-        m_rpcService->sendRandomRawTransaction4sharperWithMixedTxs(ratio_intra_cross,groupId,rlps,num_randomtx);
-    }
-    infile.close();
-    PLUGIN_LOG(INFO) << LOG_DESC("随机交易发送完成...");
-}
 
 
 

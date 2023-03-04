@@ -101,7 +101,7 @@ void Executive::verifyTransaction(
 
 bool Executive::execute()
 {
-    std::cout << "在函数Executive::execute()中" << std::endl;
+//    std::cout << "在函数Executive::execute()中" << std::endl;
     uint64_t txGasLimit = m_envInfo.precompiledEngine()->txGasLimit();
 
     if (g_BCOSConfig.version() > RC3_VERSION)

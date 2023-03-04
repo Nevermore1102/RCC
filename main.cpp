@@ -36,9 +36,10 @@
 #include <string>
 #include <unistd.h>
 #include <thread>
-// #include <libplugin/Benchmark.h>
-#include <libethcore/Block.h>
+//#include <libplugin/Benchmark.h>
+#include "libplugin/benchmark.h"
 #include <libconsensus/pbft/Common.h>
+#include <libethcore/Block.h>
 
 using namespace std;
 using namespace dev;
@@ -75,6 +76,7 @@ namespace dev {
         int hiera_shard_number; // 分片总数
         vector<h512>forwardNodeId;
         vector<h512>shardNodeId;
+        bool isShardLeader=false;
     }
 }
 
@@ -270,8 +272,8 @@ void loadHieraInfo(boost::property_tree::ptree& pt, std::string& nearest_upper_g
 
 int main() {
 
-    dev::consensus::hiera_shard_number = 9; // 初始化分片数目
-//    dev::consensus::hiera_shard_number = 1; // 初始化分片数目, 单分片
+//    dev::consensus::hiera_shard_number = 9; // 初始化分片数目
+    dev::consensus::hiera_shard_number = 1; // 初始化分片数目, 单分片
 
     // 开始增加组间通信同步组
     boost::property_tree::ptree pt;
@@ -327,11 +329,11 @@ int main() {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50000)); // 暂停10秒，等所有服务启动完毕
 
-    // PLUGIN_LOG(INFO) << LOG_DESC("开始注入交易...");
+//     PLUGIN_LOG(INFO) << LOG_DESC("开始注入交易...");
     // injectTransactions(rpcService, ledgerManager);
     //!!! 发送片内交易
     transactionInjectionTest test(rpcService, dev::consensus::internal_groupId
-        ,dev::consensus::SHARDNUM,ledgerManager,consensus::isShardLeader);
+        ,dev::consensus::hiera_shard_number,ledgerManager,consensus::isShardLeader);
     test.injectionIntraTxin1shards(2000);
     while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

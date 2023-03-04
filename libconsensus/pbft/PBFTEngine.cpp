@@ -626,7 +626,7 @@ bool PBFTEngine::sendMsg(dev::network::NodeID const& nodeId, unsigned const& pac
                                   << LOG_KV("remote_endpoint", session.nodeIPEndpoint)
                                   << LOG_KV("nodeIdx", nodeIdx())
                                   << LOG_KV("myNode", m_keyPair.pub().abridged());
-            broadcastMm_fastViewChangeark(session.nodeID(), packetType, key);
+            broadcastMark(session.nodeID(), packetType, key);
             return true;
         }
     }
