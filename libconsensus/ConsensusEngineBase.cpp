@@ -89,7 +89,7 @@ void ConsensusEngineBase::checkBlockValid(Block const& block)
     /// check transaction num
     if (block.getTransactionSize() > maxBlockTransactions())
     {
-        ENGINE_LOG(DEBUG) << LOG_DESC("checkBlockValid: overthreshold transaction num")
+        ENGINE_LOG(INFO) << LOG_DESC("checkBlockValid: overthreshold transaction num")
                           << LOG_KV("blockTransactionLimit", maxBlockTransactions())
                           << LOG_KV("blockTransNum", block.getTransactionSize());
         BOOST_THROW_EXCEPTION(
@@ -99,7 +99,7 @@ void ConsensusEngineBase::checkBlockValid(Block const& block)
     /// check the timestamp
     if (block.blockHeader().timestamp() > utcTime() && !m_allowFutureBlocks)
     {
-        ENGINE_LOG(DEBUG) << LOG_DESC("checkBlockValid: future timestamp")
+        ENGINE_LOG(INFO) << LOG_DESC("checkBlockValid: future timestamp")
                           << LOG_KV("timestamp", block.blockHeader().timestamp())
                           << LOG_KV("utcTime", utcTime()) << LOG_KV("hash", block_hash.abridged());
         BOOST_THROW_EXCEPTION(DisabledFutureTime() << errinfo_comment("Future time Disabled"));

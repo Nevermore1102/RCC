@@ -952,11 +952,12 @@ void PBFTEngine::execBlock(Sealing& sealing, PrepareReq::Ptr _req, std::ostrings
     /// no need to decode the local generated prepare packet
     auto start_time = utcTime();
     auto record_time = utcTime();
+    //如果 当前块是本节点生成的,那么直接将其复制给Sealing.Block
     if (_req->pBlock)
     {
         sealing.block = _req->pBlock;
     }
-    /// decode the network received prepare packet, 网络上来的block要decode一下
+    /// 否则,网络上来的block要decode一下
     else
     {
         // without receipt, with transaction hash(parallel calc txs' hash)
@@ -964,7 +965,7 @@ void PBFTEngine::execBlock(Sealing& sealing, PrepareReq::Ptr _req, std::ostrings
     }
     auto decode_time_cost = utcTime() - record_time;
     record_time = utcTime();
-
+    //获取该区块被封装的交易数量
     m_sealingNumber = sealing.block->getTransactionSize();
 
     /// return directly if it's an empty block, 因此日志中只有addRawPrepare,没有execBlock
