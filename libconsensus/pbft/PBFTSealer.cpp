@@ -90,6 +90,12 @@ void PBFTSealer::setBlock()
  */
 bool PBFTSealer::shouldSeal()
 {
+    if( m_pbftEngine->shouldSeal()){
+        PBFTSEALER_LOG(INFO) << LOG_DESC("m_pbftEngine->shouldSeal()为真")
+                             << LOG_KV("blkNum", m_sealing.block->header().number())
+                             << LOG_KV("nodeIdx", m_pbftEngine->nodeIdx())
+                             << LOG_KV("hash", m_sealing.block->header().hash().abridged());
+    }
     //判读条件是,父类Sealer中的shouldSeal返回真且pbftEngine中的shouldSeal返回真
     return Sealer::shouldSeal() && m_pbftEngine->shouldSeal();
 }
