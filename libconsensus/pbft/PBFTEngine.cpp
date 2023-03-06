@@ -185,31 +185,31 @@ bool PBFTEngine::shouldSeal()
     /// check leader
     //TODO: 禁用Leader的判断
 
-//    std::pair<bool, IDXTYPE> ret = getLeader();
-//    //如果得不到返回的Leader
-//    if (!ret.first)
-//    {
-////        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.first是否为false")
-////                             << LOG_KV(nodeIdx(),"不可打包");
-//        return false;
-//    }
-//    if (ret.second != nodeIdx())
-//    {
-//        /// if current node is the next leader
-//        /// and it has been notified to seal new block, return true
-//        /*
-//         * 如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true
-//         * */
-//        if (m_notifyNextLeaderSeal && getNextLeader() == nodeIdx())
-//        {
-////            PBFTSEALER_LOG(INFO)<<LOG_DESC("如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true")
-////                                 << LOG_KV(nodeIdx(),"可以打包");
-//            return true;
-//        }
-////        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.second 是否为当前节点nodeIdx()")
-////                             << LOG_KV(nodeIdx(),"不是,不可打包");
-//        return false;
-//    }
+    std::pair<bool, IDXTYPE> ret = getLeader();
+    //如果得不到返回的Leader
+    if (!ret.first)
+    {
+//        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.first是否为false")
+//                             << LOG_KV(nodeIdx(),"不可打包");
+        return false;
+    }
+    if (ret.second != nodeIdx())
+    {
+        /// if current node is the next leader
+        /// and it has been notified to seal new block, return true
+        /*
+         * 如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true
+         * */
+        if (m_notifyNextLeaderSeal && getNextLeader() == nodeIdx())
+        {
+//            PBFTSEALER_LOG(INFO)<<LOG_DESC("如果当前节点是下一个领导者,并且它已经被通知封装新的区块，返回true")
+//                                 << LOG_KV(nodeIdx(),"可以打包");
+            return true;
+        }
+//        PBFTSEALER_LOG(INFO)<<LOG_DESC("ret.second 是否为当前节点nodeIdx()")
+//                             << LOG_KV(nodeIdx(),"不是,不可打包");
+        return false;
+    }
     //如果
     if (m_reqCache->committedPrepareCache().height == m_consensusBlockNumber)
     {

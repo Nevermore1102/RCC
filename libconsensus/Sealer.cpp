@@ -124,8 +124,9 @@ void Sealer::doWork(bool wait)
 
     if (shouldSeal() && m_startConsensus.load())
     {
-        // SEAL_LOG(INFO) << LOG_DESC("111111111111111111111111111");
         //WriteGuard 是unique_lock,简化了 x_sealing 对象的上锁和解锁操作，方便线程对互斥量上锁
+//        SEAL_LOG(INFO) << LOG_DESC("当前节点通过shouldSeal(),可以生成块")<<LOG_KV("blkNum", m_sealing.block->header().number());
+
         WriteGuard l(x_sealing);
         {
             /// get current transaction num
@@ -158,8 +159,12 @@ void Sealer::doWork(bool wait)
                 m_signalled.wait_for(l, boost::chrono::milliseconds(1));
                 return;
             }
-            if (shouldHandleBlock())
+//            SEAL_LOG(INFO) << LOG_DESC("通过checkTxsEnough(maxTxsPerBlock)")<<LOG_KV("blkNum", m_sealing.block->header().number());
+            //TODO:Jason修改的第二个点, 将shouldHandleBlock注释,让所有区块都能打包块
+//            if (shouldHandleBlock())
+            if (true)
             {
+//                SEAL_LOG(INFO) << LOG_DESC("通过shouldHandleBlock(),可以生成块")<<LOG_KV("blkNum", m_sealing.block->header().number());
                 // transactionNum += m_sealing.block->getTransactionSize();
                 // SEAL_LOG(INFO) << LOG_KV("Seal_transactionNum", transactionNum); 
                 m_txPool->dropBlockTrans(m_sealing.block);
