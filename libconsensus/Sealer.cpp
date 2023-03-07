@@ -165,7 +165,7 @@ void Sealer::doWork(bool wait)
             //TODO:Jason修改的第二个点, 将shouldHandleBlock注释,让所有区块都能打包块
 //            if (shouldHandleBlock())
             //TODO:Jason修改的第三个点只有当size不等于0的时候,才会handleBlock
-            if (true)
+            if (m_sealing.block->getTransactionSize()!=0)
             {
                 SEAL_LOG(INFO) << LOG_DESC("可以生成块")<<LOG_KV("blkNum", m_sealing.block->header().number());
                 // transactionNum += m_sealing.block->getTransactionSize();

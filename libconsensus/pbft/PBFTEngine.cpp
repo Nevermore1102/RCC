@@ -486,7 +486,8 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
         if(!getLeader().first )
             PBFTENGINE_LOG(INFO) << LOG_DESC("尚未产生Leader");
         if(getLeader().second != nodeIdx())
-            PBFTENGINE_LOG(INFO) << LOG_DESC("Leader不为当前节点");
+            PBFTENGINE_LOG(INFO) << LOG_DESC("Leader不为当前节点")
+                <<LOG_KV("leader 是 ",getLeader().second);
         m_generatePrepare = false;
         return true;
     }
