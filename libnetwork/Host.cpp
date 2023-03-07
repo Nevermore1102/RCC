@@ -74,7 +74,7 @@ void Host::startAccept(boost::system::error_code boost_error)
     {
         HOST_LOG(INFO) << LOG_DESC("P2P StartAccept") << LOG_KV("Host", m_listenHost) << ":"
                        << m_listenPort;
-        auto socket = m_asi正在std::shared_ptroInterface->newSocket(NodeIPEndpoint());
+        auto socket = m_asioInterface->newSocket(NodeIPEndpoint());
         // get and set the accepted endpoint to socket(client endpoint)
         /// define callback after accept connections
         m_asioInterface->asyncAccept(
