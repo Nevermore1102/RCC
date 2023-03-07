@@ -810,9 +810,10 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
         PBFTENGINE_LOG(INFO) << LOG_DESC("FutureBlock") << LOG_KV("EINFO", oss.str());
         return CheckResult::FUTURE;
     }
+    //TODO:若判断当前节点不是req信息中的Leader.则返回LEDAER flag
     if (!isValidLeader(req))
     {
-        PBFTENGINE_LOG(INFO) << LOG_DESC("InvalidPrepare: Not the correct leader")  << LOG_KV("leader", getLeader().second);
+        PBFTENGINE_LOG(INFO) << LOG_DESC("InvalidPrepare: Not the correct leader, return checkresult:Leader")  << LOG_KV("leader", getLeader().second);
 //        return CheckResult::INVALID;
         //TODO ,让不是Leader的节点也可以exec block
         return CheckResult::LEADER;
@@ -2261,7 +2262,7 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
         << LOG_KV("hash", _prepareReq->block_hash.abridged()) << LOG_KV("nodeIdx", nodeIdx())
         << LOG_KV("myNode", m_keyPair.pub().abridged())
         << LOG_KV("curChangeCycle", m_timeManager.m_changeCycle);
-    PBFTENGINE_LOG(DEBUG) << oss.str();
+    PBFTENGINE_LOG(INFO) << oss.str();
     // check the PartiallyPrepare
     auto ret = isValidPrepare(*_prepareReq, oss);
     if (ret == CheckResult::INVALID)
@@ -2396,7 +2397,6 @@ void PBFTEngine::handleP2PMessage(
 {
 //    PBFTENGINE_LOG(INFO) << LOG_DESC("节点收到共识消息，正在处理。。。");
 //
-    PBFTENGINE_LOG(INFO) << LOG_KV("节点收到共识消息TYPE", _message->packetType());
 
     try
     {
@@ -2410,7 +2410,7 @@ void PBFTEngine::handleP2PMessage(
         switch (_message->packetType())
         {
         case PartiallyPreparePacket://0x1
-            //PBFTENGINE_LOG(INFO) << LOG_DESC(" 进入 2 ");
+//            PBFTENGINE_LOG(INFO) << LOG_DESC(" 进入 2 ");
             m_prepareWorker->enqueue([self, _session, _message]() {
                 auto pbftEngine = self.lock();
                 if (!pbftEngine)
@@ -2498,7 +2498,7 @@ bool PBFTEngine::handleReceivedPartiallyPrepare(std::shared_ptr<P2PSession> _ses
         _f(pbftMsg);
     }
 
-    //PBFTENGINE_LOG(INFO)<< LOG_KV("收到的消息test_label", pbftMsg->test_label);
+    PBFTENGINE_LOG(INFO)<< LOG_KV("收到的消息test_label", pbftMsg->test_label);
 
     PrepareReq::Ptr prepareReq = std::make_shared<PrepareReq>();
     if (!decodeToRequests(*prepareReq, ref(pbftMsg->data)))
