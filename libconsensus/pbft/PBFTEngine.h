@@ -60,7 +60,8 @@ enum CheckResult
 {
     VALID = 0,
     INVALID = 1,
-    FUTURE = 2
+    FUTURE = 2,
+    LEADER = 3,
 };
 using PBFTMsgQueue = dev::concurrent_queue<PBFTMsgPacket::Ptr>;
 class PBFTEngine : public ConsensusEngineBase, public std::enable_shared_from_this<PBFTEngine>

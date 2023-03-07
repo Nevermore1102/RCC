@@ -762,19 +762,19 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
     // Note: we should try to decrease the size of duplicated
     if (m_reqCache->isExistPrepare(req))
     {
-        PBFTENGINE_LOG(DEBUG) << LOG_DESC("InvalidPrepare: Duplicated Prep")
+        PBFTENGINE_LOG(INFO) << LOG_DESC("InvalidPrepare: Duplicated Prep")
                               << LOG_KV("EINFO", oss.str());
         return CheckResult::INVALID;
     }
     if (isSyncingHigherBlock(req))
     {
-        PBFTENGINE_LOG(DEBUG) << LOG_DESC("InvalidPrepare: Is Syncing higher number")
+        PBFTENGINE_LOG(INFO) << LOG_DESC("InvalidPrepare: Is Syncing higher number")
                               << LOG_KV("EINFO", oss.str());
         return CheckResult::INVALID;
     }
     if (hasConsensused(req))
     {
-        PBFTENGINE_LOG(TRACE) << LOG_DESC("InvalidPrepare: Consensused Prep")
+        PBFTENGINE_LOG(INFO) << LOG_DESC("InvalidPrepare: Consensused Prep")
                               << LOG_KV("EINFO", oss.str());
         return CheckResult::INVALID;
     }
@@ -792,7 +792,7 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
     if (req.isEmpty && req.height == m_reqCache->committedPrepareCache().height)
     {
         // here for debug
-        PBFTENGINE_LOG(DEBUG) << LOG_DESC("receive empty block while pbft-backup exists")
+        PBFTENGINE_LOG(INFO) << LOG_DESC("receive empty block while pbft-backup exists")
                               << LOG_KV("reqHeight", req.height)
                               << LOG_KV("reqHash", req.block_hash.abridged())
                               << LOG_KV("reqView", req.view) << LOG_KV("view", m_view)
@@ -801,7 +801,7 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
     }
     if (!req.isEmpty && !isHashSavedAfterCommit(req))
     {
-        PBFTENGINE_LOG(DEBUG) << LOG_DESC("InvalidPrepare: not saved after commit")
+        PBFTENGINE_LOG(INFO) << LOG_DESC("InvalidPrepare: not saved after commit")
                               << LOG_KV("EINFO", oss.str());
         return CheckResult::INVALID;
     }
@@ -812,7 +812,10 @@ CheckResult PBFTEngine::isValidPrepare(PrepareReq const& req, std::ostringstream
     }
     if (!isValidLeader(req))
     {
-        return CheckResult::INVALID;
+        PBFTENGINE_LOG(INFO) << LOG_DESC("InvalidPrepare: Not the correct leader")  << LOG_KV("leader", getLeader().second);
+//        return CheckResult::INVALID;
+        //TODO ,让不是Leader的节点也可以exec block
+        return CheckResult::LEADER;
     }
     if (!checkSign(req))
     {
@@ -1176,7 +1179,7 @@ void PBFTEngine::addRawPrepare(PrepareReq::Ptr _prepareReq)
     /// add raw prepare request
     m_reqCache->addRawPrepare(_prepareReq);
 }
-
+//Jason TODO ,把每个节点生成的prepare信息都能广播出去
 bool PBFTEngine::execPrepareAndGenerateSignMsg(
     PrepareReq::Ptr _prepareReq, std::ostringstream& _oss)
 {
@@ -1225,10 +1228,10 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
     m_destructorThread->enqueue(std::move(holder));
 
     m_reqCache->addPrepareReq(sign_prepare);
-    PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg: add prepare cache and broadcastSignReq")
+    PBFTENGINE_LOG(INFO) << LOG_DESC("execPrepareAndGenerateSignMsg: add prepare cache and broadcastSignReq")
                           << LOG_KV("reqNum", sign_prepare->height)
                           << LOG_KV("hash", sign_prepare->block_hash.abridged())
-                          << LOG_KV("nodeIdx", nodeIdx())
+                          << LOG_KV("本节点nodeIdx", nodeIdx())
                           << LOG_KV("addPrepareTime", utcTime() - startT)
                           << LOG_KV("myNode", m_keyPair.pub().abridged());
 
@@ -1236,7 +1239,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
     broadcastSignReq(*sign_prepare); //广播签名信息
 
     checkAndCommit();
-    PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg Succ")
+    PBFTENGINE_LOG(INFO) << LOG_DESC("handle and broadcast PrepareMsg Succ")
                          << LOG_KV("Timecost", 1000 * t.elapsed()) << LOG_KV("INFO", _oss.str());
     return true;
 }
