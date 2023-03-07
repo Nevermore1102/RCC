@@ -141,12 +141,14 @@ void Sealer::doWork(bool wait)
             {
                 m_syncTxPool = true;
             }
+            auto nodeSize = m_consensusEngine->consensusList().size();
             // 默认1000,是可变类型
-            auto maxTxsPerBlock = maxBlockCanSeal();
+            auto maxTxsPerBlock = maxBlockCanSeal()/nodeSize;
             /// load transaction from transaction queue
             if (maxTxsPerBlock > tx_num && m_syncTxPool == true && !reachBlockIntervalTime())
             {
-                // SEAL_LOG(INFO) << LOG_DESC("交易数不够,loading...");
+//                 SEAL_LOG(INFO) << LOG_DESC("交易数不够,loading...")
+//                    <<LOG_KV("装载数量",maxTxsPerBlock - tx_num);
                 //从交易池中装载交易,装载数量为 maxTxsPerBlock - tx_num
                 loadTransactions(maxTxsPerBlock - tx_num);
             }

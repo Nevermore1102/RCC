@@ -213,7 +213,7 @@ bool PBFTEngine::shouldSeal()
     //为什么只有当leader是当前节点的时候才会打印? 这边只有
     if (m_reqCache->committedPrepareCache().height == m_consensusBlockNumber)
     {
-        PBFTSEALER_LOG(INFO)<< LOG_KV("m_consensusBlockNumber",m_consensusBlockNumber);
+//        PBFTSEALER_LOG(INFO)<< LOG_KV("m_consensusBlockNumber",m_consensusBlockNumber);
         if (m_reqCache->rawPrepareCacheHeight() != m_consensusBlockNumber)
         {
             PBFTSEALER_LOG(INFO)<< LOG_DESC("rehandleCommitedPrepareCache");
@@ -2391,9 +2391,9 @@ void PBFTEngine::onReceiveGetMissedTxsRequest(
 void PBFTEngine::handleP2PMessage(
     NetworkException _exception, std::shared_ptr<P2PSession> _session, P2PMessage::Ptr _message)
 {
-    //PBFTENGINE_LOG(INFO) << LOG_DESC("节点收到共识消息，正在处理。。。");
-
-    //PBFTENGINE_LOG(INFO) << LOG_KV(" 节点收到共识消息TYPE ", _message->);
+//    PBFTENGINE_LOG(INFO) << LOG_DESC("节点收到共识消息，正在处理。。。");
+//
+    PBFTENGINE_LOG(INFO) << LOG_KV("节点收到共识消息TYPE", _message->packetType());
 
     try
     {
@@ -2406,7 +2406,7 @@ void PBFTEngine::handleP2PMessage(
         auto self = std::weak_ptr<PBFTEngine>(shared_from_this());
         switch (_message->packetType())
         {
-        case PartiallyPreparePacket:
+        case PartiallyPreparePacket://0x1
             //PBFTENGINE_LOG(INFO) << LOG_DESC(" 进入 2 ");
             m_prepareWorker->enqueue([self, _session, _message]() {
                 auto pbftEngine = self.lock();
@@ -2416,7 +2416,7 @@ void PBFTEngine::handleP2PMessage(
                 }
                 try
                 {
-                    // PBFTENGINE_LOG(INFO) << LOG_DESC(" 进入 PartiallyPreparePacket ");
+                     PBFTENGINE_LOG(INFO) << LOG_DESC(" 进入 PartiallyPreparePacket ");
                     pbftEngine->handlePartiallyPrepare(_session, _message);
                 }
                 catch (std::exception const& e)
@@ -2429,7 +2429,7 @@ void PBFTEngine::handleP2PMessage(
             });
             break;
         // receive getMissedPacket request, response missed transactions
-        case GetMissedTxsPacket:
+        case GetMissedTxsPacket:// 3号
         //PBFTENGINE_LOG(INFO) << LOG_DESC(" 进入 3 ");
             m_messageHandler->enqueue([self, _session, _message]() {
                 auto pbftEngine = self.lock();
