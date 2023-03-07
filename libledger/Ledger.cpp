@@ -234,8 +234,8 @@ bool Ledger::initLedger(std::shared_ptr<LedgerParamInterface> _ledgerParams, std
     initNetworkBandWidthLimiter();
     initQPSLimit();
 
-    std::cout << "Ledger::initLedger(std::shared_ptr<LedgerParamInterface> _ledgerParams, std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
-    std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
+//    std::cout << "Ledger::initLedger(std::shared_ptr<LedgerParamInterface> _ledgerParams, std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
+//    std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
 
     /// init blockVerifier, txPool, sync and consensus
     return (initBlockVerifier() && initTxPool() && initSync() && consensusInitFactory(_p2pService, _group_protocolID) &&
@@ -724,8 +724,8 @@ std::shared_ptr<Sealer> Ledger::createPBFTSealer(std::shared_ptr<Service> _p2pSe
         Ledger_LOG(INFO) << LOG_BADGE("initLedger")
                          << LOG_DESC("createPBFTSealer for PBFT or rPBFT")
                          << LOG_KV("consensusType", m_param->mutableConsensusParam().consensusType);
-        std::cout << "正在std::shared_ptr<Sealer> Ledger::createPBFTSealer(std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
-        std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
+//        std::cout << "正在std::shared_ptr<Sealer> Ledger::createPBFTSealer(std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
+//        std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
     }
 
     ConsensusInterface::Ptr pbftEngine = createConsensusEngine(protocol_id, _p2pService, _group_protocolID);
@@ -944,8 +944,8 @@ bool Ledger::consensusInitFactory(std::shared_ptr<Service> _p2pService, PROTOCOL
              normalrPBFTEnabled() || vrfBasedrPBFTEnabled())
     {
 
-        std::cout << "正在Ledger::consensusInitFactory(std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
-        std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
+//        std::cout << "正在Ledger::consensusInitFactory(std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
+//        std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
 
         m_sealer = createPBFTSealer(_p2pService, _group_protocolID);
     }

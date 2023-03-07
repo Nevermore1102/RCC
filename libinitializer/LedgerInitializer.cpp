@@ -267,8 +267,8 @@ vector<dev::GROUP_ID> LedgerInitializer::initLedgers(std::shared_ptr<Service> _p
                     return false;
                 }
 
-                std::cout << "LedgerInitializer::initLedgers(std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
-                std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
+//                std::cout << "LedgerInitializer::initLedgers(std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID)" << std::endl;
+//                std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
 
                 // bool succ = initLedger(_groupID, _p2pService, m_groupDataDir, _configFileName);
                 bool succ = initLedger(_groupID, _p2pService, _group_protocolID, m_groupDataDir, _configFileName);

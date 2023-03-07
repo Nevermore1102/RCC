@@ -171,7 +171,7 @@ void putGroupPubKeyIntoService(std::shared_ptr<Service> service, boost::property
         }
     }
     groupID2NodeList.insert(std::make_pair(groupid, nodelist)); // 都是同一个groupid，所以插入一次就好了
-    std::cout << "groupID2NodeList " << groupid << " " << groupID2NodeList[groupid];
+//    std::cout << "groupID2NodeList " << groupid << " " << groupID2NodeList[groupid];
 
     // std::cout << groupID2NodeList[groupid] << std::endl;
     service->setGroupID2NodeList(groupID2NodeList);

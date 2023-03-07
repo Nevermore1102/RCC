@@ -114,7 +114,7 @@ void ConsensusEngineBase::checkBlockValid(Block const& block)
     /// check the block number
     if (block.blockHeader().number() <= m_blockChain->number())
     {
-        ENGINE_LOG(DEBUG) << LOG_DESC("checkBlockValid: old height")
+        ENGINE_LOG(INFO) << LOG_DESC("checkBlockValid: old height")
                           << LOG_KV("highNumber", m_blockChain->number())
                           << LOG_KV("blockNumber", block.blockHeader().number())
                           << LOG_KV("hash", block_hash.abridged());
@@ -135,7 +135,7 @@ void ConsensusEngineBase::checkBlockValid(Block const& block)
         if (m_blockChain->numberHash(block.blockHeader().number() - 1) !=
             block.blockHeader().parentHash())
         {
-            ENGINE_LOG(DEBUG)
+            ENGINE_LOG(INFO)
                 << LOG_DESC("checkBlockValid: Invalid block for unconsistent parentHash")
                 << LOG_KV("block.parentHash", block.blockHeader().parentHash().abridged())
                 << LOG_KV("parentHash",
