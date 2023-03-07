@@ -75,8 +75,8 @@ void LedgerInitializer::initConfig(boost::property_tree::ptree const& _pt, std::
     g_BCOSConfig.setDataDir(m_groupDataDir);
 
     // INITIALIZER_LOG(INFO) << LOG_DESC("正在initConfig(boost::property_tree::ptree const& _pt, std::shared_ptr<Service> _p2pService)");
-    std::cout << "正在initConfig(boost::property_tree::ptree const& _pt, std::shared_ptr<Service> _p2pService)" << std::endl;
-    std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
+//    std::cout << "正在initConfig(boost::property_tree::ptree const& _pt, std::shared_ptr<Service> _p2pService)" << std::endl;
+//    std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
 
     // initLedgers(_p2pService);
     initLedgers(_p2pService, _group_protocolID);
@@ -453,8 +453,8 @@ bool LedgerInitializer::initLedger(
     auto ledgerParams = std::make_shared<LedgerParam>();
     ledgerParams->init(_configFileName, _dataDir);
 
-    std::cout << "LedgerInitializer::initLedger(dev::GROUP_ID const& _groupId, std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID, std::string const& _dataDir, std::string const& _configFileName)" << std::endl;
-    std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
+//    std::cout << "LedgerInitializer::initLedger(dev::GROUP_ID const& _groupId, std::shared_ptr<Service> _p2pService, PROTOCOL_ID _group_protocolID, std::string const& _dataDir, std::string const& _configFileName)" << std::endl;
+//    std::cout << "_group_protocolID = " << _group_protocolID << std::endl;
 
     bool succ = ledger->initLedger(ledgerParams, _p2pService, _group_protocolID);
     if (!succ)

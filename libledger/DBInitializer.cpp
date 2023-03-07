@@ -502,7 +502,7 @@ void DBInitializer::createStateFactory(dev::h256 const& genesisHash)
     }
     else if (dev::stringCmpIgnoreCase(m_param->mutableStateParam().type, "storage") == 0)
     {
-        std::cout<< "将storage tree作为数据存储方式" << std::endl;
+//        std::cout<< "将storage tree作为数据存储方式" << std::endl;
         createStorageState();
     }
     else

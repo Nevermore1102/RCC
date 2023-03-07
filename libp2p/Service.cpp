@@ -241,8 +241,8 @@ void Service::onConnect(dev::network::NetworkException e, dev::network::NodeInfo
         return;
     }
 
-    SERVICE_LOG(TRACE) << LOG_DESC("Service onConnect") << LOG_KV("nodeID", nodeID.abridged())
-                       << LOG_KV("endpoint", peer);
+//    SERVICE_LOG(TRACE) << LOG_DESC("Service onConnect") << LOG_KV("nodeID", nodeID.abridged())
+//                       << LOG_KV("endpoint", peer);
 
     RecursiveGuard l(x_sessions);
     auto it = m_sessions.find(nodeID);

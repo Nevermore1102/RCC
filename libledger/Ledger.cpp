@@ -705,7 +705,7 @@ std::shared_ptr<Sealer> Ledger::createPBFTSealer(std::shared_ptr<Service> _p2pSe
     }
 
     dev::PROTOCOL_ID protocol_id = getGroupProtoclID(m_groupId, ProtocolID::PBFT);
-    std::cout << "PBFT protocol_id = " << protocol_id << std::endl;
+//    std::cout << "PBFT protocol_id = " << protocol_id << std::endl;
 
     /// create consensus engine according to "consensusType"
     Ledger_LOG(INFO) << LOG_BADGE("initLedger") << LOG_BADGE("createPBFTSealer")
