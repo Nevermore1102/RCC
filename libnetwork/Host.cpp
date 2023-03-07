@@ -72,8 +72,8 @@ void Host::startAccept(boost::system::error_code boost_error)
     /// accept the connection
     if (m_run)
     {
-        HOST_LOG(INFO) << LOG_DESC("P2P StartAccept") << LOG_KV("Host", m_listenHost) << ":"
-                       << m_listenPort;
+//        HOST_LOG(INFO) << LOG_DESC("P2P StartAccept") << LOG_KV("Host", m_listenHost) << ":"
+//                       << m_listenPort;
         auto socket = m_asioInterface->newSocket(NodeIPEndpoint());
         // get and set the accepted endpoint to socket(client endpoint)
         /// define callback after accept connections
@@ -95,7 +95,7 @@ void Host::startAccept(boost::system::error_code boost_error)
 
                 /// if the connected peer over the limitation, drop socket
                 socket->setNodeIPEndpoint(endpoint);
-                HOST_LOG(INFO) << LOG_DESC("P2P Recv Connect, From=") << endpoint;
+//                HOST_LOG(INFO) << LOG_DESC("P2P Recv Connect, From=") << endpoint;
                 /// register ssl callback to get the NodeID of peers
                 std::shared_ptr<std::string> endpointPublicKey = std::make_shared<std::string>();
                 m_asioInterface->setVerifyCallback(socket, newVerifyCallback(endpointPublicKey));
@@ -427,7 +427,7 @@ void Host::asyncConnect(NodeIPEndpoint const& _nodeIPEndpoint,
     {
         return;
     }
-    HOST_LOG(INFO) << LOG_DESC("Connecting to node") << LOG_KV("endpoint", _nodeIPEndpoint);
+//    HOST_LOG(INFO) << LOG_DESC("Connecting to node") << LOG_KV("endpoint", _nodeIPEndpoint);
     {
         Guard l(x_pendingConns);
         if (m_pendingConns.count(_nodeIPEndpoint))

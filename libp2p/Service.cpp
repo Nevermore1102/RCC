@@ -134,8 +134,8 @@ void Service::heartBeat()
                                << LOG_KV("nodeID", it.second.abridged());
             continue;
         }
-        SERVICE_LOG(DEBUG) << LOG_DESC("heartBeat try to reconnect")
-                           << LOG_KV("endpoint", it.first);
+//        SERVICE_LOG(DEBUG) << LOG_DESC("heartBeat try to reconnect")
+//                           << LOG_KV("endpoint", it.first);
         m_host->asyncConnect(
             it.first, std::bind(&Service::onConnect, shared_from_this(), std::placeholders::_1,
                           std::placeholders::_2, std::placeholders::_3));
@@ -167,8 +167,8 @@ void Service::setWhitelist(PeerWhitelist::Ptr _whitelist)
     m_whitelist = _whitelist;
     host()->setWhitelist(_whitelist);
     checkWhitelistAndClearSession();
-    SERVICE_LOG(DEBUG) << LOG_BADGE("Whitelist") << LOG_DESC("Set whitelist")
-                       << m_whitelist->dump(true);
+//    SERVICE_LOG(DEBUG) << LOG_BADGE("Whitelist") << LOG_DESC("Set whitelist")
+//                       << m_whitelist->dump(true);
 }
 
 void Service::checkWhitelistAndClearSession()

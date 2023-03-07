@@ -59,9 +59,9 @@ void P2PInitializer::initConfig(boost::property_tree::ptree const& _pt)
         {
             if (it.first.find("node.") == 0)
             {
-                INITIALIZER_LOG(TRACE)
-                    << LOG_BADGE("P2PInitializer") << LOG_DESC("initConfig add staticNode")
-                    << LOG_KV("endpoint", it.second.data());
+//                INITIALIZER_LOG(TRACE)
+//                    << LOG_BADGE("P2PInitializer") << LOG_DESC("initConfig add staticNode")
+//                    << LOG_KV("endpoint", it.second.data());
                 std::vector<std::string> s;
                 try
                 {
