@@ -480,17 +480,17 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
     //先上锁
     Guard l(m_mutex);
     // 需要判断当前节点是否为Leader,如果不为Leader,就会返回
-    // TODO: Jason修改的地方:对generatePrepare进行修改
-    if (!getLeader().first || getLeader().second != nodeIdx())
-    {
-        if(!getLeader().first )
-            PBFTENGINE_LOG(INFO) << LOG_DESC("尚未产生Leader");
-        if(getLeader().second != nodeIdx())
-            PBFTENGINE_LOG(INFO) << LOG_DESC("Leader不为当前节点")
-                <<LOG_KV("leader 是 ",getLeader().second);
-        m_generatePrepare = false;
-        return true;
-    }
+    // TODO: Jason修改的地方:注释以下判断,让每个生成的块都可以构造prepare信息
+//    if (!getLeader().first || getLeader().second != nodeIdx())
+//    {
+//        if(!getLeader().first )
+//            PBFTENGINE_LOG(INFO) << LOG_DESC("尚未产生Leader");
+//        if(getLeader().second != nodeIdx())
+//            PBFTENGINE_LOG(INFO) << LOG_DESC("Leader不为当前节点")
+//                <<LOG_KV("leader 是 ",getLeader().second);
+//        m_generatePrepare = false;
+//        return true;
+//    }
     m_notifyNextLeaderSeal = false;
     //构造prepare信息
     auto prepareReq = constructPrepareReq(_block);
@@ -501,7 +501,6 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
         m_leaderFailed = true;
         changeViewForFastViewChange();//触发视图切换
         m_timeManager.m_changeCycle = 0;
-        PBFTENGINE_LOG(INFO) << LOG_DESC("此区块封装交易数为0,不调用handlePrepareMsg");
         return true;
     }
     handlePrepareMsg(prepareReq);
@@ -510,7 +509,7 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
      * */
 
     /// reset the block according to broadcast result
-    //只有当前节点生成的块要被提交,才会记录
+    //只有当前节点生成的块要被提交,才会记录,否则,由于块不是自己生成的,是P2P网络上下在来的,不调用generatePrepareg
     PBFTENGINE_LOG(INFO) << LOG_DESC("generateLocalPrepare")
                          << LOG_KV("hash", prepareReq->block_hash.abridged())
                          << LOG_KV("H", prepareReq->height) << LOG_KV("nodeIdx", nodeIdx())
