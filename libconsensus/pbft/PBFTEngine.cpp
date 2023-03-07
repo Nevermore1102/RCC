@@ -480,8 +480,13 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
     //先上锁
     Guard l(m_mutex);
     // 需要判断当前节点是否为Leader,如果不为Leader,就会返回
+    // TODO: Jason修改的地方:对generatePrepare进行修改
     if (!getLeader().first || getLeader().second != nodeIdx())
     {
+        if(!getLeader().first )
+            PBFTENGINE_LOG(INFO) << LOG_DESC("尚未产生Leader");
+        if(getLeader().second != nodeIdx())
+            PBFTENGINE_LOG(INFO) << LOG_DESC("Leader不为当前节点");
         m_generatePrepare = false;
         return true;
     }
