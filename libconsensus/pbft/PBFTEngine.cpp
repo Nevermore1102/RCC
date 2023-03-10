@@ -2264,7 +2264,9 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
         << LOG_KV("curChangeCycle", m_timeManager.m_changeCycle);
     PBFTENGINE_LOG(INFO) << oss.str();
     // check the PartiallyPrepare
+
     auto ret = isValidPrepare(*_prepareReq, oss);
+
     if (ret == CheckResult::INVALID)
     {
         return false;
@@ -2306,7 +2308,7 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
     // hit all transactions
     if (allHit)
     {
-        PBFTENGINE_LOG(DEBUG) << LOG_DESC(
+        PBFTENGINE_LOG(INFO) << LOG_DESC(
                                      "hit all the transactions, handle the rawPrepare directly")
                               << LOG_KV("txsSize", _prepareReq->pBlock->transactions()->size());
         m_partiallyPrepareCache->transPartiallyPrepareIntoRawPrepare();
