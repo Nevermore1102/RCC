@@ -278,7 +278,7 @@ public:
         {
             return;
         }
-        m_signCache[req->block_hash][signature] = req;//
+        m_signCache[req->block_hash][signature] = req;
     }
 
     /// add specified commit cache to the commit-cache

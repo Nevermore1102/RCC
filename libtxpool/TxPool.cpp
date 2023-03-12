@@ -331,8 +331,8 @@ ImportResult TxPool::verify(Transaction::Ptr trans, IfDropped _drop_policy) // å
 
     if (m_txsHash.count(tx_hash))
     {
-        // TXPOOL_LOG(INFO) << LOG_DESC("Verify: already known tx")
-                        //  << LOG_KV("hash", tx_hash.abridged());
+        TXPOOL_LOG(INFO) << LOG_DESC("Verify: already known tx")
+                         << LOG_KV("hash", tx_hash.abridged());
         return ImportResult::AlreadyKnown;
     }
     /// the transaction has been dropped before
