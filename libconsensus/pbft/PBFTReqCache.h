@@ -292,6 +292,7 @@ namespace dev
             //Jason
             inline void addNewPrepareReq(std::shared_ptr<PrepareReq> req)
             {
+                
                 auto hash = toHex(req->block_hash);
                 // if (cacheExists(m_newPrepareCache, hash, req->node_id))
                 // {
@@ -309,6 +310,9 @@ namespace dev
                     return;
                 }
                 m_newPrepareCache[req->block_hash][idx] = req;
+                PBFTENGINE_LOG(INFO)<<LOG_DESC("addNewPrepareReq")
+                        <<LOG_KV("New Prepare Cache Size", getNewPrepareCacheSize())
+                         << LOG_KV("Block Hash", req->block_hash.abridged());
             }
             /// add specified signReq to the sign-cache
             inline void addSignReq(SignReq::Ptr req)

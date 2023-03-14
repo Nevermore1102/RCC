@@ -2308,9 +2308,7 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
     if(!m_reqCache->isExistNewPrepare(_prepareReq->block_hash, _prepareReq->idx)){
         m_reqCache->addNewPrepareReq(_prepareReq);
     }
-     PBFTENGINE_LOG(INFO)<<LOG_DESC("addNewPrepareReq")
-                        <<LOG_KV("New Prepare Cache Size", m_reqCache->getNewPrepareCacheSize())
-                         << LOG_KV("Block Hash", _prepareReq->block_hash.abridged());
+
                          
     if (!m_partiallyPrepareCache->addPartiallyRawPrepare(_prepareReq))
     {
