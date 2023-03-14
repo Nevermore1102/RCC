@@ -1172,6 +1172,11 @@ bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepareReq, std::string const&
     // clear preRawPrepare before addRawPrepare when enable_block_with_txs_hash
     clearPreRawPrepare();
     /// add raw prepare request, 把rawPrepare加入cache,并打印日志
+    //Jason 把自己生成的Prepare也加入
+    // m
+    if(!m_reqCache->isExistNewPrepare(prepareReq->block_hash, prepareReq->idx)){
+        m_reqCache->addNewPrepareReq(prepareReq);
+    }
     addRawPrepare(prepareReq);
     //执行PrepareMsg并生成签名
     return execPrepareAndGenerateSignMsg(prepareReq, oss);
@@ -1544,6 +1549,8 @@ CheckResult PBFTEngine::isValidSignReq(SignReq::Ptr req, std::ostringstream& oss
         return CheckResult::INVALID;
     }
     CheckResult result = checkReq(*req, oss);
+    //Jason 添加LOG
+    PBFTENGINE_LOG(INFO) << LOG_KV("CheckResult",result);
     /// to ensure that the collected signature size is equal to minValidNodes
     /// so that checkAndCommit can be called, and the committed request backup can be stored
     if (result == CheckResult::FUTURE)
@@ -2298,10 +2305,13 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
         }
     }
     //Jason 
-     m_reqCache->addNewPrepareReq(_prepareReq);
+    if(!m_reqCache->isExistNewPrepare(_prepareReq->block_hash, _prepareReq->idx)){
+        m_reqCache->addNewPrepareReq(_prepareReq);
+    }
      PBFTENGINE_LOG(INFO)<<LOG_DESC("addNewPrepareReq")
-                        <<LOG_KV("New Prepare Cache Size", m_reqCache->getNewPrepareCacheSize());
-                         << LOG_KV("Block Hash", req->block_hash.abridged());
+                        <<LOG_KV("New Prepare Cache Size", m_reqCache->getNewPrepareCacheSize())
+                         << LOG_KV("Block Hash", _prepareReq->block_hash.abridged());
+                         
     if (!m_partiallyPrepareCache->addPartiallyRawPrepare(_prepareReq))
     {
         return false; 

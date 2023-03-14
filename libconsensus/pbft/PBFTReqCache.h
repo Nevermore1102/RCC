@@ -23,6 +23,9 @@
  * @date: 2018-09-30
  */
 #pragma once
+#include "libconsensus/Common.h"
+#include "libdevcore/FixedHash.h"
+#include "libdevcore/Log.h"
 #include <libconsensus/pbft/Common.h>
 #include <libdevcore/CommonJS.h>
 #include <libethcore/Protocol.h>
@@ -73,7 +76,14 @@ namespace dev
             {
                 return cacheExists(m_recvViewChangeReq, req.view, req.idx);
             }
-
+            //Jason
+            inline bool isExistNewPrepare(h256 const& _blockHash, IDXTYPE const& idx){
+                auto it = m_newPrepareCache.find(_blockHash);
+                if (it == m_newPrepareCache.end())
+                    return false;
+                else
+                    return true;
+            }
             /// get the size of the cached sign requests according to given block hash
             // _sizeToCheckFutureSign: the threshold size that should check signature for the future
             // requests generally 2*f+1
@@ -236,7 +246,7 @@ namespace dev
                 return encodedData;
             }
             //Jason
-            std::unordered_map<h256, std::unordered_map<std::string, PrepareReq::Ptr>>& mutableNewPrepareCache()
+            std::unordered_map<h256, std::unordered_map<IDXTYPE, PrepareReq::Ptr>>& mutableNewPrepareCache()
             {
                 return m_newPrepareCache;
             }
@@ -288,12 +298,17 @@ namespace dev
                 //     return;
                 // }
                 // {
-                auto signature = toHex(req->sig);
-                if (m_newPrepareCache.count(req->block_hash) && m_signCache[req->block_hash].count(signature))
+                // auto signature = toHex(req->sig);
+                if(isExistNewPrepare(req->block_hash, req->idx)){
+                    PBFTENGINE_LOG(INFO)<<LOG_DESC("PrepareCache 已存在");
+                    return;
+                }
+                auto idx = req->idx;
+                if (m_newPrepareCache.count(req->block_hash) && m_newPrepareCache[req->block_hash].count(idx))
                 {
                     return;
                 }
-                m_newPrepareCache[req->block_hash][signature] = req;
+                m_newPrepareCache[req->block_hash][idx] = req;
             }
             /// add specified signReq to the sign-cache
             inline void addSignReq(SignReq::Ptr req)
@@ -537,7 +552,7 @@ namespace dev
             /// cache for signReq(maps between hash and sign requests)
             std::unordered_map<h256, std::unordered_map<std::string, SignReq::Ptr>> m_signCache;
             //Jason
-            std::unordered_map<h256, std::unordered_map<std::string, PrepareReq::Ptr>> m_newPrepareCache;
+            std::unordered_map<h256, std::unordered_map<IDXTYPE, PrepareReq::Ptr>> m_newPrepareCache;
             /// cache for received-viewChange requests(maps between view and view change requests)
             std::unordered_map<VIEWTYPE, std::unordered_map<IDXTYPE, ViewChangeReq::Ptr>>
                     m_recvViewChangeReq;
