@@ -41,6 +41,7 @@
 #include <libp2p/Service.h>
 
 #include "PBFTMsgFactory.h"
+#include "libdevcore/Log.h"
 #include <libstorage/BasicRocksDB.h>
 #include <libsync/SyncStatus.h>
 // #include <libplugin/transform.h>
@@ -568,6 +569,15 @@ protected:
     template <class T>
     inline CheckResult checkReq(T& req, std::ostringstream& oss) const
     {
+        //Jason添加新判断
+        if(!m_reqCache->isExistNewPrepare(req.block_hash,req.idx)){
+              PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: sign or commit hash exist in new prepare cache")
+                                  
+                                  << LOG_KV("hash", req.block_hash.abridged())
+                                  << LOG_KV("INFO", oss.str());
+            // 若返回VALID,可能会无法达成共识
+            return CheckResult::VALID;
+        }
         if (isSyncingHigherBlock(req))
         {
             PBFTENGINE_LOG(DEBUG) << LOG_DESC("checkReq: Is Syncing higher number")
@@ -577,10 +587,10 @@ protected:
                                   << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
-
         if (m_reqCache->prepareCache().block_hash != req.block_hash)
+        
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq: sign or commit Not exist in prepare cache")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: sign or commit Not exist in prepare cache")
                                   << LOG_KV("prepHash",
                                          m_reqCache->prepareCache().block_hash.abridged())
                                   << LOG_KV("hash", req.block_hash.abridged())
@@ -602,21 +612,22 @@ protected:
         /// check the sealer of this request
         if (req.idx == nodeIdx())
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq: Recv own req")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: Recv own req")
                                   << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
         /// check view
+        
         if (m_reqCache->prepareCache().view != req.view)
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq: Recv req with unconsistent view")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: Recv req with unconsistent view")
                                   << LOG_KV("prepView", m_reqCache->prepareCache().view)
                                   << LOG_KV("view", req.view) << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
         if (!checkSign(req))
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq:  invalid sign")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq:  invalid sign")
                                   << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
@@ -631,8 +642,10 @@ protected:
     template <class T>
     inline bool hasConsensused(T const& req) const
     {
-        if (req.height < m_consensusBlockNumber ||
-            (req.height == m_consensusBlockNumber && req.view < m_view))
+        //Jason 注释关于 view的判断.
+        // if (req.height < m_consensusBlockNumber ||
+            // (req.height == m_consensusBlockNumber && req.view < m_view))
+        if(req.height < m_consensusBlockNumber)
         {
             return true;
         }
@@ -663,7 +676,8 @@ protected:
     inline bool isFutureBlock(T const& req) const
     {
         /// to ensure that the signReq can reach to consensus even if the view has been changed
-        if (req.height >= m_consensusBlockNumber || req.view > m_view)
+        //TODO 以后要改为 > 
+        if (req.height > m_consensusBlockNumber || req.view > m_view)
         {
             return true;
         }
@@ -676,6 +690,9 @@ protected:
         if (req.height > m_consensusBlockNumber ||
             (req.height == m_consensusBlockNumber && req.view > m_view))
         {
+            PBFTENGINE_LOG(INFO) << LOG_DESC("Future block")
+                            <<LOG_KV("req.height",req.height)
+                            <<LOG_KV("m_consensusBlockNumber",m_consensusBlockNumber);
             return true;
         }
         return false;
