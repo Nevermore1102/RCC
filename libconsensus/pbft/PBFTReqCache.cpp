@@ -413,21 +413,6 @@ void PBFTReqCache::removeExpiredCommitCache(h256 const& _blockHash, VIEWTYPE con
             pcache++;
     }
 }
-//Jason
-void PBFTReqCache::removeExpiredNewPrepareCache(h256 const& _blockHash, VIEWTYPE const& _view)
-{
-    auto it = m_newPrepareCache.find(_blockHash);
-    if (it == m_newPrepareCache.end())
-        return;
-    for (auto pcache = it->second.begin(); pcache != it->second.end();)
-    {
-        /// erase invalid view
-        if (pcache->second->view < _view)
-            pcache = it->second.erase(pcache);
-        else
-            pcache++;
-    }
-}
 
 }  // namespace consensus
 }  // namespace dev
