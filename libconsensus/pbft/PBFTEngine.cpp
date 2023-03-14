@@ -22,6 +22,8 @@
  * @date: 2018-09-28
  */
 #include "PBFTEngine.h"
+#include "Common.h"
+#include "libdevcore/Log.h"
 #include "libdevcrypto/CryptoInterface.h"
 #include <libconfig/GlobalConfigure.h>
 #include <libdevcore/CommonJS.h>
@@ -2295,24 +2297,31 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
             return requestMissedTxs(_prepareReq);
         }
     }
+    //Jason 
+     m_reqCache->addNewPrepareReq(_prepareReq);
+     PBFTENGINE_LOG(INFO)<<LOG_DESC("addNewPrepareReq")
+                        <<LOG_KV("New Prepare Cache Size", m_reqCache->getNewPrepareCacheSize());
+                         << LOG_KV("Block Hash", req->block_hash.abridged());
     if (!m_partiallyPrepareCache->addPartiallyRawPrepare(_prepareReq))
     {
-        return false;
+        return false; 
     }
     // decode the partiallyBlock
     _prepareReq->pBlock->decodeProposal(ref(*_prepareReq->block), true);
+    PBFTENGINE_LOG(INFO) << LOG_DESC("解码成功");
     // _prepareReq->pBlock->unExecutedTxNum = _prepareReq->pBlock->getTransactionSize();  // 转发区块前设置 unExecutedTxNum, ADD BY THB
     bool allHit = m_txPool->initPartiallyBlock(_prepareReq->pBlock);
     // hit all transactions
     if (allHit)
     {
-        PBFTENGINE_LOG(DEBUG) << LOG_DESC(
+        PBFTENGINE_LOG(INFO) << LOG_DESC(
                                      "hit all the transactions, handle the rawPrepare directly")
                               << LOG_KV("txsSize", _prepareReq->pBlock->transactions()->size());
         m_partiallyPrepareCache->transPartiallyPrepareIntoRawPrepare();
         // begin to handlePrepare
         return execPrepareAndGenerateSignMsg(_prepareReq, oss);
     }
+
     return requestMissedTxs(_prepareReq);
 }
 
@@ -2498,7 +2507,7 @@ bool PBFTEngine::handleReceivedPartiallyPrepare(std::shared_ptr<P2PSession> _ses
         _f(pbftMsg);
     }
 
-    PBFTENGINE_LOG(INFO)<< LOG_KV("收到的消息test_label", pbftMsg->test_label);
+    
 
     PrepareReq::Ptr prepareReq = std::make_shared<PrepareReq>();
     if (!decodeToRequests(*prepareReq, ref(pbftMsg->data)))

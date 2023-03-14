@@ -580,7 +580,7 @@ protected:
 
         if (m_reqCache->prepareCache().block_hash != req.block_hash)
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq: sign or commit Not exist in prepare cache")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: sign or commit Not exist in prepare cache")
                                   << LOG_KV("prepHash",
                                          m_reqCache->prepareCache().block_hash.abridged())
                                   << LOG_KV("hash", req.block_hash.abridged())
@@ -602,21 +602,21 @@ protected:
         /// check the sealer of this request
         if (req.idx == nodeIdx())
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq: Recv own req")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: Recv own req")
                                   << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
         /// check view
         if (m_reqCache->prepareCache().view != req.view)
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq: Recv req with unconsistent view")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: Recv req with unconsistent view")
                                   << LOG_KV("prepView", m_reqCache->prepareCache().view)
                                   << LOG_KV("view", req.view) << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
         if (!checkSign(req))
         {
-            PBFTENGINE_LOG(TRACE) << LOG_DESC("checkReq:  invalid sign")
+            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq:  invalid sign")
                                   << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
@@ -663,6 +663,7 @@ protected:
     inline bool isFutureBlock(T const& req) const
     {
         /// to ensure that the signReq can reach to consensus even if the view has been changed
+        //TODO 以后要改称 = 
         if (req.height >= m_consensusBlockNumber || req.view > m_view)
         {
             return true;
@@ -676,6 +677,9 @@ protected:
         if (req.height > m_consensusBlockNumber ||
             (req.height == m_consensusBlockNumber && req.view > m_view))
         {
+            PBFTENGINE_LOG(INFO) << LOG_DESC("Future block")
+                            <<LOG_KV("req.height",req.height)
+                            <<LOG_KV("m_consensusBlockNumber",m_consensusBlockNumber);
             return true;
         }
         return false;
