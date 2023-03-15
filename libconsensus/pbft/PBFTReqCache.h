@@ -328,21 +328,28 @@ namespace dev
                     const auto& idx_type_map = hash_map_pair.second;
                     for (const auto& idx_type_pair : idx_type_map) {
                        auto signature = idx_type_pair.first;
+                       auto commitReq = idx_type_pair.second;
+
+                    
                         PBFTENGINE_LOG(INFO)<<LOG_DESC("traverseCommitCache")
-                                        <<LOG_KV("Hash key", hash_key.abridged());
+                                        <<LOG_KV("Hash key", hash_key.abridged())
+                                        <<LOG_KV("From Node",commitReq->idx);
                                         // <<LOG_KV("Sig",signature.abridged();
                     }
 
                 }
             }
+            //Jason
             inline void traverseSignCache() {
                 for (const auto& hash_map_pair : m_signCache) {
                     h256 hash_key = hash_map_pair.first;
                     const auto& idx_type_map = hash_map_pair.second;
                     for (const auto& idx_type_pair : idx_type_map) {
                        auto signature = idx_type_pair.first;
+                       auto signReq = idx_type_pair.second;
                         PBFTENGINE_LOG(INFO)<<LOG_DESC("traverseSignCache")
-                                        <<LOG_KV("Hash key", hash_key.abridged());
+                                        <<LOG_KV("Hash key", hash_key.abridged())
+                                        <<LOG_KV("From Node", signReq->idx);
                                         // <<LOG_KV("Sig",signature);
                     }
 
