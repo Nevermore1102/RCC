@@ -314,6 +314,8 @@ namespace dev
                         <<LOG_KV("New Prepare Cache Size", getNewPrepareCacheSize())
                          << LOG_KV("Block Hash", req->block_hash.abridged());
             }
+            //Jason 
+            
             /// add specified signReq to the sign-cache
             inline void addSignReq(SignReq::Ptr req)
             {
@@ -530,7 +532,7 @@ namespace dev
                     }
                 }
             }
-
+            void traverseNewPrepareCache(const std::unordered_map<h256, std::unordered_map<IDXTYPE, PrepareReq::Ptr>>& newPrepareCache) ;
             void removeExpiredNewPrepareCache(h256 const& _blockHash, VIEWTYPE const& _view);
             void removeExpiredSignCache(h256 const& _blockHash, VIEWTYPE const& _view);
             void removeExpiredCommitCache(h256 const& _blockHash, VIEWTYPE const& _view);
