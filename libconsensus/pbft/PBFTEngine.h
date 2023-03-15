@@ -569,12 +569,24 @@ protected:
     template <class T>
     inline CheckResult checkReq(T& req, std::ostringstream& oss) const
     {
+            m_reqCache->traverseNewPrepareCache();
         //Jason添加新判断
         if(!m_reqCache->isExistNewPrepare(req.block_hash,req.idx)){
               PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: sign or commit hash exist in new prepare cache")
                                   
                                   << LOG_KV("hash", req.block_hash.abridged())
                                   << LOG_KV("INFO", oss.str());
+            bool is_future = isFutureBlock(req);
+            if (is_future)
+            {
+                req.isFuture = true;
+                req.signChecked = false;
+                PBFTENGINE_LOG(INFO)
+                    << LOG_DESC("checkReq: Recv future request")
+                    << LOG_KV("prepHash", m_reqCache->prepareCache().block_hash.abridged())
+                    << LOG_KV("INFO", oss.str());
+                return CheckResult::FUTURE;
+            }
             // 若返回VALID,可能会无法达成共识
             return CheckResult::VALID;
         }
@@ -587,28 +599,29 @@ protected:
                                   << LOG_KV("INFO", oss.str());
             return CheckResult::INVALID;
         }
-        if (m_reqCache->prepareCache().block_hash != req.block_hash)
+        //注释
+        // if (m_reqCache->prepareCache().block_hash != req.block_hash)
         
-        {
-            PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: sign or commit Not exist in prepare cache")
-                                  << LOG_KV("prepHash",
-                                         m_reqCache->prepareCache().block_hash.abridged())
-                                  << LOG_KV("hash", req.block_hash.abridged())
-                                  << LOG_KV("INFO", oss.str());
-            /// is future ?
-            bool is_future = isFutureBlock(req);
-            if (is_future)
-            {
-                req.isFuture = true;
-                req.signChecked = false;
-                PBFTENGINE_LOG(INFO)
-                    << LOG_DESC("checkReq: Recv future request")
-                    << LOG_KV("prepHash", m_reqCache->prepareCache().block_hash.abridged())
-                    << LOG_KV("INFO", oss.str());
-                return CheckResult::FUTURE;
-            }
-            return CheckResult::INVALID;
-        }
+        // {
+        //     PBFTENGINE_LOG(INFO) << LOG_DESC("checkReq: sign or commit Not exist in prepare cache")
+        //                           << LOG_KV("prepHash",
+        //                                  m_reqCache->prepareCache().block_hash.abridged())
+        //                           << LOG_KV("hash", req.block_hash.abridged())
+        //                           << LOG_KV("INFO", oss.str());
+        //     /// is future ?
+        //     bool is_future = isFutureBlock(req);
+        //     if (is_future)
+        //     {
+        //         req.isFuture = true;
+        //         req.signChecked = false;
+        //         PBFTENGINE_LOG(INFO)
+        //             << LOG_DESC("checkReq: Recv future request")
+        //             << LOG_KV("prepHash", m_reqCache->prepareCache().block_hash.abridged())
+        //             << LOG_KV("INFO", oss.str());
+        //         return CheckResult::FUTURE;
+        //     }
+        //     return CheckResult::INVALID;
+        // }
         /// check the sealer of this request
         if (req.idx == nodeIdx())
         {

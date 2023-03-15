@@ -1522,6 +1522,8 @@ bool PBFTEngine::handleSignMsg(SignReq::Ptr sign_req, PBFTMsgPacket const& pbftM
     checkAndCommit();
     PBFTENGINE_LOG(INFO) << LOG_DESC("handleSignMsg Succ") << LOG_KV("Timecost", 1000 * t.elapsed())
                          << LOG_KV("INFO", oss.str());
+    //Jason
+    m_reqCache->traverseSignCache();
     return true;
 }
 
@@ -1600,6 +1602,9 @@ bool PBFTEngine::handleCommitMsg(CommitReq::Ptr commit_req, PBFTMsgPacket const&
     checkAndSave(true);
     PBFTENGINE_LOG(INFO) << LOG_DESC("handleCommitMsg Succ") << LOG_KV("INFO", oss.str())
                          << LOG_KV("Timecost", 1000 * t.elapsed());
+                         
+    //Jason TODO: 遍历Commit Cache
+    m_reqCache->traverseCommitCache();
     return true;
 }
 

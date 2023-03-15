@@ -294,12 +294,6 @@ namespace dev
             {
                 
                 auto hash = toHex(req->block_hash);
-                // if (cacheExists(m_newPrepareCache, hash, req->node_id))
-                // {
-                //     return;
-                // }
-                // {
-                // auto signature = toHex(req->sig);
                 if(isExistNewPrepare(req->block_hash, req->idx)){
                     PBFTENGINE_LOG(INFO)<<LOG_DESC("PrepareCache 已存在");
                     return;
@@ -315,7 +309,45 @@ namespace dev
                          << LOG_KV("Block Hash", req->block_hash.abridged());
             }
             //Jason 
-            
+            inline void traverseNewPrepareCache() {
+                for (const auto& hash_map_pair : m_newPrepareCache) {
+                    h256 hash_key = hash_map_pair.first;
+                    const auto& idx_type_map = hash_map_pair.second;
+                    for (const auto& idx_type_pair : idx_type_map) {
+                        IDXTYPE idx_key = idx_type_pair.first;
+                        PBFTENGINE_LOG(INFO)<<LOG_DESC("traverseNewPrepareCache")
+                                        <<LOG_KV("Hash key", hash_key.abridged())
+                                        <<LOG_KV("Idx",idx_key);
+                    }
+                }
+            }
+            //Jason
+            inline void traverseCommitCache() {
+                for (const auto& hash_map_pair : m_commitCache) {
+                    h256 hash_key = hash_map_pair.first;
+                    const auto& idx_type_map = hash_map_pair.second;
+                    for (const auto& idx_type_pair : idx_type_map) {
+                       auto signature = idx_type_pair.first;
+                        PBFTENGINE_LOG(INFO)<<LOG_DESC("traverseCommitCache")
+                                        <<LOG_KV("Hash key", hash_key.abridged());
+                                        // <<LOG_KV("Sig",signature.abridged();
+                    }
+
+                }
+            }
+            inline void traverseSignCache() {
+                for (const auto& hash_map_pair : m_signCache) {
+                    h256 hash_key = hash_map_pair.first;
+                    const auto& idx_type_map = hash_map_pair.second;
+                    for (const auto& idx_type_pair : idx_type_map) {
+                       auto signature = idx_type_pair.first;
+                        PBFTENGINE_LOG(INFO)<<LOG_DESC("traverseSignCache")
+                                        <<LOG_KV("Hash key", hash_key.abridged());
+                                        // <<LOG_KV("Sig",signature);
+                    }
+
+                }
+            }
             /// add specified signReq to the sign-cache
             inline void addSignReq(SignReq::Ptr req)
             {
@@ -508,7 +540,7 @@ namespace dev
                         it++;
                 }
             }
-
+           
             inline void removeInvalidViewChange(VIEWTYPE const& curView)
             {
                 for (auto it = m_recvViewChangeReq.begin(); it != m_recvViewChangeReq.end();)
@@ -531,8 +563,7 @@ namespace dev
                         it++;
                     }
                 }
-            }
-            void traverseNewPrepareCache(const std::unordered_map<h256, std::unordered_map<IDXTYPE, PrepareReq::Ptr>>& newPrepareCache) ;
+            } 
             void removeExpiredNewPrepareCache(h256 const& _blockHash, VIEWTYPE const& _view);
             void removeExpiredSignCache(h256 const& _blockHash, VIEWTYPE const& _view);
             void removeExpiredCommitCache(h256 const& _blockHash, VIEWTYPE const& _view);

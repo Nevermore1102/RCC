@@ -431,19 +431,6 @@ void PBFTReqCache::removeExpiredNewPrepareCache(h256 const& _blockHash, VIEWTYPE
     }
 }
 //Jason
-void traverseNewPrepareCache(const std::unordered_map<h256, std::unordered_map<IDXTYPE, PrepareReq::Ptr>>& newPrepareCache) {
-    for (const auto& hash_map_pair : newPrepareCache) {
-        h256 hash_key = hash_map_pair.first;
-        const auto& idx_type_map = hash_map_pair.second;
-        PBFTENGINE_LOG(INFO)<<LOG_DESC("traverseNewPrepareCache")
-                            <<LOG_KV("Hash key", hash_key);
-        for (const auto& idx_type_pair : idx_type_map) {
-            IDXTYPE idx_key = idx_type_pair.first;
-            const PrepareReq::Ptr& prepare_req_ptr = idx_type_pair.second;
-        PBFTENGINE_LOG(INFO)<<LOG_DESC("traverseNewPrepareCache")
-                            <<LOG_KV("Idx",idx_key);
-        }
-    }
-}
+
 }  // namespace consensus
 }  // namespace dev
