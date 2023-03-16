@@ -265,6 +265,7 @@ void PBFTEngine::rehandleCommitedPrepareCache(PrepareReq const& req)
                                   << LOG_KV("errorInfo", boost::diagnostic_information(e));
         }
     });
+    PBFTENGINE_LOG(INFO)<< LOG_DESC("rehandleCommitedPrepareCache中的handlePrepareMsg");
     handlePrepareMsg(prepareReq);
     /// note blockSync to the latest number, in case of the block number of other nodes is larger
     /// than this node
@@ -505,6 +506,7 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
         m_timeManager.m_changeCycle = 0;
         return true;
     }
+     PBFTENGINE_LOG(INFO)<< LOG_DESC("generatePrepare中的handlePrepareMsg");
     handlePrepareMsg(prepareReq);
     /*
      * handlePrepareMsg会打印 addRawPrepare, execBlock, handlePrepareMsg Succ
@@ -1132,7 +1134,7 @@ void PBFTEngine::clearPreRawPrepare()
  *       (4) callback checkAndCommit function to determin can submit the block or not
  * @param prepare_req: the prepare request need to be handled
  * @param self: if generated-prepare-request need to handled, then set self to be true;
- *              else this function will filter the self-generated prepareReq
+ * else this function will filter the self-generated prepareReq
  *1. 检查prepareReq是否有效
 * 2. 如果prepareReq是有效的。
 * (1) 将pareReq添加到raw-prepare-cache中
@@ -2017,6 +2019,7 @@ void PBFTEngine::handleFutureBlock()
                              << LOG_KV("hash", p_future_prepare->block_hash.abridged())
                              << LOG_KV("nodeIdx", nodeIdx())
                              << LOG_KV("myNode", m_keyPair.pub().abridged());
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("handleFutureBlock中的handlePrepareMsg");
         handlePrepareMsg(p_future_prepare);
         m_reqCache->eraseHandledFutureReq(p_future_prepare->height);
     }
@@ -2595,6 +2598,7 @@ void PBFTEngine::onReceiveMissedTxsResponse(
         auto prepareReq = m_partiallyPrepareCache->partiallyRawPrepare();
         // re-encode the block into the completed block(for pbft-backup consideration)
         prepareReq->pBlock->encode(*prepareReq->block);
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("onReceiveMissedTxsResponse中的handlePrepareMsg");
         bool ret = handlePrepareMsg(prepareReq);
         // forward the completed prepare message
         if (ret && m_cachedForwardMsg->count(prepareReq->block_hash))

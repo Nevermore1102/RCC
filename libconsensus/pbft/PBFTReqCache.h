@@ -270,7 +270,8 @@ namespace dev
                 WriteGuard l(x_rawPrepareCache);
                 m_rawPrepareCache = req;
                 m_prepareCache->clear();
-                PBFTReqCache_LOG(INFO) << LOG_DESC("addRawPrepare") << LOG_KV("height", req->height)
+                PBFTReqCache_LOG(INFO) << LOG_DESC("addRawPrepare") 
+                                        << LOG_KV("height", req->height)
                                        << LOG_KV("reqIdx", req->idx)
                                        << LOG_KV("hash", req->block_hash.abridged())
                                        << LOG_KV("time", utcTime() - startT);
