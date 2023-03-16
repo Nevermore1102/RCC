@@ -1195,6 +1195,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
     Sealing workingSealing(m_blockFactory);
     try
     {
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("开始执行区块");
         // update the latest time of receiving the rawPrepare and ready to execute the block
         m_timeManager.m_lastAddRawPrepareTime = utcSteadyTime();
         // 执行区块
@@ -1207,6 +1208,7 @@ bool PBFTEngine::execPrepareAndGenerateSignMsg(
         if (workingSealing.p_execContext == nullptr &&
             workingSealing.block->getTransactionSize() > 0)
         {
+             PBFTENGINE_LOG(INFO)<<LOG_DESC("workingSealing.block->getTransactionSize() > 0");
             return false;
         }
     }
@@ -1500,12 +1502,18 @@ bool PBFTEngine::handleSignMsg(SignReq::Ptr sign_req, PBFTMsgPacket const& pbftM
         return false;
     }
     std::ostringstream oss;
-    oss << LOG_DESC("handleSignMsg") << LOG_KV("num", sign_req->height)
-        << LOG_KV("curNum", m_highestBlock.number()) << LOG_KV("GenIdx", sign_req->idx)
-        << LOG_KV("Sview", sign_req->view) << LOG_KV("view", m_view)
-        << LOG_KV("fromIdx", pbftMsg.node_idx) << LOG_KV("fromNode", pbftMsg.node_id.abridged())
-        << LOG_KV("fromIp", pbftMsg.endpoint) << LOG_KV("hash", sign_req->block_hash.abridged())
-        << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
+    oss << LOG_DESC("handleSignMsg") 
+        << LOG_KV("hash", sign_req->block_hash.abridged())
+        << LOG_KV("reqNum", sign_req->height)
+        << LOG_KV("curNum", m_highestBlock.number()) 
+        << LOG_KV("GenIdx", sign_req->idx)
+        << LOG_KV("nodeIdx", nodeIdx()) 
+        << LOG_KV("fromIdx", pbftMsg.node_idx) 
+        << LOG_KV("fromNode", pbftMsg.node_id.abridged())
+        << LOG_KV("myNode", m_keyPair.pub().abridged())
+        << LOG_KV("Sview", sign_req->view)
+        << LOG_KV("view", m_view)
+        << LOG_KV("fromIp", pbftMsg.endpoint); 
     auto check_ret = isValidSignReq(sign_req, oss);
     if (check_ret == CheckResult::INVALID)
     {
@@ -1520,8 +1528,9 @@ bool PBFTEngine::handleSignMsg(SignReq::Ptr sign_req, PBFTMsgPacket const& pbftM
     m_reqCache->addSignReq(sign_req);
 
     checkAndCommit();
-    PBFTENGINE_LOG(INFO) << LOG_DESC("handleSignMsg Succ") << LOG_KV("Timecost", 1000 * t.elapsed())
-                         << LOG_KV("INFO", oss.str());
+    PBFTENGINE_LOG(INFO) << LOG_DESC("handleSignMsg Succ") 
+                         << LOG_KV("INFO", oss.str())
+                         << LOG_KV("Timecost", 1000 * t.elapsed());
     //Jason
     m_reqCache->traverseSignCache();
     return true;
@@ -1580,12 +1589,18 @@ bool PBFTEngine::handleCommitMsg(CommitReq::Ptr commit_req, PBFTMsgPacket const&
         return false;
     }
     std::ostringstream oss;
-    oss << LOG_DESC("handleCommitMsg") << LOG_KV("reqNum", commit_req->height)
-        << LOG_KV("curNum", m_highestBlock.number()) << LOG_KV("GenIdx", commit_req->idx)
-        << LOG_KV("Cview", commit_req->view) << LOG_KV("view", m_view)
-        << LOG_KV("fromIdx", pbftMsg.node_idx) << LOG_KV("fromNode", pbftMsg.node_id.abridged())
-        << LOG_KV("fromIp", pbftMsg.endpoint) << LOG_KV("hash", commit_req->block_hash.abridged())
-        << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
+    oss << LOG_DESC("handleCommitMsg") 
+        << LOG_KV("hash", commit_req->block_hash.abridged())
+        << LOG_KV("reqNum", commit_req->height)
+        << LOG_KV("curNum", m_highestBlock.number()) 
+        << LOG_KV("GenIdx", commit_req->idx)
+        << LOG_KV("nodeIdx", nodeIdx()) 
+        << LOG_KV("fromIdx", pbftMsg.node_idx) 
+        << LOG_KV("Cview", commit_req->view) 
+        << LOG_KV("view", m_view)
+        << LOG_KV("fromNode", pbftMsg.node_id.abridged())
+        << LOG_KV("fromIp", pbftMsg.endpoint) 
+        << LOG_KV("myNode", m_keyPair.pub().abridged());
     auto valid_ret = isValidCommitReq(commit_req, oss);
     if (valid_ret == CheckResult::INVALID)
     {
@@ -1600,7 +1615,8 @@ bool PBFTEngine::handleCommitMsg(CommitReq::Ptr commit_req, PBFTMsgPacket const&
     }
     m_reqCache->addCommitReq(commit_req);
     checkAndSave(true);
-    PBFTENGINE_LOG(INFO) << LOG_DESC("handleCommitMsg Succ") << LOG_KV("INFO", oss.str())
+    PBFTENGINE_LOG(INFO) << LOG_DESC("handleCommitMsg Succ")
+                         << LOG_KV("INFO", oss.str())
                          << LOG_KV("Timecost", 1000 * t.elapsed());
                          
     //Jason TODO: 遍历Commit Cache
@@ -2329,6 +2345,7 @@ bool PBFTEngine::handlePartiallyPrepare(PrepareReq::Ptr _prepareReq)
     {
         PBFTENGINE_LOG(INFO) << LOG_DESC(
                                      "hit all the transactions, handle the rawPrepare directly")
+                            <<LOG_KV("Block Hash",_prepareReq->block_hash)
                               << LOG_KV("txsSize", _prepareReq->pBlock->transactions()->size());
         m_partiallyPrepareCache->transPartiallyPrepareIntoRawPrepare();
         // begin to handlePrepare
@@ -2359,7 +2376,7 @@ bool PBFTEngine::requestMissedTxs(PrepareReq::Ptr _prepareReq)
 
     m_service->asyncSendMessageByNodeID(targetNode, p2pMsg, nullptr);
 
-    PBFTENGINE_LOG(DEBUG) << LOG_DESC("send GetMissedTxsPacket to the leader")
+    PBFTENGINE_LOG(INFO) << LOG_DESC("send GetMissedTxsPacket to the leader")
                           << LOG_KV("targetIdx", _prepareReq->idx)
                           << LOG_KV("number", _prepareReq->height)
                           << LOG_KV("hash", _prepareReq->block_hash.abridged())
