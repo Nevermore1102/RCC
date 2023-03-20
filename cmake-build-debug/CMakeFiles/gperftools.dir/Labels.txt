@@ -1,0 +1,13 @@
+# Target labels
+ gperftools
+# Source files and their labels
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/gperftools
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/gperftools.rule
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/gperftools-complete.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/gperftools-stamp/gperftools-build.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/gperftools-stamp/gperftools-configure.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/gperftools-stamp/gperftools-download.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/gperftools-stamp/gperftools-install.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/gperftools-stamp/gperftools-mkdir.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/gperftools-stamp/gperftools-patch.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/gperftools-stamp/gperftools-update.rule

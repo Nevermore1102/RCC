@@ -1,0 +1,13 @@
+# Target labels
+ rocksdb
+# Source files and their labels
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/rocksdb
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/rocksdb.rule
+/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/rocksdb-complete.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/rocksdb-stamp/rocksdb-build.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/rocksdb-stamp/rocksdb-configure.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/rocksdb-stamp/rocksdb-download.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/rocksdb-stamp/rocksdb-install.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/rocksdb-stamp/rocksdb-mkdir.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/rocksdb-stamp/rocksdb-patch.rule
+/home/jason/hierashards_open/hierashards_open/deps/src/rocksdb-stamp/rocksdb-update.rule

@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/libvrf"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/libvrf.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug/CMakeFiles/libvrf-complete.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/libvrf-stamp/libvrf-build.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/libvrf-stamp/libvrf-configure.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/libvrf-stamp/libvrf-download.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/libvrf-stamp/libvrf-install.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/libvrf-stamp/libvrf-mkdir.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/libvrf-stamp/libvrf-patch.rule"
+		},
+		{
+			"file" : "/home/jason/hierashards_open/hierashards_open/deps/src/libvrf-stamp/libvrf-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"libvrf"
+		],
+		"name" : "libvrf"
+	}
+}

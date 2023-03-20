@@ -1,0 +1,911 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26
+					],
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						4,
+						7,
+						10,
+						13,
+						14,
+						17,
+						18,
+						20,
+						21,
+						23,
+						24,
+						25,
+						26,
+						27,
+						28,
+						30,
+						33,
+						37,
+						39,
+						41,
+						46,
+						47
+					]
+				},
+				{
+					"build" : "libchannelserver",
+					"jsonFile" : "directory-libchannelserver-Debug-7937297d8a6d535ff4ea.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libchannelserver",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "libdevcore",
+					"jsonFile" : "directory-libdevcore-Debug-c4f1de746dfbe9351618.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libdevcore",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "libdevcrypto",
+					"jsonFile" : "directory-libdevcrypto-Debug-34260e292ef8f66c580a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libdevcrypto",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "libethcore",
+					"jsonFile" : "directory-libethcore-Debug-03de59c6bc10c221aa75.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libethcore",
+					"targetIndexes" : 
+					[
+						11
+					]
+				},
+				{
+					"build" : "libstat",
+					"jsonFile" : "directory-libstat-Debug-2bdbab5db90146501211.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libstat",
+					"targetIndexes" : 
+					[
+						42
+					]
+				},
+				{
+					"build" : "libflowlimit",
+					"jsonFile" : "directory-libflowlimit-Debug-e9a3483bf301da7579e4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libflowlimit",
+					"targetIndexes" : 
+					[
+						16
+					]
+				},
+				{
+					"build" : "libtxpool",
+					"jsonFile" : "directory-libtxpool-Debug-5eccfc5c7317045c4865.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libtxpool",
+					"targetIndexes" : 
+					[
+						48
+					]
+				},
+				{
+					"build" : "libstorage",
+					"jsonFile" : "directory-libstorage-Debug-0d5b33b5bc8a785d2ce5.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libstorage",
+					"targetIndexes" : 
+					[
+						43
+					]
+				},
+				{
+					"build" : "libprecompiled",
+					"childIndexes" : 
+					[
+						10
+					],
+					"jsonFile" : "directory-libprecompiled-Debug-bcce435bd01700e8209e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libprecompiled",
+					"targetIndexes" : 
+					[
+						35
+					]
+				},
+				{
+					"build" : "libprecompiled/extension",
+					"jsonFile" : "directory-libprecompiled.extension-Debug-81b2686902d2b3e8f1ad.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 9,
+					"projectIndex" : 0,
+					"source" : "libprecompiled/extension"
+				},
+				{
+					"build" : "libnetwork",
+					"jsonFile" : "directory-libnetwork-Debug-3545f4379425e0a74f2e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libnetwork",
+					"targetIndexes" : 
+					[
+						31
+					]
+				},
+				{
+					"build" : "libp2p",
+					"jsonFile" : "directory-libp2p-Debug-305e86e0150112660e3e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libp2p",
+					"targetIndexes" : 
+					[
+						32
+					]
+				},
+				{
+					"build" : "libexecutive",
+					"jsonFile" : "directory-libexecutive-Debug-130985bff0c33a68a3ee.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libexecutive",
+					"targetIndexes" : 
+					[
+						15
+					]
+				},
+				{
+					"build" : "libmptstate",
+					"jsonFile" : "directory-libmptstate-Debug-aaa3f5903a88b1f68fa7.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libmptstate",
+					"targetIndexes" : 
+					[
+						29
+					]
+				},
+				{
+					"build" : "libblockverifier",
+					"jsonFile" : "directory-libblockverifier-Debug-0d01a6d6aa6699a49b2e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libblockverifier",
+					"targetIndexes" : 
+					[
+						3
+					]
+				},
+				{
+					"build" : "libstoragestate",
+					"jsonFile" : "directory-libstoragestate-Debug-75ee0fa910c7f36685f8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libstoragestate",
+					"targetIndexes" : 
+					[
+						44
+					]
+				},
+				{
+					"build" : "libblockchain",
+					"jsonFile" : "directory-libblockchain-Debug-2e6e9ea2b3e45719a2b2.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libblockchain",
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"build" : "libsync",
+					"jsonFile" : "directory-libsync-Debug-4e26f6e6c00f8879487f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libsync",
+					"targetIndexes" : 
+					[
+						45
+					]
+				},
+				{
+					"build" : "libconsensus",
+					"jsonFile" : "directory-libconsensus-Debug-df62ea2d719d02888691.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libconsensus",
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"build" : "libledger",
+					"jsonFile" : "directory-libledger-Debug-2d24617cff0f5863df66.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libledger",
+					"targetIndexes" : 
+					[
+						22
+					]
+				},
+				{
+					"build" : "librpc",
+					"jsonFile" : "directory-librpc-Debug-3c78e3e54792c85e68c7.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "librpc",
+					"targetIndexes" : 
+					[
+						38
+					]
+				},
+				{
+					"build" : "libinitializer",
+					"jsonFile" : "directory-libinitializer-Debug-99edb1d99479326db822.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libinitializer",
+					"targetIndexes" : 
+					[
+						19
+					]
+				},
+				{
+					"build" : "libsecurity",
+					"jsonFile" : "directory-libsecurity-Debug-64b43ed1fbad6380f3ce.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libsecurity",
+					"targetIndexes" : 
+					[
+						40
+					]
+				},
+				{
+					"build" : "libeventfilter",
+					"jsonFile" : "directory-libeventfilter-Debug-56b4736d310fa0d2433f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libeventfilter",
+					"targetIndexes" : 
+					[
+						12
+					]
+				},
+				{
+					"build" : "libplugin",
+					"jsonFile" : "directory-libplugin-Debug-ddf24a813e74ed8a365c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libplugin",
+					"targetIndexes" : 
+					[
+						34
+					]
+				},
+				{
+					"build" : "libprotobasic",
+					"jsonFile" : "directory-libprotobasic-Debug-0a7c6b111c23d26bb7eb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libprotobasic",
+					"targetIndexes" : 
+					[
+						36
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26
+					],
+					"name" : "FISCO-BCOS",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+						24,
+						25,
+						26,
+						27,
+						28,
+						29,
+						30,
+						31,
+						32,
+						33,
+						34,
+						35,
+						36,
+						37,
+						38,
+						39,
+						40,
+						41,
+						42,
+						43,
+						44,
+						45,
+						46,
+						47,
+						48
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "BuildInfo.h::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-BuildInfo.h-Debug-d8fc8752b52714a5b7b3.json",
+					"name" : "BuildInfo.h",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "GroupSigLib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GroupSigLib-Debug-4a4cbbc3f23d0fa9a186.json",
+					"name" : "GroupSigLib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 17,
+					"id" : "blockchain::@2eed86286fc7c5529809",
+					"jsonFile" : "target-blockchain-Debug-ac94ac8cea63a232b8bc.json",
+					"name" : "blockchain",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 15,
+					"id" : "blockverifier::@52a79e9f7057a9c57063",
+					"jsonFile" : "target-blockverifier-Debug-05c6f2d430914435c272.json",
+					"name" : "blockverifier",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "boost::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-boost-Debug-0476762084833b9157bb.json",
+					"name" : "boost",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "channelserver::@d8ea8a061f1aa2b6b14c",
+					"jsonFile" : "target-channelserver-Debug-cc745e0c1b04bcdaa5ae.json",
+					"name" : "channelserver",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 19,
+					"id" : "consensus::@360b42758d25b9a9ba2e",
+					"jsonFile" : "target-consensus-Debug-ba5155ad7f27c064c658.json",
+					"name" : "consensus",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "cryptopp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-cryptopp-Debug-4bede986816671a9713f.json",
+					"name" : "cryptopp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "devcore::@53af244f0c493e8db743",
+					"jsonFile" : "target-devcore-Debug-1a219a6eea5548314525.json",
+					"name" : "devcore",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "devcrypto::@e58300256fedac60e51a",
+					"jsonFile" : "target-devcrypto-Debug-5f8309fd55463ed28bef.json",
+					"name" : "devcrypto",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "doc::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-doc-Debug-cbe1ef330c0a608c0fe6.json",
+					"name" : "doc",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "ethcore::@86afee01da7a33f92b82",
+					"jsonFile" : "target-ethcore-Debug-ce849c9dc2a48ce075a0.json",
+					"name" : "ethcore",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 24,
+					"id" : "eventfilter::@0e6ce3d3dad159dadeec",
+					"jsonFile" : "target-eventfilter-Debug-ef331d24177680181c8d.json",
+					"name" : "eventfilter",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "evmc::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-evmc-Debug-cd981d747d7d6e65cbe6.json",
+					"name" : "evmc",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "evmone::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-evmone-Debug-e068e6e7a7931958ebe6.json",
+					"name" : "evmone",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 13,
+					"id" : "executivecontext::@e1af93b3b19f1af3bd7e",
+					"jsonFile" : "target-executivecontext-Debug-d5fab9e92aca352ec44f.json",
+					"name" : "executivecontext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "flowlimit::@51f0205cbc87eaeee448",
+					"jsonFile" : "target-flowlimit-Debug-c74336fbd544815a1c3d.json",
+					"name" : "flowlimit",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "gperftools::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-gperftools-Debug-9124d52437ffa14f3218.json",
+					"name" : "gperftools",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "hierashards::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-hierashards-Debug-ee2c5616c70c51e35a51.json",
+					"name" : "hierashards",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 22,
+					"id" : "initializer::@dea06713f99da8470dd8",
+					"jsonFile" : "target-initializer-Debug-2563450d8cdda3481c4d.json",
+					"name" : "initializer",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "jsoncpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-jsoncpp-Debug-d67c00f029a96c465e05.json",
+					"name" : "jsoncpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "jsonrpccpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-jsonrpccpp-Debug-2602fc2d91aa5eb1cc75.json",
+					"name" : "jsonrpccpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 20,
+					"id" : "ledger::@82f4effe628f911da767",
+					"jsonFile" : "target-ledger-Debug-0b5600e8561d287f602b.json",
+					"name" : "ledger",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "leveldb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-leveldb-Debug-fb5c8c0cf2df9dd906c1.json",
+					"name" : "leveldb",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "libff::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-libff-Debug-e22b8f44cff068a41809.json",
+					"name" : "libff",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "libvrf::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-libvrf-Debug-d03b28f2f352f1538304.json",
+					"name" : "libvrf",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "libzdb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-libzdb-Debug-19ff3645d88b860b754c.json",
+					"name" : "libzdb",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mhd::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mhd-Debug-8a8168a3b9c7e5d758d2.json",
+					"name" : "mhd",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mpir::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mpir-Debug-52d3b90df08e43663adf.json",
+					"name" : "mpir",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 14,
+					"id" : "mptstate::@86a45aef5d073fb345e9",
+					"jsonFile" : "target-mptstate-Debug-fa2c30777e47000167de.json",
+					"name" : "mptstate",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mysqlclient::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mysqlclient-Debug-ced98a6d8a8ccdd9b8ec.json",
+					"name" : "mysqlclient",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 11,
+					"id" : "network::@77b67a839382420e757e",
+					"jsonFile" : "target-network-Debug-0fc85554cde7577e9269.json",
+					"name" : "network",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 12,
+					"id" : "p2p::@bad0c41105176e276d77",
+					"jsonFile" : "target-p2p-Debug-5ed6f1e8f2a18f19ba5c.json",
+					"name" : "p2p",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "paillier::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-paillier-Debug-925367338466ec4e4999.json",
+					"name" : "paillier",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 25,
+					"id" : "plugin::@64ec9deb8d843a2a9106",
+					"jsonFile" : "target-plugin-Debug-cda7161fd343ced5e1af.json",
+					"name" : "plugin",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "precompiled::@b171c2ddd53ae591a900",
+					"jsonFile" : "target-precompiled-Debug-7185e626c67bd0b7fde7.json",
+					"name" : "precompiled",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 26,
+					"id" : "protobasic::@58e90c1738da1ba44b08",
+					"jsonFile" : "target-protobasic-Debug-f00e9bc8debc374f4f79.json",
+					"name" : "protobasic",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "rocksdb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-rocksdb-Debug-bfc3ebf399a0053f9f78.json",
+					"name" : "rocksdb",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 21,
+					"id" : "rpc::@5d041e3e4d57200e3fd8",
+					"jsonFile" : "target-rpc-Debug-656e594e54715bb1d2d7.json",
+					"name" : "rpc",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "secp256k1::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-secp256k1-Debug-77bead0386f67c182a1c.json",
+					"name" : "secp256k1",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 23,
+					"id" : "security::@7d9fd3bbb4a03e66c475",
+					"jsonFile" : "target-security-Debug-0788571a09657cfa8867.json",
+					"name" : "security",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "snappy::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-snappy-Debug-1bf13a89316363ae56af.json",
+					"name" : "snappy",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "stat::@3bca4c5d79f34e3b344f",
+					"jsonFile" : "target-stat-Debug-db97a705fa6739dfaf0f.json",
+					"name" : "stat",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "storage::@0fb4ff7c139f680ae0fa",
+					"jsonFile" : "target-storage-Debug-b70176202184ac595c44.json",
+					"name" : "storage",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 16,
+					"id" : "storagestate::@be9e5bf8cca7592e3036",
+					"jsonFile" : "target-storagestate-Debug-a84a30a9b5f8c7e73ee7.json",
+					"name" : "storagestate",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 18,
+					"id" : "sync::@530167a23845438adeeb",
+					"jsonFile" : "target-sync-Debug-b386fc53e0e40dc977c6.json",
+					"name" : "sync",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "tassl::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-tassl-Debug-48551af3c84ce6b9187d.json",
+					"name" : "tassl",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "tbb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-tbb-Debug-41bfcf2b4fbbbf3f8324.json",
+					"name" : "tbb",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "txpool::@cd7735ec15d19b561671",
+					"jsonFile" : "target-txpool-Debug-a40f97af2c483ffc27e3.json",
+					"name" : "txpool",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/jason/hierashards_open/hierashards_open/cmake-build-debug",
+		"source" : "/home/jason/hierashards_open/hierashards_open"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}
