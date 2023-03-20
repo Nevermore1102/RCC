@@ -181,6 +181,7 @@ void PartiallyBlock::encodeMissedInfo(std::shared_ptr<bytes> _encodedBytes)
 void PartiallyBlock::fetchMissedTxs(
     std::shared_ptr<bytes> _encodedBytes, bytesConstRef _missInfo, dev::h256 const& _expectedHash)
 {
+    
     // decode _missInfo
     RLP missedInfoRlp(_missInfo);
     // Note: since the blockHash maybe changed after the block executed,

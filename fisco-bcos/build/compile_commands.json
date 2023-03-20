@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/Users/tanghaibo/fisco/FISCO-BCOS/fisco-bcos/build/main",
-  "command": "/usr/bin/clang++  -I/Users/tanghaibo/fisco/FISCO-BCOS/fisco-bcos/main/.. -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk -mmacosx-version-min=11.2 -o CMakeFiles/fisco-bcos.dir/main.o -c /Users/tanghaibo/fisco/FISCO-BCOS/fisco-bcos/main/main.cpp",
-  "file": "/Users/tanghaibo/fisco/FISCO-BCOS/fisco-bcos/main/main.cpp"
-}
-]

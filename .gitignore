@@ -1,0 +1,64 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# java
+*.class
+
+
+# ignore some directory
+build**
+deps
+deps/**
+
+# vs
+*.sln
+*.vcxproj*
+.vs/
+.vscode/
+
+#
+.cache/*
+# macOS
+.DS_Store
+
+# others
+.clang-format
+git.tar.gz
+.cache/**
+zh_main.cpp
+libblockverifier/BlockVerifier_fisco.cpp
+.cache/clangd/*
+.cache/clangd/**
+.cache/clangd/
+
+vs.tar

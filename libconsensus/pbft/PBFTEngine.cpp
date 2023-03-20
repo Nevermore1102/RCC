@@ -2437,7 +2437,7 @@ void PBFTEngine::onReceiveGetMissedTxsRequest(
 void PBFTEngine::handleP2PMessage(
     NetworkException _exception, std::shared_ptr<P2PSession> _session, P2PMessage::Ptr _message)
 {
-//    PBFTENGINE_LOG(INFO) << LOG_DESC("节点收到共识消息，正在处理。。。");
+   PBFTENGINE_LOG(INFO) << LOG_DESC("节点收到共识消息，正在处理。。。");
 //
 
     try
@@ -2486,7 +2486,7 @@ void PBFTEngine::handleP2PMessage(
             break;
         // receive missed transactions, fill block
         case MissedTxsPacket:
-        //PBFTENGINE_LOG(INFO) << LOG_DESC("  4 ");
+            PBFTENGINE_LOG(INFO) << LOG_DESC("MissedTxsPacket Case");
             m_messageHandler->enqueue([self, _session, _message]() {
                 auto pbftEngine = self.lock();
                 if (pbftEngine)
@@ -2577,7 +2577,7 @@ void PBFTEngine::onReceiveMissedTxsResponse(
     try
     {
         Guard l(m_mutex);
-        PBFTENGINE_LOG(DEBUG) << LOG_DESC("onReceiveMissedTxsResponse and fillBlock")
+        PBFTENGINE_LOG(INFO) << LOG_DESC("onReceiveMissedTxsResponse and fillBlock")
                               << LOG_KV("size", _message->length())
                               << LOG_KV("peer", _session->nodeID().abridged());
         RLP blockRLP(ref(*(_message->buffer())));
