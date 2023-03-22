@@ -23,8 +23,11 @@
  */
 #include "PBFTEngine.h"
 #include "Common.h"
+#include "libdevcore/FixedHash.h"
 #include "libdevcore/Log.h"
 #include "libdevcrypto/CryptoInterface.h"
+#include <cmath>
+#include <cstdlib>
 #include <libconfig/GlobalConfigure.h>
 #include <libdevcore/CommonJS.h>
 #include <libethcore/CommonJS.h>
@@ -615,6 +618,7 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
         //构造prepare信息
         auto prepareReq4nl = constructPrepareReq4nl(_block);
         PBFTENGINE_LOG(INFO)<<LOG_DESC("开始自己处理PrepareReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
+        handlePrepareMsg4nl(prepareReq4nl);
         m_signalled.notify_all();
         m_generatePrepare = false;
         return true;
@@ -1265,6 +1269,21 @@ bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepare_req, PBFTMsgPacket con
     }
     return handlePrepareMsg(prepare_req, pbftMsg.endpoint);
 }
+bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepare_req, PBFTMsgPacket const& pbftMsg)
+{
+    //解码
+    bool valid = decodeToRequests(*prepare_req, ref(pbftMsg.data));
+    // set isEmpty flag for the prepareReq
+    if (pbftMsg.prepareWithEmptyBlock)
+    {
+        prepare_req->isEmpty = true;
+    }
+    if (!valid)
+    {
+        return false;
+    }
+    return handlePrepareMsg4nl(prepare_req, pbftMsg.endpoint);
+}
 
 void PBFTEngine::clearPreRawPrepare()
 {
@@ -1334,6 +1353,183 @@ bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepareReq, std::string const&
     return execPrepareAndGenerateSignMsg(prepareReq, oss);
 }
 
+//处理pre
+//1 check
+//clean and add cache
+//generate sign msg
+bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string const& endpoint)
+{
+    std::ostringstream oss;
+    // PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("reqIdx", prepareReq->idx)
+    //     << LOG_KV("view", prepareReq->view) << LOG_KV("reqNum", prepareReq->height)
+    //     << LOG_KV("curNum", m_highestBlock.number()) << LOG_KV("consNum", m_consensusBlockNumber)
+    //     << LOG_KV("curView", m_view) << LOG_KV("fromIp", endpoint)
+    //     << LOG_KV("hash", prepareReq->block_hash.abridged()) << LOG_KV("nodeIdx", nodeIdx())
+    //     << LOG_KV("myNode", m_keyPair.pub().abridged())
+    //     << LOG_KV("curChangeCycle", m_timeManager.m_changeCycle);
+
+
+    oss << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
+        << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
+        << LOG_KV("已共识最高块curNum", m_highestBlock.number()) << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
+        << LOG_KV("fromIp", endpoint)
+        << LOG_KV("hash", prepareReq->block_hash.abridged()) << LOG_KV("自己的nodeIdx", nodeIdx())
+        << LOG_KV("myNode", m_keyPair.pub().abridged());
+
+    //暂时用reqNum和m_consensusBlockNumber替代轮数
+    //reqNum为当前共识，m_consensusBlockNumber为已共识
+    PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
+        << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
+        << LOG_KV("已共识最高块curNum", m_highestBlock.number()) << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
+        << LOG_KV("fromIp", endpoint)
+        << LOG_KV("hash", prepareReq->block_hash.abridged()) << LOG_KV("自己的nodeIdx", nodeIdx())
+        << LOG_KV("myNode", m_keyPair.pub().abridged());
+
+    //check..to add
+
+
+    //add cache 
+    m_reqCache->addPrepareReq4nl(prepareReq);
+    
+    //不执行直接广播签名
+
+    return OnlyGenerateSignMsg4nl(prepareReq, oss);
+    
+
+
+    // PBFTENGINE_LOG(INFO)<<oss;
+
+    /// check the prepare request is valid or not
+    // auto valid_ret = isValidPrepare(*prepareReq, oss);
+    // if (valid_ret == CheckResult::INVALID)
+    // {
+    //     PBFTENGINE_LOG(INFO)<<LOG_DESC("PrepareMsg invalid,清除preRawPrepare,返回false");
+    //     clearPreRawPrepare();
+    //     return false;
+    // }
+    // /// update the view for given idx
+    // updateViewMap(prepareReq->idx, prepareReq->view);
+
+    // if (valid_ret == CheckResult::FUTURE)
+    // {
+    //     PBFTENGINE_LOG(INFO)<<LOG_DESC("PrepareMsg FUTURE,清除preRawPrepare,调用addFuturePrepareCache,返回True");
+    //     clearPreRawPrepare();
+    //     m_reqCache->addFuturePrepareCache(prepareReq);
+    //     return true;
+    // }
+    // // clear preRawPrepare before addRawPrepare when enable_block_with_txs_hash
+    // clearPreRawPrepare();
+    // /// add raw prepare request, 把rawPrepare加入cache,并打印日志
+    // //Jason 把自己生成的Prepare也加入
+    // // m
+    // if(!m_reqCache->isExistNewPrepare(prepareReq->block_hash, prepareReq->idx)){
+    //     m_reqCache->addNewPrepareReq(prepareReq);
+    // }
+    // addRawPrepare(prepareReq);
+    // //执行PrepareMsg并生成签名
+    // return execPrepareAndGenerateSignMsg(prepareReq, oss);
+    return true;
+}
+//check pre 4nl
+//case 1 : check 轮次信息
+//case 2 : check  以共识此块
+//
+CheckResult PBFTEngine::isValidPrepare4nl(PrepareReq4nl const& req, std::ostringstream& oss) const
+{
+
+
+    return CheckResult::VALID;
+
+}
+
+
+bool PBFTEngine::OnlyGenerateSignMsg4nl(
+    PrepareReq4nl::Ptr _prepareReq, std::ostringstream& _oss)
+{
+
+
+    //需要 req.height; req.view; _idx req.block_hash;
+    //注意 此处nodeidx应为_prepareReq 的nodeidx 表示pre来源块，而不是sign块来源
+    // SignReq4nl::Ptr sign_req = std::make_shared<SignReq4nl>(*_prepareReq, m_keyPair, nodeIdx());
+    SignReq4nl::Ptr sign_req = std::make_shared<SignReq4nl>(*_prepareReq, m_keyPair, _prepareReq->idx);
+
+    bytes sign_req_data;
+    sign_req->encode(sign_req_data);
+
+    // broad cast  and add cache
+    bool succ = broadcastMsg(SignReqPacket4nl, *sign_req, ref(sign_req_data));
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("广播签名包结束");
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("开始处理SignReqPacket4nl!!!!!!!!!!!!!!!!!!!!!--self");
+    //自己添加签名包
+
+    // long randomnum=random();
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("self randomnum start",randomnum);
+
+    m_reqCache->addSignReq4nl(sign_req);
+
+    // 触发check -- 可能落后，cache内已有签名包
+    checkAndCommit4nl(sign_req->height,sign_req->idx,true);
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("self randomnum end",randomnum);
+
+    return succ;
+
+
+
+
+
+
+    
+}
+
+bool PBFTEngine::handleSignMsg4nl(SignReq4nl::Ptr sign_req, PBFTMsgPacket const& pbftMsg)
+{
+    Timer t;
+    bool valid = decodeToRequests(*sign_req, ref(pbftMsg.data));
+    if (!valid)
+    {
+        return false;
+    }
+    std::ostringstream oss;
+    oss << LOG_DESC("handleSignMsg") 
+        << LOG_KV("hash", sign_req->block_hash.abridged())
+        << LOG_KV("reqNum", sign_req->height)
+        << LOG_KV("curNum", m_highestBlock.number()) 
+        << LOG_KV("GenIdx", sign_req->idx)
+        << LOG_KV("nodeIdx", nodeIdx()) 
+        << LOG_KV("fromIdx", pbftMsg.node_idx) 
+        << LOG_KV("fromNode", pbftMsg.node_id.abridged())
+        << LOG_KV("myNode", m_keyPair.pub().abridged())
+        << LOG_KV("Sview", sign_req->view)
+        << LOG_KV("view", m_view)
+        << LOG_KV("fromIp", pbftMsg.endpoint); 
+    // auto check_ret = isValidSignReq(sign_req, oss);
+    // if (check_ret == CheckResult::INVALID)
+    // {
+    //     return false;
+    // }
+    // updateViewMap(sign_req->idx, sign_req->view);
+
+    // if (check_ret == CheckResult::FUTURE)
+    // {
+    //     return true;
+    // }
+
+    //add cache
+    // long randomnum=random();//debug看是否是多线程穿插问题
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("randomnum start",randomnum);
+    m_reqCache->addSignReq4nl(sign_req);
+    checkAndCommit4nl(sign_req->height,sign_req->idx);
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("randomnum end",randomnum);
+
+    //触发check and commit
+    // checkAndCommit();
+    // PBFTENGINE_LOG(INFO) << LOG_DESC("handleSignMsg Succ") 
+    //                      << LOG_KV("INFO", oss.str())
+    //                      << LOG_KV("Timecost", 1000 * t.elapsed());
+    //Jason
+    // m_reqCache->traverseSignCache();
+    return true;
+}
 void PBFTEngine::addRawPrepare(PrepareReq::Ptr _prepareReq)
 {
     /// add raw prepare request
@@ -1474,6 +1670,45 @@ void PBFTEngine::checkAndCommit()
         m_timeManager.m_lastSignTime = utcSteadyTime();
         checkAndSave(false);
     }
+}
+//bool byself :表示自己处理晚pre包后出发的check，此时别的sign包可能先到
+// chenk sign cache 
+// get size (hash)
+// if size==minValidNodeSize 触发commit逻辑 广播commit包
+//
+void PBFTEngine::checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself)
+{
+    // if(byself) PBFTENGINE_LOG(INFO)<<LOG_DESC("自己触发");
+    auto minValidNodeSize = minValidNodes();
+    //get hash,通过reqNum和nodeidx去找hash ，若sign包先来hash则为空(后面考虑这个case)
+    dev::h256 hash=h256();
+    if(m_reqCache->prepareCache4nl().count(reqNum) &&m_reqCache->prepareCache4nl().at(reqNum).count(node_idx) )
+    {
+        hash =m_reqCache->prepareCache4nl().at(reqNum).at(node_idx)->block_hash;
+    }
+    else 
+    {
+        //case: pre包还没到  
+        return ;
+    }
+    //get 
+    size_t sign_size =
+        m_reqCache->getSigCacheSize4nl(hash, minValidNodeSize);
+    //
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("正在check")<<LOG_KV("reqNum", reqNum)
+        <<LOG_KV("node_idx", node_idx)
+        <<LOG_KV("hash", hash.abridged())
+        <<LOG_KV("sign_size", sign_size);        
+    if(sign_size == minValidNodeSize||(byself&&sign_size > minValidNodeSize))
+    {
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("收集足够签名包,开始发送commit包")
+            <<LOG_KV("reqNum", reqNum)
+            <<LOG_KV("node_idx", node_idx)
+            <<LOG_KV("hash", hash.abridged());
+        // to add 触发广播commit包流程
+    }
+    return ;
+
 }
 
 /// if collect >= 2/3 SignReq and CommitReq, then callback this function to commit block
@@ -2060,10 +2295,18 @@ void PBFTEngine::handleMsg(PBFTMsgPacket::Ptr pbftMsg)
     case PrepareReqPacket4nl:
     {
         PBFTENGINE_LOG(INFO)<<LOG_DESC("开始处理PrepareReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
-        return;
+        // return;
         PrepareReq4nl::Ptr prepare_req4nl = std::make_shared<PrepareReq4nl>();
-        // succ = handlePrepareMsg(prepare_req, *pbftMsg);
-        // pbft_msg = prepare_req;
+        succ = handlePrepareMsg4nl(prepare_req4nl, *pbftMsg);
+        pbft_msg = prepare_req4nl;
+        break;
+    }
+    case SignReqPacket4nl:
+    {
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("开始处理SignReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
+        SignReq4nl::Ptr req = std::make_shared<SignReq4nl>();
+        succ = handleSignMsg4nl(req, *pbftMsg);
+        pbft_msg = req;
         break;
     }
     default:

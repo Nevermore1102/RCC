@@ -603,7 +603,7 @@ struct PrepareReq4nl : public PBFTMsg
      * @param _idx: index of the node that generates this PrepareReq
      */
     PrepareReq4nl(
-        PrepareReq const& req, KeyPair const& keyPair, VIEWTYPE const& _view, IDXTYPE const& _idx)
+        PrepareReq4nl const& req, KeyPair const& keyPair, VIEWTYPE const& _view, IDXTYPE const& _idx)
     {
         block = std::make_shared<dev::bytes>();
         height = req.height;

@@ -27,6 +27,7 @@
 #include "PBFTReqCache.h"
 #include "PartiallyPBFTReqCache.h"
 #include "TimeManager.h"
+#include <cstdint>
 #include <libconsensus/ConsensusEngineBase.h>
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/ThreadPool.h>
@@ -374,8 +375,14 @@ public:
     void sendPrepareMsgFromLeader4nl(
             PrepareReq4nl::Ptr _prepareReq, bytesConstRef _data, 
             dev::PACKET_TYPE const& _p2pPacketType=0);
-
-
+    bool handlePrepareMsg4nl(PrepareReq4nl::Ptr prepare_req, std::string const& endpoint = "self");
+    /// handler prepare messages
+    bool handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, PBFTMsgPacket const& pbftMsg);
+    CheckResult isValidPrepare4nl(PrepareReq4nl const& req, std::ostringstream& oss) const;
+    bool OnlyGenerateSignMsg4nl(
+        PrepareReq4nl::Ptr _prepareReq, std::ostringstream& _oss);
+    bool handleSignMsg4nl(SignReq4nl::Ptr signReq, PBFTMsgPacket const& pbftMsg);
+    void  checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself=false);
 
 protected:
     virtual void registerDisconnectHandler();

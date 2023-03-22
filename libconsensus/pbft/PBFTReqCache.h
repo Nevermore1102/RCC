@@ -29,6 +29,7 @@
 #include <libconsensus/pbft/Common.h>
 #include <libdevcore/CommonJS.h>
 #include <libethcore/Protocol.h>
+#include <unordered_map>
 namespace dev
 {
     namespace consensus
@@ -522,6 +523,91 @@ namespace dev
             }
 
 
+            inline void addPrepareReq4nl(PrepareReq4nl::Ptr req)
+            {
+                m_prepareCache4nl[req->height][req->idx]=req;
+                showallPrepareReq4nl();
+                //未完成,处理sign &commit cache中无效信息
+            }
+            inline std::unordered_map<int64_t, std::unordered_map<int64_t, PrepareReq4nl::Ptr>>
+                 const& prepareCache4nl() { return m_prepareCache4nl; }
+            
+            inline void showallPrepareReq4nl()
+            {
+                PBFTENGINE_LOG(INFO)<<LOG_KV("显示pre包cache:size", m_prepareCache4nl.size());
+                
+                for(auto numreq:m_prepareCache4nl)
+                {
+                    PBFTENGINE_LOG(INFO)<<LOG_KV("numreq.size", numreq.second.size());
+                    for(auto idx:numreq.second)
+                    {
+                        PBFTENGINE_LOG(INFO)<<LOG_KV("nodeid", idx.first)
+                        <<LOG_KV("hash", idx.second->block_hash.abridged());
+                    }
+                }
+                //未完成,处理sign &commit cache中无效信息
+            }
+            /// add specified signReq to the sign-cache
+            inline void addSignReq4nl(SignReq4nl::Ptr req)
+            {
+                auto signature = toHex(req->sig);
+                // determine existence: in case of assign overhead
+                if (m_signCache4nl.count(req->block_hash) && m_signCache4nl[req->block_hash].count(signature))
+                {
+                    return;
+                }
+                m_signCache4nl[req->block_hash][signature] = req;
+                PBFTENGINE_LOG(INFO)<<LOG_DESC("添加签名包")
+                    <<LOG_KV("hash",req->block_hash.abridged())
+                    <<LOG_KV("size",m_signCache4nl[req->block_hash].size());
+
+            }
+
+            /// add specified commit cache to the commit-cache
+            inline void addCommitReq4nl(CommitReq4nl::Ptr req)
+            {
+                auto signature = toHex(req->sig);
+                // determine existence: in case of assign overhead
+                if (m_commitCache4nl.count(req->block_hash) && m_commitCache4nl[req->block_hash].count(signature))
+                {
+                    return;
+                }
+                m_commitCache4nl[req->block_hash][signature] = req;
+                PBFTENGINE_LOG(INFO)<<LOG_DESC("添加共识包")
+                    <<LOG_KV("hash",req->block_hash.abridged())
+                    <<LOG_KV("签名cache,size",m_signCache4nl[req->block_hash].size())
+                    <<LOG_KV("共识cache,size",m_commitCache4nl[req->block_hash].size());
+
+            }
+            
+            /// get the size of the cached sign requests according to given block hash
+            // _sizeToCheckFutureSign: the threshold size that should check signature for the future
+            // requests generally 2*f+1
+            inline size_t getSigCacheSize4nl(h256 const& _blockHash, IDXTYPE const& _sizeToCheckFutureSign)
+            {
+                auto cachedSignSize = getSizeFromCache(_blockHash, m_signCache4nl);
+                //一些case 后面考虑
+                // to avoid performance overhead,
+                // only collect at least 2*f+1 sign requests,
+                // should check signature for the future sign request
+                // if (cachedSignSize >= _sizeToCheckFutureSign)
+                // {
+                //     // to demand the condition "only collect 2*f sign requests can procedure to
+                //     // commit-period" of checkAndCommit
+                //     // at most 2*f future sign requests can be stored in the future sign cache,
+                //     // avoid the case：
+                //     // 1. some node receive more than 2*f future sign requests before handle a sign request
+                //     // 2. the node receive a sign request and procedure checkAndCommit,
+                //     //    the number of collected sign requests is more than 2*f+1,
+                //     //    and the node will not procedure to the commit-period
+                //     auto limitedFutureSignSize = _sizeToCheckFutureSign - 1;
+                //     return checkAndRemoveInvalidFutureReq(
+                //             _blockHash, m_signCache, true, limitedFutureSignSize);
+                // }
+                return cachedSignSize;
+            }
+
+
         protected:
             /// remove invalid requests cached in cache according to current block
             template <typename T, typename U, typename S>
@@ -613,6 +699,16 @@ namespace dev
             /// key: block hash, value: the cached future prepeare
             std::unordered_map<uint64_t, std::shared_ptr<PrepareReq>> m_futurePrepareCache;
             const unsigned m_maxFuturePrepareCacheSize = 10;
+            //cache 4nl
+            //轮数(req.num)--> node idx(req.idx) -->pre_ptr
+            std::unordered_map<int64_t, std::unordered_map<int64_t, PrepareReq4nl::Ptr>> m_prepareCache4nl;
+            //hash --> sign --> ptr
+            std::unordered_map<h256, std::unordered_map<std::string, SignReq4nl::Ptr>> m_signCache4nl;
+
+            std::unordered_map<h256, std::unordered_map<std::string, CommitReq4nl::Ptr>> m_commitCache4nl;
+
+
+
 
             mutable SharedMutex x_rawPrepareCache;
 
