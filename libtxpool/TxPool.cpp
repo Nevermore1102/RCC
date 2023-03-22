@@ -22,6 +22,7 @@
  * @date: 2018-09-23
  */
 #include "TxPool.h"
+#include "libdevcore/Log.h"
 #include "tbb/parallel_for_each.h"
 #include <libdevcore/Common.h>
 #include <libethcore/Exceptions.h>
@@ -395,6 +396,8 @@ struct TxCallback
 bool TxPool::removeTrans(h256 const& _txHash, bool _needTriggerCallback,
     std::shared_ptr<dev::eth::Block> _block, size_t _index)
 {
+    //
+    //LOG(INFO)<<LOG_DESC("开始删除交易");
     Transaction::Ptr transaction = nullptr;
     // remove transaction from txPool
     std::unordered_map<h256, TransactionQueue::iterator>::iterator p_tx;

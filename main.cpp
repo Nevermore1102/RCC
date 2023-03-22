@@ -1,3 +1,4 @@
+#include <cmath>
 #include <leveldb/db.h>
 #include <libblockchain/BlockChainImp.h>
 #include <libblockverifier/BlockVerifier.h>
@@ -37,6 +38,7 @@
 #include <unistd.h>
 #include <thread>
 //#include <libplugin/Benchmark.h>
+#include "libdevcore/Log.h"
 #include "libplugin/benchmark.h"
 #include <libconsensus/pbft/Common.h>
 #include <libethcore/Block.h>
@@ -77,6 +79,8 @@ namespace dev {
         vector<h512>forwardNodeId;
         vector<h512>shardNodeId;
         bool isShardLeader=false;
+
+        bool  isNoneLeaderConsensus=true;
     }
 }
 
@@ -327,16 +331,18 @@ int main() {
     syncs->startP2PThread(); // 启动跨片P2P通信线程
     syncs->startExecuteThreads(); // 启动执行线程
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(50000)); // 暂停10秒，等所有服务启动完毕
+    std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 暂停10秒，等所有服务启动完毕
 
 //     PLUGIN_LOG(INFO) << LOG_DESC("开始注入交易...");
     // injectTransactions(rpcService, ledgerManager);
     //!!! 发送片内交易
     transactionInjectionTest test(rpcService, dev::consensus::internal_groupId
         ,dev::consensus::hiera_shard_number,ledgerManager,consensus::isShardLeader);
-    test.injectionIntraTxin1shards(2000);
+    test.injectionIntraTxin1shards(6);
     while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        //节点主线程三秒一跳，不跳就宕机了
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        LOG(INFO)<<LOG_DESC("***************main heart beat**************");
     }
     return 0;
 }

@@ -121,7 +121,7 @@ void transactionInjectionTest::injectionCorssTxin9shards()
 void transactionInjectionTest::injectionIntraTxin1shards(int num_tx) 
 {
     std::string signedTransaction=createIntraTx4sharper();
-    m_rpcService->sendRandomRawTransaction4sharper(m_internal_groupId,signedTransaction,2000);
+    m_rpcService->sendRandomRawTransaction4sharper(m_internal_groupId,signedTransaction,num_tx);
     return; 
 }
 //产生一笔片内交易

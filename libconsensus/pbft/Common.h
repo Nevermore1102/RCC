@@ -45,6 +45,8 @@ namespace consensus
     extern std::map<unsigned long, unsigned long> messageIDs;
     extern tbb::concurrent_queue<dev::eth::Transaction::Ptr> toExecute_transactions; // 缓存共识完的交易，按顺序存放在队列中，等待执行
 
+    //4nl
+    extern bool isNoneLeaderConsensus;
 // for bip152: packetType for partiallyBlock
 enum P2PPacketType : uint32_t
 {
@@ -69,6 +71,9 @@ enum PBFTPacketType : byte
     SignReqPacket = 0x01,
     CommitReqPacket = 0x02,
     ViewChangeReqPacket = 0x03,
+    PrepareReqPacket4nl = 0x04,
+    SignReqPacket4nl = 0x05,
+    CommitReqPacket4nl = 0x06,
     PBFTPacketCount
 };
 
@@ -568,5 +573,176 @@ struct ViewChangeReq : public PBFTMsg
         sig2 = signHash(fieldsWithoutBlock(), keyPair);
     }
 };
+
+/// definition of the prepare requests 4nl
+struct PrepareReq4nl : public PBFTMsg
+{
+    using Ptr = std::shared_ptr<PrepareReq4nl>;
+    /// block data
+    std::shared_ptr<bytes> block;
+    std::shared_ptr<dev::eth::Block> pBlock = nullptr;
+    /// execution result of block(save the execution result temporarily)
+    /// no need to send or receive accross the network
+    dev::blockverifier::ExecutiveContext::Ptr p_execContext = nullptr;
+    /// default constructor
+    PrepareReq4nl() { block = std::make_shared<dev::bytes>(); }
+    virtual ~PrepareReq4nl() {}
+    PrepareReq4nl(KeyPair const& _keyPair, int64_t const& _height, VIEWTYPE const& _view,
+        IDXTYPE const& _idx, h256 const _blockHash)
+      : PBFTMsg(_keyPair, _height, _view, _idx, _blockHash), p_execContext(nullptr)
+    {
+        block = std::make_shared<dev::bytes>();
+    }
+    /**
+     * @brief: populate the prepare request from specified prepare request,
+     *         given view and node index
+     *
+     * @param req: given prepare request to populate the PrepareReq object
+     * @param keyPair: keypair used to sign for the PrepareReq
+     * @param _view: current view
+     * @param _idx: index of the node that generates this PrepareReq
+     */
+    PrepareReq4nl(
+        PrepareReq const& req, KeyPair const& keyPair, VIEWTYPE const& _view, IDXTYPE const& _idx)
+    {
+        block = std::make_shared<dev::bytes>();
+        height = req.height;
+        view = _view;
+        idx = _idx;
+        timestamp = u256(utcTime());
+        block_hash = req.block_hash;
+        sig = signHash(block_hash, keyPair);
+        sig2 = signHash(fieldsWithoutBlock(), keyPair);
+        block = req.block;
+        pBlock = req.pBlock;
+        p_execContext = nullptr;
+    }
+
+    /**
+     * @brief: construct PrepareReq from given block, view and node idx
+     * @param blockStruct : the given block used to populate the PrepareReq
+     * @param keyPair : keypair used to sign for the PrepareReq
+     * @param _view : current view
+     * @param _idx : index of the node that generates this PrepareReq
+     */
+    PrepareReq4nl(dev::eth::Block::Ptr blockStruct, KeyPair const& keyPair, VIEWTYPE const& _view,
+        IDXTYPE const& _idx, bool const& _onlyHash = false)
+    {
+        block = std::make_shared<dev::bytes>();
+        height = blockStruct->blockHeader().number();
+        view = _view;
+        idx = _idx;
+        timestamp = u256(utcTime());
+        block_hash = blockStruct->blockHeader().hash();
+        sig = signHash(block_hash, keyPair);
+        sig2 = signHash(fieldsWithoutBlock(), keyPair);
+        blockStruct->encodeProposal(block, _onlyHash);
+        pBlock = blockStruct;
+        p_execContext = nullptr;
+    }
+
+    /**
+     * @brief : update the PrepareReq with specified block and block-execution-result
+     *
+     * @param sealing : object contains both block and block-execution-result
+     * @param keyPair : keypair used to sign for the PrepareReq
+     */
+    PrepareReq4nl(PrepareReq4nl const& req, Sealing const& sealing, KeyPair const& keyPair)
+    {
+        block = std::make_shared<dev::bytes>();
+        height = req.height;
+        view = req.view;
+        idx = req.idx;
+        p_execContext = sealing.p_execContext;
+        timestamp = u256(utcTime());
+        block_hash = sealing.block->blockHeader().hash();
+        sig = signHash(block_hash, keyPair);
+        sig2 = signHash(fieldsWithoutBlock(), keyPair);
+        pBlock = sealing.block;
+        LOG(DEBUG) << "Re-generate prepare_requests since block has been executed, time = "
+                   << timestamp << " , block_hash: " << block_hash.abridged();
+    }
+
+    bool operator==(PrepareReq4nl const& req) const
+    {
+        return PBFTMsg::operator==(req) && *req.block == *block;
+    }
+    bool operator!=(PrepareReq4nl const& req) const { return !(operator==(req)); }
+
+    /// trans PrepareReq from object to RLPStream
+    virtual void streamRLPFields(RLPStream& _s) const
+    {
+        PBFTMsg::streamRLPFields(_s);
+        _s << *block;
+    }
+
+    /// populate PrepareReq from given RLP object
+    virtual void populate(RLP const& _rlp)
+    {
+        PBFTMsg::populate(_rlp);
+        int field = 0;
+        try
+        {
+            *block = _rlp[field = 7].toBytes();
+        }
+        catch (Exception const& _e)
+        {
+            _e << dev::eth::errinfo_name("invalid msg format")
+               << dev::eth::BadFieldError(field, toHex(_rlp[field].data().toBytes()));
+            throw;
+        }
+    }
+};
+
+/// signature request
+struct SignReq4nl : public PBFTMsg
+{
+    using Ptr = std::shared_ptr<SignReq4nl>;
+    SignReq4nl() = default;
+
+    /**
+     * @brief: populate the SignReq from given PrepareReq and node index
+     *
+     * @param req: PrepareReq used to populate the SignReq
+     * @param keyPair: keypair used to sign for the SignReq
+     * @param _idx: index of the node that generates this SignReq
+     */
+    SignReq4nl(PrepareReq4nl const& req, KeyPair const& keyPair, IDXTYPE const& _idx)
+    {
+        height = req.height;
+        view = req.view;
+        idx = _idx;
+        timestamp = u256(utcTime());
+        block_hash = req.block_hash;
+        sig = signHash(block_hash, keyPair);
+        sig2 = signHash(fieldsWithoutBlock(), keyPair);
+    }
+};
+
+/// commit request
+struct CommitReq4nl : public PBFTMsg
+{
+    using Ptr = std::shared_ptr<CommitReq4nl>;
+    CommitReq4nl() = default;
+    /**
+     * @brief: populate the CommitReq from given PrepareReq and node index
+     *
+     * @param req: PrepareReq used to populate the CommitReq
+     * @param keyPair: keypair used to sign for the CommitReq
+     * @param _idx: index of the node that generates this CommitReq
+     */
+    CommitReq4nl(PrepareReq4nl const& req, KeyPair const& keyPair, IDXTYPE const& _idx)
+    {
+        height = req.height;
+        view = req.view;
+        idx = _idx;
+        timestamp = u256(utcTime());
+        block_hash = req.block_hash;
+        sig = signHash(block_hash, keyPair);
+        sig2 = signHash(fieldsWithoutBlock(), keyPair);
+    }
+};
+
+
 }  // namespace consensus
 }  // namespace dev

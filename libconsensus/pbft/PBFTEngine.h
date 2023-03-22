@@ -369,6 +369,12 @@ public:
     }
 
     // size_t messageIDs[SHARDNUM] = {0}; // ADD BY THB
+    //function of none leader consensus
+    PrepareReq4nl::Ptr constructPrepareReq4nl(dev::eth::Block::Ptr _block);
+    void sendPrepareMsgFromLeader4nl(
+            PrepareReq4nl::Ptr _prepareReq, bytesConstRef _data, 
+            dev::PACKET_TYPE const& _p2pPacketType=0);
+
 
 
 protected:

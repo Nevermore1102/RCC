@@ -457,12 +457,118 @@ PrepareReq::Ptr PBFTEngine::constructPrepareReq(dev::eth::Block::Ptr _block)
     }
     return prepareReq;
 }
+//构建并广播pre
 
+PrepareReq4nl::Ptr PBFTEngine::constructPrepareReq4nl(dev::eth::Block::Ptr _block)
+{
+    dev::eth::Block::Ptr engineBlock = m_blockFactory->createBlock();
+    *engineBlock = std::move(*_block);
+    PrepareReq4nl::Ptr prepareReq4nl = std::make_shared<PrepareReq4nl>(
+        engineBlock, m_keyPair, m_view, nodeIdx(), m_enablePrepareWithTxsHash);
+    if (prepareReq4nl->pBlock->transactions()->size() == 0)
+    {
+        prepareReq4nl->isEmpty = true;
+    }
+    //直接删除交易
+    PBFTENGINE_LOG(INFO)<<LOG_KV("块内交易数量",prepareReq4nl->pBlock->transactions()->size());
+    dropHandledTransactions(prepareReq4nl->pBlock);
+    //仅广播
+    if(m_enablePrepareWithTxsHash&&prepareReq4nl->pBlock->transactions()->size() > 0)
+    {
+        //新建线程广播
+        auto self = std::weak_ptr<PBFTEngine>(shared_from_this());
+        m_threadPool->enqueue([self, prepareReq4nl, engineBlock]() {
+            try
+            {
+                PBFTENGINE_LOG(INFO)<<LOG_DESC("开始发送1");
+                auto pbftEngine = self.lock();
+                if (!pbftEngine)
+                {
+                    return;
+                }
+                std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
+                //编码所有交易
+                prepareReq4nl->encode(*prepare_data);
+                pbftEngine->sendPrepareMsgFromLeader4nl(prepareReq4nl, ref(*prepare_data));
+            }
+            catch (std::exception const& e)
+            {
+                PBFTENGINE_LOG(ERROR) << LOG_DESC("broadcastPrepare exceptioned")
+                                      << LOG_KV("errorInfo", boost::diagnostic_information(e));
+            }
+
+        });
+    }
+    
+
+    // the non-empty block only broadcast hash when enable-prepare-with-txs-hash
+    // //当区块非空的时候
+    // if (m_enablePrepareWithTxsHash && prepareReq4nl->pBlock->transactions()->size() > 0)
+    // {
+    //     // addPreRawPrepare to response to the request-sealers
+    //     m_partiallyPrepareCache->addPreRawPrepare(prepareReq4nl);
+    //     // encode prepareReq with uncompleted transactions into sendedData
+    //     std::shared_ptr<bytes> sendedData = std::make_shared<bytes>();
+    //     //TODO 
+    //     prepareReq->encode(*sendedData);
+    //     auto self = std::weak_ptr<PBFTEngine>(shared_from_this());
+    //     m_threadPool->enqueue([self, prepareReq4nl, sendedData]() {
+    //         try
+    //         {
+    //             auto pbftEngine = self.lock();
+    //             if (!pbftEngine)
+    //             {
+    //                 return;
+    //             }
+    //             pbftEngine->sendPrepareMsgFromLeader(
+    //                 prepareReq4nl, ref(*sendedData), PartiallyPreparePacket);
+    //         }
+    //         catch (std::exception const& e)
+    //         {
+    //             PBFTENGINE_LOG(ERROR) << LOG_DESC("broadcastPrepare exceptioned")
+    //                                   << LOG_KV("errorInfo", boost::diagnostic_information(e));
+    //         }
+    //     });
+    //     // re-encode the block with completed transactions
+    //     prepareReq->pBlock->encode(*prepareReq->block);
+    // }
+    // // not enable-prepare-with-txs-hash or the empty block
+    // //当区块为空
+    // else
+    // {
+    //     auto self = std::weak_ptr<PBFTEngine>(shared_from_this());
+    //     m_threadPool->enqueue([self, prepareReq, engineBlock]() {
+    //         try
+    //         {
+    //             auto pbftEngine = self.lock();
+    //             if (!pbftEngine)
+    //             {
+    //                 return;
+    //             }
+    //             std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
+    //             prepareReq->encode(*prepare_data);
+    //             pbftEngine->sendPrepareMsgFromLeader(prepareReq, ref(*prepare_data));
+    //         }
+    //         catch (std::exception const& e)
+    //         {
+    //             PBFTENGINE_LOG(ERROR) << LOG_DESC("broadcastPrepare exceptioned")
+    //                                   << LOG_KV("errorInfo", boost::diagnostic_information(e));
+    //         }
+    //     });
+    // }
+    return prepareReq4nl;
+}
 // broadcast prepare message to all the other nodes
 void PBFTEngine::sendPrepareMsgFromLeader(
     PrepareReq::Ptr _prepareReq, bytesConstRef _data, dev::PACKET_TYPE const& _p2pPacketType)
 {
     broadcastMsg(PrepareReqPacket, *_prepareReq, _data, _p2pPacketType);
+}
+//广播pre4nl 修改PACKET_TYPE，查看此函数定义处
+void PBFTEngine::sendPrepareMsgFromLeader4nl(
+    PrepareReq4nl::Ptr _prepareReq, bytesConstRef _data, dev::PACKET_TYPE const& _p2pPacketType)
+{
+    broadcastMsg(PrepareReqPacket4nl, *_prepareReq, _data, _p2pPacketType);
 }
 
 /// sealing the generated block into prepareReq and push its to msgQueue
@@ -496,6 +602,27 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
 //        return true;
 //    }
     m_notifyNextLeaderSeal = false;
+    //4nl
+
+    if(isNoneLeaderConsensus)
+    {
+        //check
+        if(_block->getTransactionSize()==0) 
+        {
+            PBFTENGINE_LOG(INFO)<<LOG_DESC("error 打包空交易");
+            return true;
+        }
+        //构造prepare信息
+        auto prepareReq4nl = constructPrepareReq4nl(_block);
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("开始自己处理PrepareReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
+        m_signalled.notify_all();
+        m_generatePrepare = false;
+        return true;
+    }
+
+
+
+
     //构造prepare信息
     auto prepareReq = constructPrepareReq(_block);
     // 如果prepare中的pBlock的交易数为0且设定为排除空块
@@ -1079,7 +1206,29 @@ void PBFTEngine::pushValidPBFTMsgIntoQueue(NetworkException, std::shared_ptr<P2P
     {
         _f(pbft_msg);
     }
-    if (pbft_msg->packet_id <= ViewChangeReqPacket)
+    //4nl
+    // PrepareReqPacket = 0x00,
+    // SignReqPacket = 0x01,
+    // CommitReqPacket = 0x02,
+    // ViewChangeReqPacket = 0x03,
+    // PrepareReqPacket4nl = 0x04,
+    // SignReqPacket4nl = 0x05,
+    // CommitReqPacket4nl = 0x06,
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("处理消息包的类型", pbft_msg->packet_id==PrepareReqPacket4nl)
+    // <<LOG_KV("PrepareReqPacket", pbft_msg->packet_id==PrepareReqPacket)
+    // <<LOG_KV("SignReqPacket", pbft_msg->packet_id==SignReqPacket)
+    // <<LOG_KV("CommitReqPacket", pbft_msg->packet_id==CommitReqPacket)
+    // <<LOG_KV("ViewChangeReqPacket", pbft_msg->packet_id==ViewChangeReqPacket)
+    // <<LOG_KV("PrepareReqPacket4nl", pbft_msg->packet_id==PrepareReqPacket4nl)
+    // <<LOG_KV("SignReqPacket4nl", pbft_msg->packet_id==SignReqPacket4nl)
+    // <<LOG_KV("CommitReqPacket4nl", pbft_msg->packet_id==CommitReqPacket4nl);
+
+
+
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("处理消息包的类型", pbft_msg->packet_id==PrepareReqPacket4nl)
+    // <<LOG_KV("true", 1==1);
+    // if (pbft_msg->packet_id <= ViewChangeReqPacket)
+    if (pbft_msg->packet_id <= CommitReqPacket4nl)
     {
         m_msgQueue.push(pbft_msg);
         /// notify to handleMsg after push new PBFTMsgPacket into m_msgQueue
@@ -1878,6 +2027,7 @@ void PBFTEngine::handleMsg(PBFTMsgPacket::Ptr pbftMsg)
     {
     case PrepareReqPacket:
     {
+        return;
         PrepareReq::Ptr prepare_req = std::make_shared<PrepareReq>();
         succ = handlePrepareMsg(prepare_req, *pbftMsg);
         pbft_msg = prepare_req;
@@ -1885,6 +2035,7 @@ void PBFTEngine::handleMsg(PBFTMsgPacket::Ptr pbftMsg)
     }
     case SignReqPacket:
     {
+        return;
         SignReq::Ptr req = std::make_shared<SignReq>();
         succ = handleSignMsg(req, *pbftMsg);
         pbft_msg = req;
@@ -1892,6 +2043,7 @@ void PBFTEngine::handleMsg(PBFTMsgPacket::Ptr pbftMsg)
     }
     case CommitReqPacket:
     {
+        return;
         CommitReq::Ptr req = std::make_shared<CommitReq>();
         succ = handleCommitMsg(req, *pbftMsg);
         pbft_msg = req;
@@ -1899,9 +2051,19 @@ void PBFTEngine::handleMsg(PBFTMsgPacket::Ptr pbftMsg)
     }
     case ViewChangeReqPacket:
     {
+        //此处直接return则不能正常打包!!!
         std::shared_ptr<ViewChangeReq> req = std::make_shared<ViewChangeReq>();
         succ = handleViewChangeMsg(req, *pbftMsg);
         pbft_msg = req;
+        break;
+    }
+    case PrepareReqPacket4nl:
+    {
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("开始处理PrepareReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
+        return;
+        PrepareReq4nl::Ptr prepare_req4nl = std::make_shared<PrepareReq4nl>();
+        // succ = handlePrepareMsg(prepare_req, *pbftMsg);
+        // pbft_msg = prepare_req;
         break;
     }
     default:
@@ -2438,7 +2600,7 @@ void PBFTEngine::onReceiveGetMissedTxsRequest(
 void PBFTEngine::handleP2PMessage(
     NetworkException _exception, std::shared_ptr<P2PSession> _session, P2PMessage::Ptr _message)
 {
-   PBFTENGINE_LOG(INFO) << LOG_DESC("节点收到共识消息，正在处理。。。");
+   //PBFTENGINE_LOG(INFO) << LOG_DESC("节点收到共识消息，正在处理。。。");
 //
 
     try
@@ -2506,7 +2668,7 @@ void PBFTEngine::handleP2PMessage(
         }
 
         //PBFTENGINE_LOG(INFO)<< LOG_KV("收到的消息test_label", pbftMsg->test_label);
-
+            //PBFTENGINE_LOG(INFO)<<LOG_DESC("开始处理消息包,push");
             onRecvPBFTMessage(_exception, _session, _message);
             break;
         }
