@@ -557,6 +557,7 @@ namespace dev
                     return;
                 }
                 m_signCache4nl[req->block_hash][signature] = req;
+                //show for debug
                 PBFTENGINE_LOG(INFO)<<LOG_DESC("添加签名包")
                     <<LOG_KV("hash",req->block_hash.abridged())
                     <<LOG_KV("size",m_signCache4nl[req->block_hash].size());
@@ -606,8 +607,36 @@ namespace dev
                 // }
                 return cachedSignSize;
             }
+            /// get the size of the cached commit requests according to given block hash
+            inline size_t getCommitCacheSize4nl(
+                    h256 const& _blockHash, IDXTYPE const& _sizeToCheckFutureCommit)
+            {
+                auto cachedCommitSize = getSizeFromCache(_blockHash, m_commitCache4nl);
+                // if (cachedCommitSize >= _sizeToCheckFutureCommit)
+                // {
+                //     auto limitedSize = _sizeToCheckFutureCommit - 1;
+                //     return checkAndRemoveInvalidFutureReq(_blockHash, m_commitCache, false, limitedSize);
+                // }
+                return cachedCommitSize;
+            }
 
-
+            void delCache4nl(int64_t reqNum)
+            {
+                for(auto ele:m_prepareCache4nl.at(reqNum))
+                {
+                    auto hash=ele.second->block_hash;
+                    PBFTReqCache_LOG(INFO) << LOG_DESC("删除cache4nl") << LOG_KV("hash", hash.abridged());
+                    //sign cache
+                    auto psign = m_signCache4nl.find(hash);
+                    if (psign != m_signCache4nl.end())
+                        m_signCache4nl.erase(psign);
+                    //copmmit cache
+                    auto pcommit = m_commitCache4nl.find(hash);
+                    if (pcommit != m_commitCache4nl.end())
+                        m_commitCache4nl.erase(pcommit);
+                }
+                //可能还要加对pre cache的操作
+            }
         protected:
             /// remove invalid requests cached in cache according to current block
             template <typename T, typename U, typename S>

@@ -1671,6 +1671,75 @@ void PBFTEngine::checkAndCommit()
         checkAndSave(false);
     }
 }
+
+//广播并add cache
+bool PBFTEngine::broadcastCommitReq4nl(PrepareReq4nl const& req)
+{
+    //注意nodeidx
+    CommitReq4nl::Ptr commit_req = std::make_shared<CommitReq4nl>(req, m_keyPair, req.idx);
+    bytes commit_req_data;
+    commit_req->encode(commit_req_data);
+    bool succ = broadcastMsg(CommitReqPacket4nl, *commit_req, ref(commit_req_data));
+    if (succ)
+        m_reqCache->addCommitReq4nl(commit_req);
+    return succ;
+}
+
+/**
+ * @brief : 1. decode the network-received message into commitReq
+ *          2. check the validation of the commitReq
+ *          3. add the valid commitReq into the cache
+ *          4. submit to blockchain if the size of collected commitReq is over 2/3
+ * @param commit_req: return value, the decoded commitReq
+ * @param pbftMsg: the network-received PBFTMsgPacket
+ */
+bool PBFTEngine::handleCommitMsg4nl(CommitReq4nl::Ptr commit_req, PBFTMsgPacket const& pbftMsg)
+{
+    Timer t;
+    bool valid = decodeToRequests(*commit_req, ref(pbftMsg.data));
+    if (!valid)
+    {
+        return false;
+    }
+    std::ostringstream oss;
+    oss << LOG_DESC("handleCommitMsg") 
+        << LOG_KV("hash", commit_req->block_hash.abridged())
+        << LOG_KV("reqNum", commit_req->height)
+        << LOG_KV("curNum", m_highestBlock.number()) 
+        << LOG_KV("GenIdx", commit_req->idx)
+        << LOG_KV("nodeIdx", nodeIdx()) 
+        << LOG_KV("fromIdx", pbftMsg.node_idx) 
+        << LOG_KV("Cview", commit_req->view) 
+        << LOG_KV("view", m_view)
+        << LOG_KV("fromNode", pbftMsg.node_id.abridged())
+        << LOG_KV("fromIp", pbftMsg.endpoint) 
+        << LOG_KV("myNode", m_keyPair.pub().abridged());
+    //check 
+    // auto valid_ret = isValidCommitReq(commit_req, oss);
+    // if (valid_ret == CheckResult::INVALID)
+    // {
+    //     return false;
+    // }
+    // /// update the view for given idx
+
+    // if (valid_ret == CheckResult::FUTURE)
+    // {
+    //     return true;
+    // }
+    //add cache
+    m_reqCache->addCommitReq4nl(commit_req);
+    //触发check and save
+    checkAndSave4nl(commit_req->height,commit_req->idx);
+    // PBFTENGINE_LOG(INFO) << LOG_DESC("handleCommitMsg Succ")
+    //                      << LOG_KV("INFO", oss.str())
+    //                      << LOG_KV("Timecost", 1000 * t.elapsed());
+                         
+    //Jason TODO: 遍历Commit Cache
+    // m_reqCache->traverseCommitCache();
+    return true;
+}
+
+
 //bool byself :表示自己处理晚pre包后出发的check，此时别的sign包可能先到
 // chenk sign cache 
 // get size (hash)
@@ -1694,23 +1763,89 @@ void PBFTEngine::checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself)
     //get 
     size_t sign_size =
         m_reqCache->getSigCacheSize4nl(hash, minValidNodeSize);
-    //
-    PBFTENGINE_LOG(INFO)<<LOG_DESC("正在check")<<LOG_KV("reqNum", reqNum)
-        <<LOG_KV("node_idx", node_idx)
-        <<LOG_KV("hash", hash.abridged())
-        <<LOG_KV("sign_size", sign_size);        
+    //show for debug
+    // PBFTENGINE_LOG(INFO)<<LOG_DESC("正在check")<<LOG_KV("reqNum", reqNum)
+    //     <<LOG_KV("node_idx", node_idx)
+    //     <<LOG_KV("hash", hash.abridged())
+    //     <<LOG_KV("sign_size", sign_size);    
+    //2个条件确保每个commit包触发一次    
     if(sign_size == minValidNodeSize||(byself&&sign_size > minValidNodeSize))
     {
         PBFTENGINE_LOG(INFO)<<LOG_DESC("收集足够签名包,开始发送commit包")
             <<LOG_KV("reqNum", reqNum)
             <<LOG_KV("node_idx", node_idx)
             <<LOG_KV("hash", hash.abridged());
-        // to add 触发广播commit包流程
+        
+        
+        
+        // to add 触发广播commit包流程 并且 add commit cache
+        broadcastCommitReq4nl(*m_reqCache->prepareCache4nl().at(reqNum).at(node_idx));
+        
+
+        //check and save 
+
+        checkAndSave4nl(reqNum, node_idx);
     }
     return ;
 
 }
+//对一个pre包进行check,够票触发总的
+bool PBFTEngine::checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx)
+{
+    auto minValidNodeSize = minValidNodes();
+    //get hash
+    dev::h256 hash=h256();
+    if(m_reqCache->prepareCache4nl().count(reqNum) &&m_reqCache->prepareCache4nl().at(reqNum).count(node_idx) )
+    {
+        hash =m_reqCache->prepareCache4nl().at(reqNum).at(node_idx)->block_hash;
+    }
+    else 
+    {
+        //case: pre包还没到  此处不会出现
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("error in PBFTEngine::checkSignAndCommitOnePre4nl");
+        return false;
+    }
 
+
+    size_t sign_size =
+        m_reqCache->getSigCacheSize4nl(hash, minValidNodeSize);
+    size_t commit_size =
+        m_reqCache->getCommitCacheSize4nl(hash, minValidNodeSize);
+    if (sign_size >= minValidNodeSize && commit_size >= minValidNodeSize)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum)
+{
+    for(auto allpre:m_reqCache->prepareCache4nl().at(reqNum))
+    {
+        if(!checkSignAndCommitOnePre4nl(reqNum,allpre.first)) return false;
+    }
+
+    return true;
+}
+
+void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
+{
+    if(checkSignAndCommitOnePre4nl(reqNum,node_idx))
+    {
+        if(!checkSignAndCommitAll4nl(reqNum)) return ;
+    }
+    else {
+        return ;
+    }
+    //进入save逻辑 该轮次票已收齐；
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("进入save逻辑 该轮次票已收齐；");
+    //1. 四块合一 2.执行 3. 存储 4. 更新状态让打包节点继续打包
+    //to add...
+
+    //del sign and commit cache 防止反复进入同一轮次的save逻辑
+    m_reqCache->delCache4nl(reqNum);
+    //update pre
+}
 /// if collect >= 2/3 SignReq and CommitReq, then callback this function to commit block
 /// check whether view and height is valid, if valid, then commit the block and clear the context
 void PBFTEngine::checkAndSave(bool commitPhase)
@@ -2306,6 +2441,15 @@ void PBFTEngine::handleMsg(PBFTMsgPacket::Ptr pbftMsg)
         PBFTENGINE_LOG(INFO)<<LOG_DESC("开始处理SignReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
         SignReq4nl::Ptr req = std::make_shared<SignReq4nl>();
         succ = handleSignMsg4nl(req, *pbftMsg);
+        pbft_msg = req;
+        break;
+    }
+    case CommitReqPacket4nl:
+    {
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("开始处理CommitReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
+
+        CommitReq4nl::Ptr req = std::make_shared<CommitReq4nl>();
+        succ = handleCommitMsg4nl(req, *pbftMsg);
         pbft_msg = req;
         break;
     }
