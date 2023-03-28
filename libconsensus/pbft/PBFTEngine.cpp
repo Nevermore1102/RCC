@@ -493,7 +493,6 @@ PrepareReq4nl::Ptr PBFTEngine::constructPrepareReq4nl(dev::eth::Block::Ptr _bloc
                 std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
                 //编码所有交易
                 prepareReq4nl->encode(*prepare_data);
-                PBFTENGINE_LOG(INFO)<<LOG_KV("prepare_data",prepare_data);
                 pbftEngine->sendPrepareMsgFromLeader4nl(prepareReq4nl, ref(*prepare_data));
             }
             catch (std::exception const& e)
@@ -1275,6 +1274,7 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepare_req, PBFTMsgPack
 {
     //解码
     bool valid = decodeToRequests(*prepare_req, ref(pbftMsg.data));
+
     // set isEmpty flag for the prepareReq
     if (pbftMsg.prepareWithEmptyBlock)
     {
@@ -1373,7 +1373,7 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string 
     if(prepareReq->idx!=nodeIdx()){
         prepareReq->pBlock = m_blockFactory->createBlock();
         assert(prepareReq->pBlock);
-        prepareReq->pBlock->encode(*prepareReq->block);
+        prepareReq->pBlock->decodeProposal(ref(*prepareReq->block), true);
     }
     oss << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
         << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
