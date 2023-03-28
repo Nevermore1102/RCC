@@ -448,6 +448,7 @@ PrepareReq::Ptr PBFTEngine::constructPrepareReq(dev::eth::Block::Ptr _block)
                     return;
                 }
                 std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
+                prepareReq->pBlock->encode(*(prepareReq->block));
                 prepareReq->encode(*prepare_data);
                 pbftEngine->sendPrepareMsgFromLeader(prepareReq, ref(*prepare_data));
             }
@@ -492,6 +493,7 @@ PrepareReq4nl::Ptr PBFTEngine::constructPrepareReq4nl(dev::eth::Block::Ptr _bloc
                 std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
                 //编码所有交易
                 prepareReq4nl->encode(*prepare_data);
+                PBFTENGINE_LOG(INFO)<<LOG_KV("prepare_data",prepare_data);
                 pbftEngine->sendPrepareMsgFromLeader4nl(prepareReq4nl, ref(*prepare_data));
             }
             catch (std::exception const& e)
@@ -1368,7 +1370,11 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string 
     //     << LOG_KV("myNode", m_keyPair.pub().abridged())
     //     << LOG_KV("curChangeCycle", m_timeManager.m_changeCycle);
 
-
+    if(prepareReq->idx!=nodeIdx()){
+        prepareReq->pBlock = m_blockFactory->createBlock();
+        assert(prepareReq->pBlock);
+        prepareReq->pBlock->encode(*prepareReq->block);
+    }
     oss << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
         << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
         << LOG_KV("已共识最高块curNum", m_highestBlock.number()) << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
@@ -1383,10 +1389,9 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string 
         << LOG_KV("已共识最高块curNum", m_highestBlock.number()) << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
         << LOG_KV("fromIp", endpoint)
         << LOG_KV("hash", prepareReq->block_hash.abridged()) << LOG_KV("自己的nodeIdx", nodeIdx())
-        << LOG_KV("myNode", m_keyPair.pub().abridged());
-
+        << LOG_KV("myNode", m_keyPair.pub().abridged())
+        << LOG_KV("prepareReq.pBlock",prepareReq->pBlock);
     //check..to add
-
 
     //add cache 
     m_reqCache->addPrepareReq4nl(prepareReq);
@@ -1472,13 +1477,6 @@ bool PBFTEngine::OnlyGenerateSignMsg4nl(
     // PBFTENGINE_LOG(INFO)<<LOG_KV("self randomnum end",randomnum);
 
     return succ;
-
-
-
-
-
-
-    
 }
 
 bool PBFTEngine::handleSignMsg4nl(SignReq4nl::Ptr sign_req, PBFTMsgPacket const& pbftMsg)
@@ -1728,6 +1726,7 @@ bool PBFTEngine::handleCommitMsg4nl(CommitReq4nl::Ptr commit_req, PBFTMsgPacket 
     // }
     //add cache
     m_reqCache->addCommitReq4nl(commit_req);
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("触发check and save");
     //触发check and save
     checkAndSave4nl(commit_req->height,commit_req->idx);
     // PBFTENGINE_LOG(INFO) << LOG_DESC("handleCommitMsg Succ")
@@ -1820,9 +1819,18 @@ bool PBFTEngine::checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx)
 
 bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum)
 {
+
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("Total Node Num",m_nodeNum)
+    //                     <<LOG_KV("m_reqCache->prepareCache4nl().at(reqNum).size()",m_reqCache->prepareCache4nl().at(reqNum).size());
+    // Jason 设计为收到所有prepare信息之后才可以save
+    if(m_reqCache->prepareCache4nl().at(reqNum).size()!=m_nodeNum){
+        return false;
+    }
+    //对于每个prepare信息,检查,但是此时有可能preparecache也是收集不全的.
     for(auto allpre:m_reqCache->prepareCache4nl().at(reqNum))
     {
-        if(!checkSignAndCommitOnePre4nl(reqNum,allpre.first)) return false;
+        if(!checkSignAndCommitOnePre4nl(reqNum,allpre.first)) 
+            return false;
     }
 
     return true;
@@ -1830,9 +1838,12 @@ bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum)
 
 void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
 {
+
     if(checkSignAndCommitOnePre4nl(reqNum,node_idx))
     {
-        if(!checkSignAndCommitAll4nl(reqNum)) return ;
+        if(!checkSignAndCommitAll4nl(reqNum)) {
+            return ;
+        }
     }
     else {
         return ;
@@ -1840,7 +1851,68 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     //进入save逻辑 该轮次票已收齐；
     PBFTENGINE_LOG(INFO)<<LOG_DESC("进入save逻辑 该轮次票已收齐；");
     //1. 四块合一 2.执行 3. 存储 4. 更新状态让打包节点继续打包
-    //to add...
+    //TODO 四块合一
+    // auto start_commit_time = utcTime();
+    // auto record_time = utcTime();
+    for(auto allpre:m_reqCache->prepareCache4nl().at(reqNum))
+    {
+        dev::eth::Block::Ptr bigBlockfor4nl = m_blockFactory->createBlock();
+        auto node_idx = allpre.first;
+        auto prepareReq4nl = allpre.second;
+        PBFTENGINE_LOG(INFO)<<LOG_KV("reqNum",reqNum)
+                            <<LOG_KV("node_idx",node_idx)
+                            <<LOG_KV("prepareReq",prepareReq4nl->block_hash.abridged())
+                            <<LOG_KV("TransactionSize",prepareReq4nl->pBlock->getTransactionSize());
+        // if(p_block!=nullptr){
+        //     PBFTENGINE_LOG(INFO)<<LOG_KV("Block Hash",p_block->blockHeaderHash().abridged())
+        //                     <<LOG_KV("TransactionSize",p_block->getTransactionSize());
+        // }
+    }
+    // std::shared_ptr<dev::eth::Block> p_block = m_reqCache->prepareCache4nl().at(reqNum);
+    
+    // m_reqCache->generateAndSetSigList(*p_block, minValidNodes());
+
+    // auto genSig_time_cost = utcTime() - record_time;
+
+
+    // //TODO  callback block chain to commit block
+    // record_time = utcTime();
+    // CommitResult ret = m_blockChain->commitBlock(p_block, std::shared_ptr<ExecutiveContext>(m_reqCache->prepareCache().p_execContext));
+    // auto commitBlock_time_cost = utcTime() - record_time;
+
+
+    // record_time = utcTime();
+    //  if (ret == CommitResult::OK){
+    //             auto dropTxs_time_cost = utcTime() - record_time;
+    //             record_time = utcTime();
+    //             m_blockSync->noteSealingBlockNumber(m_reqCache->prepareCache().height);
+    //             auto noteSealing_time_cost = utcTime() - record_time;
+
+    //     PBFTENGINE_LOG(INFO)
+    //                 << LOG_DESC("CommitBlock Succ")
+    //                 << LOG_KV("prepareHeight", m_reqCache->prepareCache().height)
+    //                 << LOG_KV("reqIdx", m_reqCache->prepareCache().idx)
+    //                 << LOG_KV("hash", m_reqCache->prepareCache().block_hash.abridged())
+    //                 << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged())
+    //                 << LOG_KV("genSigTimeCost", genSig_time_cost)
+    //                 << LOG_KV("commitBlockTimeCost", commitBlock_time_cost)
+    //                 << LOG_KV("dropTxsTimeCost", dropTxs_time_cost)
+    //                 << LOG_KV("noteSealingTimeCost", noteSealing_time_cost)
+    //                 << LOG_KV("totalTimeCost", utcTime() - start_commit_time);
+    //     m_reqCache->delCache4nl(reqNum);
+
+    // } else{
+    //             PBFTENGINE_LOG(INFO)
+    //                 << LOG_DESC("CommitBlock Failed")
+    //                 << LOG_KV("reqNum", p_block->blockHeader().number())
+    //                 << LOG_KV("curNum", m_highestBlock.number())
+    //                 << LOG_KV("reqIdx", m_reqCache->prepareCache().idx)
+    //                 << LOG_KV("hash", p_block->blockHeader().hash().abridged())
+    //                 << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
+    //             /// note blocksync to sync
+    //             m_blockSync->noteSealingBlockNumber(m_blockChain->number());
+    //             m_txPool->handleBadBlock(*p_block);
+    // }
 
     //del sign and commit cache 防止反复进入同一轮次的save逻辑
     m_reqCache->delCache4nl(reqNum);

@@ -331,7 +331,7 @@ int main() {
     syncs->startP2PThread(); // 启动跨片P2P通信线程
     syncs->startExecuteThreads(); // 启动执行线程
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 暂停10秒，等所有服务启动完毕
+    std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // 暂停20秒，等所有服务启动完毕
 
 //     PLUGIN_LOG(INFO) << LOG_DESC("开始注入交易...");
     // injectTransactions(rpcService, ledgerManager);

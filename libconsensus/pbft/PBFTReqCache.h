@@ -527,7 +527,7 @@ namespace dev
             {
                 m_prepareCache4nl[req->height][req->idx]=req;
                 showallPrepareReq4nl();
-                //未完成,处理sign &commit cache中无效信息
+                //TODO 未完成,处理sign &commit cache中无效信息
             }
             inline std::unordered_map<int64_t, std::unordered_map<int64_t, PrepareReq4nl::Ptr>>
                  const& prepareCache4nl() { return m_prepareCache4nl; }
@@ -560,7 +560,8 @@ namespace dev
                 //show for debug
                 PBFTENGINE_LOG(INFO)<<LOG_DESC("添加签名包")
                     <<LOG_KV("hash",req->block_hash.abridged())
-                    <<LOG_KV("size",m_signCache4nl[req->block_hash].size());
+                    <<LOG_KV("签名包来源idx",req->idx)
+                    <<LOG_KV("sign cache size",m_signCache4nl[req->block_hash].size());
 
             }
 
@@ -575,12 +576,11 @@ namespace dev
                 }
                 m_commitCache4nl[req->block_hash][signature] = req;
                 PBFTENGINE_LOG(INFO)<<LOG_DESC("添加共识包")
-                    <<LOG_KV("hash",req->block_hash.abridged())
-                    <<LOG_KV("签名cache,size",m_signCache4nl[req->block_hash].size())
-                    <<LOG_KV("共识cache,size",m_commitCache4nl[req->block_hash].size());
+                  <<LOG_KV("hash",req->block_hash.abridged())
+                    <<LOG_KV("签名Sign Cache Size",m_signCache4nl[req->block_hash].size())
+                    <<LOG_KV("共识Commit Cache Size",m_commitCache4nl[req->block_hash].size());
 
             }
-            
             /// get the size of the cached sign requests according to given block hash
             // _sizeToCheckFutureSign: the threshold size that should check signature for the future
             // requests generally 2*f+1
