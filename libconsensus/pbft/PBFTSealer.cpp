@@ -80,7 +80,7 @@ void PBFTSealer::setBlock()
     //默认true
     hookAfterHandleBlock();
     // calculate transactionRoot before execBlock
-    m_sealing.block->calTransactionRoot();
+    m_sealing.block->calTransactionRoot(true);
 }
 
 /**

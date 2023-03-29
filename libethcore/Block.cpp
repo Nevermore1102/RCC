@@ -23,6 +23,7 @@
  */
 #include "Block.h"
 #include "TxsParallelParser.h"
+#include "libdevcore/Log.h"
 #include "libdevcrypto/CryptoInterface.h"
 #include <libdevcore/Guards.h>
 #include <libdevcore/RLP.h>
@@ -173,12 +174,16 @@ void Block::encodeRC2(bytes& _out) const
 
 /// encode transactions to bytes using rlp-encoding when transaction list has been changed
 void Block::calTransactionRoot(bool update) const
-{
+{   
+    BLOCK_LOG(INFO)<<LOG_DESC("第一个if");
+
     if (g_BCOSConfig.version() >= V2_2_0)
     {
         calTransactionRootV2_2_0(update);
         return;
     }
+    BLOCK_LOG(INFO)<<LOG_DESC("第二个if");
+
     if (g_BCOSConfig.version() >= RC2_VERSION)
     {
         calTransactionRootRC2(update);
@@ -187,12 +192,17 @@ void Block::calTransactionRoot(bool update) const
 
     WriteGuard l(x_txsCache);
     RLPStream txs;
+    BLOCK_LOG(INFO)<<LOG_DESC("appendList");
+
     txs.appendList(m_transactions->size());
     if (m_txsCache == bytes())
     {
+    BLOCK_LOG(INFO)<<LOG_DESC("m_txsCache == bytes()");
+
         BytesMap txsMapCache;
         for (size_t i = 0; i < m_transactions->size(); i++)
         {
+            BLOCK_LOG(INFO)<<LOG_DESC("for....");
             RLPStream s;
             s << i;
             bytes trans_data;
@@ -200,17 +210,22 @@ void Block::calTransactionRoot(bool update) const
             txs.appendRaw(trans_data);
             txsMapCache.insert(std::make_pair(s.out(), trans_data));
         }
+        BLOCK_LOG(INFO)<<LOG_DESC("swapOut(m_txsCache);");
         txs.swapOut(m_txsCache);
+        BLOCK_LOG(INFO)<<LOG_DESC("m_transRootCache");
         m_transRootCache = hash256(txsMapCache);
     }
     if (update == true)
     {
+        BLOCK_LOG(INFO)<<LOG_DESC("update == true");
         m_blockHeader.setTransactionsRoot(m_transRootCache);
+        BLOCK_LOG(INFO)<<LOG_DESC("setTransactionsRoot succ");
     }
 }
 
 void Block::calTransactionRootV2_2_0(bool update) const
 {
+
     TIME_RECORD(
         "Calc transaction root, count:" + boost::lexical_cast<std::string>(m_transactions->size()));
     WriteGuard l(x_txsCache);
@@ -222,8 +237,8 @@ void Block::calTransactionRootV2_2_0(bool update) const
             [&](const tbb::blocked_range<size_t>& _r) {
                 for (uint32_t i = _r.begin(); i < _r.end(); ++i)
                 {
-                    RLPStream s;
-                    s << i;
+                    RLPStream s; 
+                    s << i;  
                     dev::bytes byteValue = s.out();
                     dev::h256 hValue = ((*m_transactions)[i])->hash();
                     byteValue.insert(byteValue.end(), hValue.begin(), hValue.end());
@@ -232,6 +247,7 @@ void Block::calTransactionRootV2_2_0(bool update) const
             });
         m_txsCache = TxsParallelParser::encode(m_transactions);
         m_transRootCache = dev::getHash256(transactionList);
+   
     }
     if (update == true)
     {
@@ -485,6 +501,7 @@ void Block::decodeRC2(
 {
     /// no try-catch to throw exceptions directly
     /// get RLP of block
+    //TODO 研究为什么有tx个数,没有tx信息??
     RLP block_rlp = BlockHeader::extractBlock(_block_bytes);
     /// get block header
     m_blockHeader.populate(block_rlp[0]);
@@ -506,10 +523,13 @@ void Block::decodeRC2(
     /// get sig_list
     m_sigList = std::make_shared<SigListType>(
         block_rlp[3].toVector<std::pair<u256, std::vector<unsigned char>>>());
-
+    
+    BLOCK_LOG(INFO)<<LOG_KV("m_sigList",m_sigList)
+                   <<LOG_KV("_withReceipt",_withReceipt);
     /// get transactionReceipt list
     if (_withReceipt)
     {
+         BLOCK_LOG(INFO)<<LOG_DESC("开始分配[i]");
         RLP transactionReceipts_rlp = block_rlp[4];
         m_transactionReceipts->resize(transactionReceipts_rlp.itemCount());
         for (size_t i = 0; i < transactionReceipts_rlp.itemCount(); i++)

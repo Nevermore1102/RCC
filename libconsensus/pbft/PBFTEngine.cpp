@@ -1373,6 +1373,7 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string 
     if(prepareReq->idx!=nodeIdx()){
         prepareReq->pBlock = m_blockFactory->createBlock();
         assert(prepareReq->pBlock);
+        //TODO 需要确认每个Tx[i] 
         prepareReq->pBlock->decodeProposal(ref(*prepareReq->block), true);
     }
     oss << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
@@ -1384,11 +1385,15 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string 
 
     //暂时用reqNum和m_consensusBlockNumber替代轮数
     //reqNum为当前共识，m_consensusBlockNumber为已共识
-    PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
+    PBFTENGINE_LOG(INFO) 
+        << LOG_DESC("handlePrepareMsg4nl") 
+        << LOG_KV("消息包来源nodeidx", prepareReq->idx)
         << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
-        << LOG_KV("已共识最高块curNum", m_highestBlock.number()) << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
+        << LOG_KV("已共识最高块curNum", m_highestBlock.number()) 
+        << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
         << LOG_KV("fromIp", endpoint)
-        << LOG_KV("hash", prepareReq->block_hash.abridged()) << LOG_KV("自己的nodeIdx", nodeIdx())
+        << LOG_KV("hash", prepareReq->block_hash.abridged()) 
+        << LOG_KV("自己的nodeIdx", nodeIdx())
         << LOG_KV("myNode", m_keyPair.pub().abridged())
         << LOG_KV("prepareReq.pBlock",prepareReq->pBlock);
     //check..to add
@@ -1852,22 +1857,35 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     PBFTENGINE_LOG(INFO)<<LOG_DESC("进入save逻辑 该轮次票已收齐；");
     //1. 四块合一 2.执行 3. 存储 4. 更新状态让打包节点继续打包
     //TODO 四块合一
+    dev::eth::Block::Ptr bigBlockfor4nl = m_blockFactory->createBlock();
+    bigBlockfor4nl->header().populateFromParent(
+        m_blockChain->getBlockByNumber(m_blockChain->number())->header());
     // auto start_commit_time = utcTime();
     // auto record_time = utcTime();
+    // 往 bigBlockfor4nl中添加交易
     for(auto allpre:m_reqCache->prepareCache4nl().at(reqNum))
     {
-        dev::eth::Block::Ptr bigBlockfor4nl = m_blockFactory->createBlock();
         auto node_idx = allpre.first;
         auto prepareReq4nl = allpre.second;
         PBFTENGINE_LOG(INFO)<<LOG_KV("reqNum",reqNum)
                             <<LOG_KV("node_idx",node_idx)
                             <<LOG_KV("prepareReq",prepareReq4nl->block_hash.abridged())
                             <<LOG_KV("TransactionSize",prepareReq4nl->pBlock->getTransactionSize());
+        auto transactions = prepareReq4nl->pBlock->transactions();
+        bigBlockfor4nl->appendTransactions(transactions);
         // if(p_block!=nullptr){
         //     PBFTENGINE_LOG(INFO)<<LOG_KV("Block Hash",p_block->blockHeaderHash().abridged())
         //                     <<LOG_KV("TransactionSize",p_block->getTransactionSize());
         // }
     }
+    
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("bigBlockfor4nl 开始计算交易根")
+                        <<LOG_KV("bigBlock Tx Size",bigBlockfor4nl->getTransactionSize());
+    bigBlockfor4nl->calTransactionRoot();
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("计算交易根完成");
+    PBFTENGINE_LOG(INFO)<<LOG_KV("bigBlockfor4nl MaxBlockNumber",bigBlockfor4nl->blockHeaderHash().abridged())
+                        <<LOG_KV("bigBlockfor4nl tx size",bigBlockfor4nl->getTransactionSize())
+                        <<LOG_KV("bigBlockTranProof",bigBlockfor4nl->getTransactionProof());
     // std::shared_ptr<dev::eth::Block> p_block = m_reqCache->prepareCache4nl().at(reqNum);
     
     // m_reqCache->generateAndSetSigList(*p_block, minValidNodes());
