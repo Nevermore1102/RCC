@@ -175,14 +175,12 @@ void Block::encodeRC2(bytes& _out) const
 /// encode transactions to bytes using rlp-encoding when transaction list has been changed
 void Block::calTransactionRoot(bool update) const
 {   
-    BLOCK_LOG(INFO)<<LOG_DESC("第一个if");
 
     if (g_BCOSConfig.version() >= V2_2_0)
     {
         calTransactionRootV2_2_0(update);
         return;
     }
-    BLOCK_LOG(INFO)<<LOG_DESC("第二个if");
 
     if (g_BCOSConfig.version() >= RC2_VERSION)
     {
@@ -192,12 +190,10 @@ void Block::calTransactionRoot(bool update) const
 
     WriteGuard l(x_txsCache);
     RLPStream txs;
-    BLOCK_LOG(INFO)<<LOG_DESC("appendList");
 
     txs.appendList(m_transactions->size());
     if (m_txsCache == bytes())
     {
-    BLOCK_LOG(INFO)<<LOG_DESC("m_txsCache == bytes()");
 
         BytesMap txsMapCache;
         for (size_t i = 0; i < m_transactions->size(); i++)
@@ -210,16 +206,12 @@ void Block::calTransactionRoot(bool update) const
             txs.appendRaw(trans_data);
             txsMapCache.insert(std::make_pair(s.out(), trans_data));
         }
-        BLOCK_LOG(INFO)<<LOG_DESC("swapOut(m_txsCache);");
         txs.swapOut(m_txsCache);
-        BLOCK_LOG(INFO)<<LOG_DESC("m_transRootCache");
         m_transRootCache = hash256(txsMapCache);
     }
     if (update == true)
     {
-        BLOCK_LOG(INFO)<<LOG_DESC("update == true");
         m_blockHeader.setTransactionsRoot(m_transRootCache);
-        BLOCK_LOG(INFO)<<LOG_DESC("setTransactionsRoot succ");
     }
 }
 
@@ -459,15 +451,20 @@ void Block::decode(
         return;
     }
 
+
+    BLOCK_LOG(INFO)<<LOG_DESC("开始普通 DECODE");
     /// no try-catch to throw exceptions directly
     /// get RLP of block
     RLP block_rlp = BlockHeader::extractBlock(_block_bytes);
+    BLOCK_LOG(INFO)<<LOG_DESC("BlockHeader::extractBlock(_block_bytes)完成");
     /// get block header
     m_blockHeader.populate(block_rlp[0]);
+    BLOCK_LOG(INFO)<<LOG_DESC("m_blockHeader.populate(block_rlp[0]);完成");
     /// get transaction list
     RLP transactions_rlp = block_rlp[1];
-
+    BLOCK_LOG(INFO)<<LOG_DESC(" RLP transactions_rlp = block_rlp[1];完成");
     m_transactions->resize(transactions_rlp.itemCount());
+    BLOCK_LOG(INFO)<<LOG_DESC(" m_transactions->resize(transactions_rlp.itemCount());完成");
     for (size_t i = 0; i < transactions_rlp.itemCount(); i++)
     {
         (*m_transactions)[i] = std::make_shared<dev::eth::Transaction>();
@@ -510,7 +507,7 @@ void Block::decodeRC2(
 
     /// get txsCache
     m_txsCache = transactions_rlp.toBytes();
-
+    //  BLOCK_LOG(INFO)<<LOG_KV("m_txsCache.at(0)",m_txsCache.at(0));
     /// decode transaction
     TxsParallelParser::decode(m_transactions, ref(m_txsCache), _option, _withTxHash);
 
@@ -547,6 +544,8 @@ void Block::encodeProposal(std::shared_ptr<bytes> _out, bool const&)
 
 void Block::decodeProposal(bytesConstRef _block, bool const&)
 {
+    LOG(INFO)<<LOG_DESC("开始DECODE");
+    BLOCK_LOG(INFO)<<LOG_DESC("开始DECODE");
     decode(_block);
 }
 

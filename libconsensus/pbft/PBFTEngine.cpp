@@ -473,12 +473,35 @@ PrepareReq4nl::Ptr PBFTEngine::constructPrepareReq4nl(dev::eth::Block::Ptr _bloc
     {
         prepareReq4nl->isEmpty = true;
     }
-    //直接删除交易
+    //TODO放到checkAndSave  直接删除交易
     PBFTENGINE_LOG(INFO)<<LOG_KV("块内交易数量",prepareReq4nl->pBlock->transactions()->size());
     dropHandledTransactions(prepareReq4nl->pBlock);
     //仅广播
     if(m_enablePrepareWithTxsHash&&prepareReq4nl->pBlock->transactions()->size() > 0)
     {
+
+        // dev::eth::Block::Ptr newDataBlock = m_blockFactory->createBlock();
+        //  std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
+                //编码所有交易
+        // PBFTENGINE_LOG(INFO)<<LOG_KV("prepareReq4nl->block",prepareReq4nl->block);
+        // prepareReq4nl->encode(*prepare_data);
+        // // newDataBlock->decode(ref(*prepareReq4nl->block), CheckTransaction::None, false, true);
+        //  newDataBlock->decodeProposal(ref(*prepareReq4nl->block),true);
+        // if(prepareReq4nl->pBlock->transactions())
+        // {
+        //     for(auto ele: *prepareReq4nl->pBlock->transactions())
+        //     {
+        //         PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele->hash().abridged());
+        //     }
+        // }
+        // if(newDataBlock)
+        // {
+        //     PBFTENGINE_LOG(INFO)<<LOG_KV("getTransactionSize in newDataBlock",newDataBlock->getTransactionSize());
+        //     for(auto ele: *newDataBlock->transactions())
+        //     {
+        //         PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele->hash().abridged());
+        //     }
+        // }
         //新建线程广播
         auto self = std::weak_ptr<PBFTEngine>(shared_from_this());
         m_threadPool->enqueue([self, prepareReq4nl, engineBlock]() {
@@ -493,6 +516,9 @@ PrepareReq4nl::Ptr PBFTEngine::constructPrepareReq4nl(dev::eth::Block::Ptr _bloc
                 std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
                 //编码所有交易
                 prepareReq4nl->encode(*prepare_data);
+                
+
+
                 pbftEngine->sendPrepareMsgFromLeader4nl(prepareReq4nl, ref(*prepare_data));
             }
             catch (std::exception const& e)
@@ -1374,7 +1400,17 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string 
         prepareReq->pBlock = m_blockFactory->createBlock();
         assert(prepareReq->pBlock);
         //TODO 需要确认每个Tx[i] 
+        PBFTENGINE_LOG(INFO) << LOG_DESC("开始Decode网络Prepare包");
+                            
         prepareReq->pBlock->decodeProposal(ref(*prepareReq->block), true);
+        //TODO 这边就是把Block中的交易填充
+        m_txPool->initPartiallyBlock(prepareReq->pBlock);
+        // prepareReq->pBlock->encode(*prepareReq->block);
+        PBFTENGINE_LOG(INFO) << LOG_DESC("Decode网络Prepare包结束");
+        PBFTENGINE_LOG(INFO) << LOG_DESC("删除交易信息");
+        // dropHandledTransactions(prepareReq->pBlock);
+
+        
     }
     oss << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
         << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
@@ -1843,7 +1879,8 @@ bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum)
 
 void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
 {
-
+    auto start_commit_time = utcTime();
+    auto record_time = utcTime();
     if(checkSignAndCommitOnePre4nl(reqNum,node_idx))
     {
         if(!checkSignAndCommitAll4nl(reqNum)) {
@@ -1872,6 +1909,9 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
                             <<LOG_KV("prepareReq",prepareReq4nl->block_hash.abridged())
                             <<LOG_KV("TransactionSize",prepareReq4nl->pBlock->getTransactionSize());
         auto transactions = prepareReq4nl->pBlock->transactions();
+        for(auto ele:*transactions){
+             PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele);
+        }
         bigBlockfor4nl->appendTransactions(transactions);
         // if(p_block!=nullptr){
         //     PBFTENGINE_LOG(INFO)<<LOG_KV("Block Hash",p_block->blockHeaderHash().abridged())
@@ -1883,9 +1923,54 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
                         <<LOG_KV("bigBlock Tx Size",bigBlockfor4nl->getTransactionSize());
     bigBlockfor4nl->calTransactionRoot();
     PBFTENGINE_LOG(INFO)<<LOG_DESC("计算交易根完成");
-    PBFTENGINE_LOG(INFO)<<LOG_KV("bigBlockfor4nl MaxBlockNumber",bigBlockfor4nl->blockHeaderHash().abridged())
-                        <<LOG_KV("bigBlockfor4nl tx size",bigBlockfor4nl->getTransactionSize())
-                        <<LOG_KV("bigBlockTranProof",bigBlockfor4nl->getTransactionProof());
+    PBFTENGINE_LOG(INFO)<<LOG_KV("bigBlockfor4nl blockHeaderHash",bigBlockfor4nl->blockHeaderHash().abridged()) 
+                        <<LOG_KV("bigBlockfor4nl tx size",bigBlockfor4nl->getTransactionSize());
+    // // 执行区块
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("bigBlockfor4nl 开始执行区块");
+    dev::blockverifier::ExecutiveContext::Ptr exeContext4nl = executeBlock(*bigBlockfor4nl);
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("bigBlockfor4nl 执行区块结束,开始提交")
+                        <<LOG_KV("exeContext4nl",exeContext4nl);
+    CommitResult ret = m_blockChain->commitBlock(bigBlockfor4nl,std::shared_ptr<ExecutiveContext>(exeContext4nl));
+    // auto commitBlock_time_cost = utcTime() - record_time;
+    // record_time = utcTime();
+    // PBFTENGINE_LOG(INFO)<<LOG_KV("bigBlockfor4nl 提交结果, OK = 0",ret);
+    if (ret == CommitResult::OK)
+    {
+         PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::OK");
+        // dropHandledTransactions(bigBlockfor4nl);
+
+        // auto dropTxs_time_cost = utcTime() - record_time;
+        // record_time = utcTime();
+        // m_blockSync->noteSealingBlockNumber(m_reqCache->prepareCache().height);
+        // auto noteSealing_time_cost = utcTime() - record_time;
+
+        // PBFTENGINE_LOG(INFO)
+        //     << LOG_DESC("CommitBlock Succ")
+        //     << LOG_KV("prepareHeight", m_reqCache->prepareCache().height)
+        //     << LOG_KV("reqIdx", m_reqCache->prepareCache().idx)
+        //     << LOG_KV("hash", m_reqCache->prepareCache().block_hash.abridged())
+        //     << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged())
+        //     << LOG_KV("commitBlockTimeCost", commitBlock_time_cost)
+        //     << LOG_KV("dropTxsTimeCost", dropTxs_time_cost)
+        //     << LOG_KV("noteSealingTimeCost", noteSealing_time_cost)
+        //     << LOG_KV("totalTimeCost", utcTime() - start_commit_time);
+        // m_reqCache->delCache4nl(reqNum);
+    }
+    else
+    {
+             PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::不OK!!!");
+        // PBFTENGINE_LOG(WARNING)
+        //     << LOG_DESC("CommitBlock Failed")
+        //     << LOG_KV("reqNum", bigBlockfor4nl->blockHeader().number())
+        //     << LOG_KV("curNum", m_highestBlock.number())
+        //     << LOG_KV("reqIdx", m_reqCache->prepareCache().idx)
+        //     << LOG_KV("hash", bigBlockfor4nl->blockHeader().hash().abridged())
+        //     << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
+        //         /// note blocksync to sync
+        //     m_blockSync->noteSealingBlockNumber(m_blockChain->number());
+        //     m_txPool->handleBadBlock(*bigBlockfor4nl);
+    }
+
     // std::shared_ptr<dev::eth::Block> p_block = m_reqCache->prepareCache4nl().at(reqNum);
     
     // m_reqCache->generateAndSetSigList(*p_block, minValidNodes());
@@ -1933,7 +2018,6 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     // }
 
     //del sign and commit cache 防止反复进入同一轮次的save逻辑
-    m_reqCache->delCache4nl(reqNum);
     //update pre
 }
 /// if collect >= 2/3 SignReq and CommitReq, then callback this function to commit block

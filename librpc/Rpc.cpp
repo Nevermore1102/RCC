@@ -1402,6 +1402,7 @@ dev::eth::Transaction::Ptr Rpc::generateTransactionWithoutSig4sharper(dev::eth::
     generatedTx->setBlockLimit(input_tx->blockLimit());
     generatedTx->setType(input_tx->type());
     //random nonce 4 sharper cache logic
+    //TODO 
     generatedTx->setNonce(generateRandomValue4sharper());
     generatedTx->setImportTime(utcTime());
     return generatedTx;
