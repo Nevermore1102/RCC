@@ -22,6 +22,7 @@
  * @date: 2018-09-28
  */
 #include "ConsensusEngineBase.h"
+#include "libconsensus/Common.h"
 using namespace dev::eth;
 using namespace dev::db;
 using namespace dev::blockverifier;
@@ -273,6 +274,9 @@ void ConsensusEngineBase::resetConfig()
     }
     m_f = (m_nodeNum - 1) / 3;
     m_cfgErr = (node_idx == MAXIDX);
+    global_node_idx = node_idx;
+    ENGINE_LOG(INFO) << LOG_KV(
+            "global_node_idx",global_node_idx);
     m_idx = node_idx;
 }
 

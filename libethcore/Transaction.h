@@ -117,9 +117,9 @@ public:
     然后使用std::uniform_int_distribution分布将随机数映射到整数区间[0, node_count - 1]
     最后通过取模判断是否可以打包
     */
-    bool can_be_packed(int node_count) {
+    bool canBePacked(int node_count,int node_idx) {
         std::uniform_int_distribution<> distribution(0, node_count - 1);
-        return distribution(generator_) == 0; // 这里假设只有node index为0的节点可以打包
+        return distribution(generator_) == node_idx; // 这里假设只有node index为0的节点可以打包
     }
 
 

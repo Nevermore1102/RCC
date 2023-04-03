@@ -28,6 +28,7 @@
  */
 #pragma once
 #include "ConsensusEngineBase.h"
+#include <libconsensus/ConsensusEngineBase.h>
 #include <libblockchain/BlockChainInterface.h>
 #include <libdevcore/Worker.h>
 #include <libethcore/Block.h>
@@ -135,7 +136,7 @@ protected:
     virtual bool shouldWait(bool const& wait) const;
     /// load transactions from transaction pool
     void loadTransactions(uint64_t const& transToFetch);
-    void loadTransactions4nl(uint64_t const& transToFetch,uint64_t const& node_size);
+    void loadTransactions4nl(uint64_t const& transToFetch,uint64_t const& node_size,uint64_t const& node_idx);
     virtual bool checkTxsEnough(uint64_t maxTxsCanSeal)
     {
         uint64_t tx_num = m_sealing.block->getTransactionSize();

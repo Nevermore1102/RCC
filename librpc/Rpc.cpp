@@ -1524,24 +1524,24 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
             case ProtocolVersion::v2:
                 checkRequest(_groupID);
                 checkSyncStatus(_groupID);
-                //RPC_LOG(INFO)<<LOG_DESC("投递交易1");
+                // RPC_LOG(INFO)<<LOG_DESC("投递交易1");
                 ret = txPool->submitTransactions(tx);
-                //RPC_LOG(INFO)<<LOG_DESC("交易投递结束1");
+                // RPC_LOG(INFO)<<LOG_DESC("交易投递结束1");
                 break;
             // the v2 submit transactions sync
             // and v3 submit transactions async
             case ProtocolVersion::v3:
-                //RPC_LOG(INFO)<<LOG_DESC("投递交易2");
+                // RPC_LOG(INFO)<<LOG_DESC("投递交易2");
                 ret = txPool->submit(tx);
-                //RPC_LOG(INFO)<<LOG_DESC("交易投递结束2") << LOG_KV("toJS(ret.first)", ret.first) << LOG_KV("toJS(ret.second)", ret.second);
+                // RPC_LOG(INFO)<<LOG_DESC("交易投递结束2") << LOG_KV("toJS(ret.first)", ret.first) << LOG_KV("toJS(ret.second)", ret.second);
                 break;
             // default submit transactions sync
             default:
                 checkRequest(_groupID);
                 checkSyncStatus(_groupID);
-                //RPC_LOG(INFO)<<LOG_DESC("投递交易3");
+                // RPC_LOG(INFO)<<LOG_DESC("投递交易3");
                 ret = txPool->submitTransactions(tx);
-                //RPC_LOG(INFO)<<LOG_DESC("交易投递结束3");
+                // RPC_LOG(INFO)<<LOG_DESC("交易投递结束3");
                 break;
             }
             //return toJS(ret.first);

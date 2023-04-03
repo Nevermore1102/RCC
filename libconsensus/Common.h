@@ -33,6 +33,8 @@ namespace dev
 {
 namespace consensus
 {
+extern int global_node_idx; 
+
 typedef uint16_t IDXTYPE;
 typedef int64_t VIEWTYPE;
 static const IDXTYPE MAXIDX = UINT16_MAX;
@@ -72,3 +74,4 @@ public:
 
 }  // namespace consensus
 }  // namespace dev
+     

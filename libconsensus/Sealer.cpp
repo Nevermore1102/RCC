@@ -27,8 +27,15 @@
  * @ modification: rename Consensus.cpp to Sealer.cpp
  */
 #include "Sealer.h"
+#include "libconsensus/Common.h"
+#include "libnetwork/Common.h"
+#include "libp2p/Common.h"
+#include "libp2p/P2PMessage.h"
+#include "libp2p/P2PSession.h"
 #include <libethcore/LogEntry.h>
 #include <libsync/SyncStatus.h>
+#include <libconsensus/ConsensusEngineBase.h>
+
 using namespace std;
 using namespace dev::sync;
 using namespace dev::blockverifier;
@@ -142,6 +149,8 @@ void Sealer::doWork(bool wait)
                 m_syncTxPool = true;
             }
             auto nodeSize = m_consensusEngine->consensusList().size();
+            // auto node_idx = consensus::node_idx;
+     
             // 默认1000,是可变类型
             auto maxTxsPerBlock = maxBlockCanSeal()/nodeSize;
             /// load transaction from transaction queue
@@ -150,8 +159,10 @@ void Sealer::doWork(bool wait)
 //                 SEAL_LOG(INFO) << LOG_DESC("交易数不够,loading...")
 //                    <<LOG_KV("装载数量",maxTxsPerBlock - tx_num);
                 //从交易池中装载交易,装载数量为 maxTxsPerBlock - tx_num
-
-                loadTransactions4nl(maxTxsPerBlock - tx_num,nodeSize);
+                //Jason
+                auto node_idx =global_node_idx;
+                // SEAL_LOG(INFO) << LOG_KV("consensus::global_node_idx",node_idx);
+                loadTransactions(maxTxsPerBlock - tx_num);
             }
                 
             /// check enough or reach block interval
@@ -203,11 +214,13 @@ void Sealer::loadTransactions(uint64_t const& transToFetch)
 //*** 
 //***
 
-void Sealer::loadTransactions4nl(uint64_t const& transToFetch,uint64_t const& node_size)
+void Sealer::loadTransactions4nl(uint64_t const& transToFetch,uint64_t const& node_size,uint64_t const& node_idx)
 {
-    /// fetch transactions and update m_transactionSet
+     
+    //  ssize_t nodeIndex = pbftEngine->getIndexBySealer(_p2pSession->nodeID());
+        /// fetch transactions and update m_transactionSet
     m_sealing.block->appendTransactions(
-        m_txPool->topTransactions4nl(transToFetch, node_size,m_sealing.m_transactionSet, true));
+        m_txPool->topTransactions4nl(transToFetch, node_size,node_idx,m_sealing.m_transactionSet, true));
 }
 
 /// check whether the blocksync module is syncing

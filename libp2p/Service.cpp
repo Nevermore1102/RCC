@@ -30,6 +30,7 @@
 #include "libp2p/P2PInterface.h"       // for CallbackFunc...
 #include "libp2p/P2PMessageFactory.h"  // for P2PMessageFa...
 #include "libp2p/P2PSession.h"         // for P2PSession
+#include "libconsensus/Common.h"
 #include <libstat/NetworkStatHandler.h>
 #include <boost/random.hpp>
 #include <unordered_map>

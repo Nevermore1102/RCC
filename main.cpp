@@ -74,6 +74,7 @@ namespace dev {
 
 namespace dev {
     namespace consensus {
+        int global_node_idx = -1;
         int internal_groupId; // 当前分片所在的groupID
         int hiera_shard_number; // 分片总数
         vector<h512>forwardNodeId;

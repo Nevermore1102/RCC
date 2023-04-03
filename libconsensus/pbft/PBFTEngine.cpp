@@ -23,6 +23,7 @@
  */
 #include "PBFTEngine.h"
 #include "Common.h"
+#include "libconsensus/Common.h"
 #include "libdevcore/FixedHash.h"
 #include "libdevcore/Log.h"
 #include "libdevcrypto/CryptoInterface.h"
@@ -58,6 +59,7 @@ namespace consensus
 const std::string PBFTEngine::c_backupKeyCommitted = "committed";
 const std::string PBFTEngine::c_backupMsgDirName = "pbftMsgBackup/RocksDB";
 
+
 void PBFTEngine::start()
 {
     // create PBFTMsgFactory
@@ -66,7 +68,6 @@ void PBFTEngine::start()
     assert(m_reqCache);
     // set checkSignCallback for reqCache
     m_reqCache->setCheckSignCallback(boost::bind(&PBFTEngine::checkSign, this, boost::placeholders::_1));
-
     // register P2P callback after create PBFTMsgFactory
     m_service->registerHandlerByProtoclID(
         m_protocolId, boost::bind(&PBFTEngine::handleP2PMessage, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3));
@@ -85,7 +86,7 @@ void PBFTEngine::registerDisconnectHandler()
         // register disconnect callback
         auto self = std::weak_ptr<PBFTEngine>(shared_from_this());
         m_service->registerDisconnectHandlerByProtocolID(
-            m_protocolId, [self](dev::network::NetworkException,
+            m_protocolId, [self](dev::network::NetworkException,                   
                               std::shared_ptr<dev::p2p::P2PSession> _p2pSession) {
                 try
                 {
@@ -95,6 +96,8 @@ void PBFTEngine::registerDisconnectHandler()
                         return;
                     }
                     ssize_t nodeIndex = pbftEngine->getIndexBySealer(_p2pSession->nodeID());
+                   
+
                     if (nodeIndex < 0)
                     {
                         return;
@@ -116,7 +119,7 @@ void PBFTEngine::registerDisconnectHandler()
     }
     catch (std::exception const& e)
     {
-        PBFTENGINE_LOG(ERROR) << LOG_DESC("registerDisconnectHandler for PBFTEngine failed")
+        PBFTENGINE_LOG(INFO) << LOG_DESC("registerDisconnectHandler for PBFTEngine failed")
                               << LOG_KV("e", boost::diagnostic_information(e));
     }
 }
@@ -645,6 +648,11 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
         //构造prepare信息
         auto prepareReq4nl = constructPrepareReq4nl(_block);
         PBFTENGINE_LOG(INFO)<<LOG_DESC("开始自己处理PrepareReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
+        for(auto ele:*_block->transactions()){
+            PBFTENGINE_LOG(INFO)<<LOG_KV("ele nonce",ele->nonce())
+                                <<LOG_KV("ele hash",ele->hash());
+        }
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("打印结束");
         handlePrepareMsg4nl(prepareReq4nl);
         m_signalled.notify_all();
         m_generatePrepare = false;
