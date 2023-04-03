@@ -150,8 +150,8 @@ void Sealer::doWork(bool wait)
 //                 SEAL_LOG(INFO) << LOG_DESC("交易数不够,loading...")
 //                    <<LOG_KV("装载数量",maxTxsPerBlock - tx_num);
                 //从交易池中装载交易,装载数量为 maxTxsPerBlock - tx_num
-                
-                loadTransactions(maxTxsPerBlock - tx_num);
+
+                loadTransactions4nl(maxTxsPerBlock - tx_num,nodeSize);
             }
                 
             /// check enough or reach block interval
@@ -193,6 +193,21 @@ void Sealer::loadTransactions(uint64_t const& transToFetch)
     /// fetch transactions and update m_transactionSet
     m_sealing.block->appendTransactions(
         m_txPool->topTransactions(transToFetch, m_sealing.m_transactionSet, true));
+}
+
+//Jason
+//*** 这个函数是用来装载交易的
+//*** 判断当前交易是否可以被装载到区块里
+//*** topTransactions4l 会调用是否可以装载判断
+//*** 初步构想是找到所有可以添加的.
+//*** 
+//***
+
+void Sealer::loadTransactions4nl(uint64_t const& transToFetch,uint64_t const& node_size)
+{
+    /// fetch transactions and update m_transactionSet
+    m_sealing.block->appendTransactions(
+        m_txPool->topTransactions4nl(transToFetch, node_size,m_sealing.m_transactionSet, true));
 }
 
 /// check whether the blocksync module is syncing

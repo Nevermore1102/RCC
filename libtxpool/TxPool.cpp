@@ -700,6 +700,74 @@ std::shared_ptr<Transactions> TxPool::topTransactions(
     return ret;
 }
 
+//Jason
+std::shared_ptr<dev::eth::Transactions> TxPool::topTransactions4nl(uint64_t const& _limit,uint64_t const& node_size)
+{
+    h256Hash _avoid = h256Hash();
+    return topTransactions4nl(_limit,node_size,_avoid);
+}
+
+std::shared_ptr<Transactions> TxPool::topTransactions4nl(
+    uint64_t const& _limit, uint64_t const& node_size, h256Hash& _avoid, bool _updateAvoid)
+{
+    // TXPOOL_LOG(INFO) << LOG_DESC("取一些交易")
+    //                  << LOG_KV("数量", _limit);
+
+    uint64_t limit = min(m_limit, _limit);
+    uint64_t txCnt = 0;
+    auto ret = std::make_shared<Transactions>();
+    std::vector<dev::h256> invalidBlockLimitTxs;
+    std::vector<dev::eth::NonceKeyType> nonceKeyCache;
+
+    {
+        WriteGuard wl(x_invalidTxs);
+        ReadGuard l(m_lock);
+        for (auto it = m_txsQueue.begin(); txCnt < limit && it != m_txsQueue.end(); it++)
+        {
+            if (m_invalidTxs->count((*it)->hash()))
+            {
+                continue;
+            }
+            /// check nonce again when obtain transactions
+            // since the invalid nonce has already been checked before the txs import into the
+            // txPool the txs with duplicated nonce here are already-committed, but have not been
+            // dropped, so no need to insert the already-committed transaction into m_invalidTxs
+            if (!m_txNonceCheck->isNonceOk(*(*it), false))
+            {
+                // 发现并报告nonce值重复的交易
+                // 这里不需要将重复交易放入invalidTxs队列中吗？
+                TXPOOL_LOG(DEBUG) << LOG_DESC(
+                                         "Duplicated nonce: transaction maybe already-committed")
+                                  << LOG_KV("nonce", (*it)->nonce())
+                                  << LOG_KV("hash", (*it)->hash().abridged());
+                continue;
+            }
+            // check block limit(only insert txs with invalid blockLimit into m_invalidTxs)
+            if (!m_txNonceCheck->isBlockLimitOk(*(*it)))
+            {
+                // m_invalidTxs->insert(std::pair<h256, u256>((*it)->hash(), (*it)->nonce()));
+                // modify by zh on 22.11.26
+                m_invalidTxs->insert(std::pair<h256, u256>((*it)->get_originalhash(), (*it)->nonce()));
+                TXPOOL_LOG(WARNING)
+                    << LOG_DESC("Invalid blocklimit") << LOG_KV("hash", (*it)->hash().abridged())
+                    << LOG_KV("blockLimit", (*it)->blockLimit())
+                    << LOG_KV("blockNumber", m_blockChain->number());
+                continue;
+            }
+            if (!_avoid.count((*it)->hash()))
+            {
+                ret->push_back(*it);
+                txCnt++;
+                if (_updateAvoid)
+                    _avoid.insert((*it)->hash());
+            }
+        }
+    }
+    // TXPOOL_LOG(DEBUG) << "topTransaction done, ignore: " << ignoreCount;
+    m_workerPool->enqueue([this]() { removeInvalidTxs(); });
+    return ret;
+}
+
 std::shared_ptr<Transactions> TxPool::topTransactionsCondition(
     uint64_t const& _limit, dev::h512 const&)
 {

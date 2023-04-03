@@ -57,6 +57,11 @@ public:
     virtual std::shared_ptr<dev::eth::Transactions> topTransactions(
         uint64_t const& _limit, h256Hash& _avoid, bool _updateAvoid = false) = 0;
 
+    //Jason
+    virtual std::shared_ptr<dev::eth::Transactions> topTransactions4nl(uint64_t const& _limit,uint64_t const& node_size) = 0;
+    virtual std::shared_ptr<dev::eth::Transactions> topTransactions4nl(
+        uint64_t const& _limit, uint64_t const& node_size, h256Hash& _avoid, bool _updateAvoid = false) = 0;
+
     /// param 1: the transaction limit
     /// param 2: the node id
     virtual std::shared_ptr<dev::eth::Transactions> topTransactionsCondition(

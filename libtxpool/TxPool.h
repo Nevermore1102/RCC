@@ -143,7 +143,10 @@ public:
         uint64_t const& _limit, h256Hash& _avoid, bool _updateAvoid = false) override;
     std::shared_ptr<dev::eth::Transactions> topTransactionsCondition(
         uint64_t const& _limit, dev::h512 const& _nodeId) override;
-
+    //Jason
+    std::shared_ptr<dev::eth::Transactions> topTransactions4nl(uint64_t const& _limit,uint64_t const& node_size) override;
+    std::shared_ptr<dev::eth::Transactions> topTransactions4nl(
+        uint64_t const& _limit, uint64_t const& node_size, h256Hash& _avoid, bool _updateAvoid = false) override;
     /// get all transactions(maybe blocksync module need this interface)
     std::shared_ptr<dev::eth::Transactions> pendingList() const override;
     /// get current transaction num

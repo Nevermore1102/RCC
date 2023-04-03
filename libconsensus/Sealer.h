@@ -35,6 +35,7 @@
 #include <libsync/SyncInterface.h>
 #include <libtxpool/TxPool.h>
 #include <libtxpool/TxPoolInterface.h>
+#include <cstdint>
 namespace dev
 {
 namespace consensus
@@ -134,6 +135,7 @@ protected:
     virtual bool shouldWait(bool const& wait) const;
     /// load transactions from transaction pool
     void loadTransactions(uint64_t const& transToFetch);
+    void loadTransactions4nl(uint64_t const& transToFetch,uint64_t const& node_size);
     virtual bool checkTxsEnough(uint64_t maxTxsCanSeal)
     {
         uint64_t tx_num = m_sealing.block->getTransactionSize();
