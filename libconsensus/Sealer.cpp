@@ -150,6 +150,7 @@ void Sealer::doWork(bool wait)
 //                 SEAL_LOG(INFO) << LOG_DESC("交易数不够,loading...")
 //                    <<LOG_KV("装载数量",maxTxsPerBlock - tx_num);
                 //从交易池中装载交易,装载数量为 maxTxsPerBlock - tx_num
+                
                 loadTransactions(maxTxsPerBlock - tx_num);
             }
                 

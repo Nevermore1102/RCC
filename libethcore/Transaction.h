@@ -27,7 +27,7 @@
 #include <tbb/concurrent_unordered_set.h>
 #include <boost/optional.hpp>
 #include <libplugin/Common.h>
-
+#include <random>
 
 namespace dev
 {
@@ -69,7 +69,10 @@ public:
     /// or 1.
 
     /// Constructs a null transaction.
-    Transaction() {}
+    Transaction() {
+        std::random_device rd;
+        generator_ = std::mt19937(rd());
+    }
     /// Constructs an unsigned message-call transaction.
     Transaction(u256 const& _value, u256 const& _gasPrice, u256 const& _gas, Address const& _dest,
         bytes const& _data, u256 const& _nonce = u256(0), u256 _chainId = u256(1),
@@ -85,7 +88,10 @@ public:
         m_rlpBuffer(bytes()),
         m_chainId(_chainId),
         m_groupId(_groupId)
-    {}
+    {
+        std::random_device rd;
+        generator_ = std::mt19937(rd());
+    }
 
     /// Constructs an unsigned contract-creation transaction.
     Transaction(u256 const& _value, u256 const& _gasPrice, u256 const& _gas, bytes const& _data,
@@ -100,7 +106,22 @@ public:
         m_rlpBuffer(bytes()),
         m_chainId(_chainId),
         m_groupId(_groupId)
-    {}
+    {
+        std::random_device rd;
+        generator_ = std::mt19937(rd());
+    }
+    //Jason
+    /*
+    这里使用std::random_device来获取真随机数种子
+    并通过std::mt19937生成器生成随机数
+    然后使用std::uniform_int_distribution分布将随机数映射到整数区间[0, node_count - 1]
+    最后通过取模判断是否可以打包
+    */
+    bool can_be_packed(int node_count) {
+        std::uniform_int_distribution<> distribution(0, node_count - 1);
+        return distribution(generator_) == 0; // 这里假设只有node index为0的节点可以打包
+    }
+
 
     /// Constructs a transaction from the given RLP.
     explicit Transaction(bytesConstRef _rlp, CheckTransaction _checkSig);
@@ -374,6 +395,7 @@ public:
 
 protected:
     static bool isZeroSignature(u256 const& _r, u256 const& _s) { return !_r && !_s; }
+    std::mt19937 generator_;
 
     void encodeRC1(bytes& _trans, IncludeSignature _sig = WithSignature) const;
     void encodeRC2(bytes& _trans, IncludeSignature _sig = WithSignature) const;
