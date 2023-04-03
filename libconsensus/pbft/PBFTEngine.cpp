@@ -478,7 +478,7 @@ PrepareReq4nl::Ptr PBFTEngine::constructPrepareReq4nl(dev::eth::Block::Ptr _bloc
     }
     //TODO放到checkAndSave  直接删除交易
     PBFTENGINE_LOG(INFO)<<LOG_KV("块内交易数量",prepareReq4nl->pBlock->transactions()->size());
-    dropHandledTransactions(prepareReq4nl->pBlock);
+    // dropHandledTransactions(prepareReq4nl->pBlock);
     //仅广播
     if(m_enablePrepareWithTxsHash&&prepareReq4nl->pBlock->transactions()->size() > 0)
     {
@@ -518,6 +518,8 @@ PrepareReq4nl::Ptr PBFTEngine::constructPrepareReq4nl(dev::eth::Block::Ptr _bloc
                 }
                 std::shared_ptr<bytes> prepare_data = std::make_shared<bytes>();
                 //编码所有交易
+                prepareReq4nl->pBlock->encode(*(prepareReq4nl->block));
+
                 prepareReq4nl->encode(*prepare_data);
                 
 
@@ -648,10 +650,10 @@ bool PBFTEngine::generatePrepare(dev::eth::Block::Ptr _block)
         //构造prepare信息
         auto prepareReq4nl = constructPrepareReq4nl(_block);
         PBFTENGINE_LOG(INFO)<<LOG_DESC("开始自己处理PrepareReqPacket4nl!!!!!!!!!!!!!!!!!!!!!");
-        for(auto ele:*_block->transactions()){
-            PBFTENGINE_LOG(INFO)<<LOG_KV("ele nonce",ele->nonce())
-                                <<LOG_KV("ele hash",ele->hash());
-        }
+        // for(auto ele:*_block->transactions()){
+        //     PBFTENGINE_LOG(INFO)<<LOG_KV("ele nonce",ele->nonce())
+        //                         <<LOG_KV("ele hash",ele->hash());
+        // }
         PBFTENGINE_LOG(INFO)<<LOG_DESC("打印结束");
         handlePrepareMsg4nl(prepareReq4nl);
         m_signalled.notify_all();
@@ -1393,61 +1395,65 @@ bool PBFTEngine::handlePrepareMsg(PrepareReq::Ptr prepareReq, std::string const&
 //1 check
 //clean and add cache
 //generate sign msg
-bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq, std::string const& endpoint)
+bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq4nl, std::string const& endpoint)
 {
     std::ostringstream oss;
-    // PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("reqIdx", prepareReq->idx)
-    //     << LOG_KV("view", prepareReq->view) << LOG_KV("reqNum", prepareReq->height)
+    // PBFTENGINE_LOG(INFO) << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("reqIdx", prepareReq4nl->idx)
+    //     << LOG_KV("view", prepareReq4nl->view) << LOG_KV("reqNum", prepareReq4nl->height)
     //     << LOG_KV("curNum", m_highestBlock.number()) << LOG_KV("consNum", m_consensusBlockNumber)
     //     << LOG_KV("curView", m_view) << LOG_KV("fromIp", endpoint)
-    //     << LOG_KV("hash", prepareReq->block_hash.abridged()) << LOG_KV("nodeIdx", nodeIdx())
+    //     << LOG_KV("hash", prepareReq4nl->block_hash.abridged()) << LOG_KV("nodeIdx", nodeIdx())
     //     << LOG_KV("myNode", m_keyPair.pub().abridged())
     //     << LOG_KV("curChangeCycle", m_timeManager.m_changeCycle);
 
-    if(prepareReq->idx!=nodeIdx()){
-        prepareReq->pBlock = m_blockFactory->createBlock();
-        assert(prepareReq->pBlock);
+    if(prepareReq4nl->idx!=nodeIdx()){
+        prepareReq4nl->pBlock = m_blockFactory->createBlock();
+        assert(prepareReq4nl->pBlock);
         //TODO 需要确认每个Tx[i] 
         PBFTENGINE_LOG(INFO) << LOG_DESC("开始Decode网络Prepare包");
-                            
-        prepareReq->pBlock->decodeProposal(ref(*prepareReq->block), true);
+                             
+        prepareReq4nl->pBlock->decodeProposal(ref(*prepareReq4nl->block), false);
         //TODO 这边就是把Block中的交易填充
-        m_txPool->initPartiallyBlock(prepareReq->pBlock);
-        // prepareReq->pBlock->encode(*prepareReq->block);
+        m_txPool->initPartiallyBlock(prepareReq4nl->pBlock);
+        // prepareReq4nl->pBlock->encode(*prepareReq4nl->block);
         PBFTENGINE_LOG(INFO) << LOG_DESC("Decode网络Prepare包结束");
+        // auto transactions = prepareReq4nl->pBlock->transactions();
+        // for(auto ele:*transactions){
+        //      PBFTENGINE_LOG(INFO)<<LOG_KV("handlePrepareMsg4nl ele",ele);
+        // }
         PBFTENGINE_LOG(INFO) << LOG_DESC("删除交易信息");
-        // dropHandledTransactions(prepareReq->pBlock);
+        dropHandledTransactions(prepareReq4nl->pBlock);
 
         
     }
-    oss << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq->idx)
-        << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
+    oss << LOG_DESC("handlePrepareMsg4nl") << LOG_KV("消息包来源nodeidx", prepareReq4nl->idx)
+        << LOG_KV("消息包内共识轮数reqNum", prepareReq4nl->height)
         << LOG_KV("已共识最高块curNum", m_highestBlock.number()) << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
         << LOG_KV("fromIp", endpoint)
-        << LOG_KV("hash", prepareReq->block_hash.abridged()) << LOG_KV("自己的nodeIdx", nodeIdx())
+        << LOG_KV("hash", prepareReq4nl->block_hash.abridged()) << LOG_KV("自己的nodeIdx", nodeIdx())
         << LOG_KV("myNode", m_keyPair.pub().abridged());
 
     //暂时用reqNum和m_consensusBlockNumber替代轮数
     //reqNum为当前共识，m_consensusBlockNumber为已共识
     PBFTENGINE_LOG(INFO) 
         << LOG_DESC("handlePrepareMsg4nl") 
-        << LOG_KV("消息包来源nodeidx", prepareReq->idx)
-        << LOG_KV("消息包内共识轮数reqNum", prepareReq->height)
+        << LOG_KV("消息包来源nodeidx", prepareReq4nl->idx)
+        << LOG_KV("消息包内共识轮数reqNum", prepareReq4nl->height)
         << LOG_KV("已共识最高块curNum", m_highestBlock.number()) 
         << LOG_KV("正在共识轮数consNum", m_consensusBlockNumber)
         << LOG_KV("fromIp", endpoint)
-        << LOG_KV("hash", prepareReq->block_hash.abridged()) 
+        << LOG_KV("hash", prepareReq4nl->block_hash.abridged()) 
         << LOG_KV("自己的nodeIdx", nodeIdx())
         << LOG_KV("myNode", m_keyPair.pub().abridged())
-        << LOG_KV("prepareReq.pBlock",prepareReq->pBlock);
+        << LOG_KV("prepareReq4nl.pBlock",prepareReq4nl->pBlock);
     //check..to add
 
     //add cache 
-    m_reqCache->addPrepareReq4nl(prepareReq);
+    m_reqCache->addPrepareReq4nl(prepareReq4nl);
     
     //不执行直接广播签名
 
-    return OnlyGenerateSignMsg4nl(prepareReq, oss);
+    return OnlyGenerateSignMsg4nl(prepareReq4nl, oss);
     
 
 
