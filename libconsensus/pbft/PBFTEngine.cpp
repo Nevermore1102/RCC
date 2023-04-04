@@ -1421,8 +1421,9 @@ bool PBFTEngine::handlePrepareMsg4nl(PrepareReq4nl::Ptr prepareReq4nl, std::stri
         // for(auto ele:*transactions){
         //      PBFTENGINE_LOG(INFO)<<LOG_KV("handlePrepareMsg4nl ele",ele);
         // }
-        PBFTENGINE_LOG(INFO) << LOG_DESC("删除交易信息");
-        dropHandledTransactions(prepareReq4nl->pBlock);
+        // //Jason 
+        // PBFTENGINE_LOG(INFO) << LOG_DESC("删除交易信息");
+        // dropHandledTransactions(prepareReq4nl->pBlock);
 
         
     }
@@ -1951,6 +1952,8 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     if (ret == CommitResult::OK)
     {
          PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::OK");
+
+        PBFTENGINE_LOG(INFO) << LOG_DESC("删除交易信息");
         dropHandledTransactions(bigBlockfor4nl);
 
         // auto dropTxs_time_cost = utcTime() - record_time;
@@ -1968,7 +1971,7 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
         //     << LOG_KV("dropTxsTimeCost", dropTxs_time_cost)
         //     << LOG_KV("noteSealingTimeCost", noteSealing_time_cost)
         //     << LOG_KV("totalTimeCost", utcTime() - start_commit_time);
-        // m_reqCache->delCache4nl(reqNum);
+        m_reqCache->delCache4nl(reqNum);
     }
     else
     {
