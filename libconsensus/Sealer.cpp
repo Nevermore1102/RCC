@@ -162,7 +162,8 @@ void Sealer::doWork(bool wait)
                 //Jason
                 auto node_idx =global_node_idx;
                 // SEAL_LOG(INFO) << LOG_KV("consensus::global_node_idx",node_idx);
-                loadTransactions(maxTxsPerBlock - tx_num);
+                // loadTransactions(maxTxsPerBlock - tx_num);
+                loadTransactions4nl(maxTxsPerBlock - tx_num, nodeSize,node_idx);
             }
                 
             /// check enough or reach block interval

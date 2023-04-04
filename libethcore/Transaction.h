@@ -116,10 +116,14 @@ public:
     }
     //Jason
     /*
-    这里使用std::random_device来获取真随机数种子
-    并通过std::mt19937生成器生成随机数
-    然后使用std::uniform_int_distribution分布将随机数映射到整数区间[0, node_count - 1]
-    最后通过取模判断是否可以打包
+    首先，代码从对象的 m_nonce 字段中获取一个 u256 类型的值。这个值是一个256位的整数。
+    然后，将这个256位的整数转换成一个数组，其中每个元素表示一个字节。这个数组的大小为32个字节（即256位）。
+    这是通过 toBigEndian 函数实现的，是将一个256位的整数转换为字节数组的常见方法之一。
+    接下来，将最后4个字节解释为一个32位整数，并将其存储在变量 nonceInt 中。
+    然后，对 nonceInt 模除以 node_count，将结果存储在变量 nonceMod 中。这是为了确保节点可以被平均地分布在块中。
+    然后，将 nonceMod 转换成一个大整数 nonceModBigInt，这是为了与其他大整数进行比较，以及执行其他可能需要大整数的操作。
+    最后，如果 nonceMod 等于 node_idx，则返回 true，表示节点可以被加入块中；否则，返回 false，表示节点不能被加入块中。
+
     */
     bool canBePacked(int node_count,int node_idx) {
         u256 nonce = this->m_nonce;
@@ -134,19 +138,13 @@ public:
         int32_t nonceMod = nonceInt % node_count;
 
          cpp_int nonceModBigInt(nonceMod);
-     // u256 nonceModU256 = nonceModBigInt.convert_to<u256>();
-        LOG(INFO)<<LOG_KV("node_count",node_count)
-                        <<LOG_KV("node_idx",node_idx)
-                        <<LOG_KV("nonceMod",nonceMod);
         if (nonceMod == node_idx) {
+            // LOG(INFO)<<LOG_DESC("返回true,成功加入块");
             return true;
         } else {
+            // LOG(INFO)<<LOG_DESC("返回false,加入块失败");
             return false;
         } 
- 
-        // std::uniform_int_distribution<> distribution(0, node_count - 1);
-   
-        // return distribution(generator_) == node_idx; // 这里假设只有node index为0的节点可以打包
     }
 
 

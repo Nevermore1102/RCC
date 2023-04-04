@@ -1951,7 +1951,7 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     if (ret == CommitResult::OK)
     {
          PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::OK");
-        // dropHandledTransactions(bigBlockfor4nl);
+        dropHandledTransactions(bigBlockfor4nl);
 
         // auto dropTxs_time_cost = utcTime() - record_time;
         // record_time = utcTime();
@@ -1972,17 +1972,8 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     }
     else
     {
-             PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::不OK!!!");
-        // PBFTENGINE_LOG(WARNING)
-        //     << LOG_DESC("CommitBlock Failed")
-        //     << LOG_KV("reqNum", bigBlockfor4nl->blockHeader().number())
-        //     << LOG_KV("curNum", m_highestBlock.number())
-        //     << LOG_KV("reqIdx", m_reqCache->prepareCache().idx)
-        //     << LOG_KV("hash", bigBlockfor4nl->blockHeader().hash().abridged())
-        //     << LOG_KV("nodeIdx", nodeIdx()) << LOG_KV("myNode", m_keyPair.pub().abridged());
-        //         /// note blocksync to sync
-        //     m_blockSync->noteSealingBlockNumber(m_blockChain->number());
-        //     m_txPool->handleBadBlock(*bigBlockfor4nl);
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::不OK!!!");
+
     }
 
     // std::shared_ptr<dev::eth::Block> p_block = m_reqCache->prepareCache4nl().at(reqNum);

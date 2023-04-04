@@ -710,9 +710,6 @@ std::shared_ptr<dev::eth::Transactions> TxPool::topTransactions4nl(uint64_t cons
 std::shared_ptr<Transactions> TxPool::topTransactions4nl(
     uint64_t const& _limit, uint64_t const& node_size, uint64_t const& node_idx,h256Hash& _avoid, bool _updateAvoid)
 {
-    TXPOOL_LOG(INFO) << LOG_DESC("取一些交易")
-                     << LOG_KV("数量", _limit)
-                    << LOG_KV("节点数",node_size);
 
     uint64_t limit = min(m_limit, _limit);
     uint64_t txCnt = 0;
@@ -756,12 +753,12 @@ std::shared_ptr<Transactions> TxPool::topTransactions4nl(
                 continue;
             }
             // Jason
-            if(!(*it)->canBePacked(node_size,node_idx)){
-                TXPOOL_LOG(INFO) << LOG_DESC(
-                                         "只有idx正确的 节点才可以打包!!!")
-                                <<LOG_KV("node_idx",node_idx)
-                                  << LOG_KV("nonce", (*it)->nonce())
-                                  << LOG_KV("hash", (*it)->hash().abridged());
+            if(!((*it)->canBePacked(node_size,node_idx))){
+                // TXPOOL_LOG(INFO) << LOG_DESC(
+                //                          "只有idx正确的 节点才可以打包!!!")
+                //                 <<LOG_KV("node_idx",node_idx)
+                //                   << LOG_KV("nonce", (*it)->nonce())
+                //                   << LOG_KV("hash", (*it)->hash().abridged());
                 continue;
             }
 
