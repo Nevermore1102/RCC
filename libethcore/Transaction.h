@@ -28,7 +28,11 @@
 #include <boost/optional.hpp>
 #include <libplugin/Common.h>
 #include <random>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/endian/conversion.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
+using namespace boost::multiprecision;
 namespace dev
 {
 namespace eth
@@ -118,8 +122,31 @@ public:
     最后通过取模判断是否可以打包
     */
     bool canBePacked(int node_count,int node_idx) {
-        std::uniform_int_distribution<> distribution(0, node_count - 1);
-        return distribution(generator_) == node_idx; // 这里假设只有node index为0的节点可以打包
+        u256 nonce = this->m_nonce;
+        std::array<uint8_t, 32> nonceBytes;
+        // toBigEndian(nonce, nonceBytes.begin());
+        toBigEndian(nonce, nonceBytes);
+        // Extract the last 4 bytes as an integer
+        uint32_t nonceInt = 0;
+        std::memcpy(&nonceInt, &nonceBytes[28], sizeof(nonceInt));
+        nonceInt = boost::endian::big_to_native(nonceInt);
+
+        int32_t nonceMod = nonceInt % node_count;
+
+         cpp_int nonceModBigInt(nonceMod);
+     // u256 nonceModU256 = nonceModBigInt.convert_to<u256>();
+        LOG(INFO)<<LOG_KV("node_count",node_count)
+                        <<LOG_KV("node_idx",node_idx)
+                        <<LOG_KV("nonceMod",nonceMod);
+        if (nonceMod == node_idx) {
+            return true;
+        } else {
+            return false;
+        } 
+ 
+        // std::uniform_int_distribution<> distribution(0, node_count - 1);
+   
+        // return distribution(generator_) == node_idx; // 这里假设只有node index为0的节点可以打包
     }
 
 

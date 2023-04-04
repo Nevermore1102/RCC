@@ -1452,6 +1452,8 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
 
         auto txPool = ledgerManager()->txPool(_groupID);
         // only check txPool here
+        RPC_LOG(INFO)   << LOG_DESC("获取交易池成功")
+                        <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         if (!txPool)
         {
             BOOST_THROW_EXCEPTION(
@@ -1478,10 +1480,13 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
                 auto transactionCallback = *currentTransactionCallback;
                 clientProtocolversion = (*m_transactionCallbackVersion)();
                 std::weak_ptr<dev::blockchain::BlockChainInterface> weakedBlockChain(blockChain);
-                // Note: Since blockChain has a transaction cache, that is,
-                //       BlockChain holds transactions, in order to prevent circular references,
-                //       the callback of the transaction cannot hold the blockChain of shared_ptr,
-                //       must be weak_ptr
+                 // 
+                /**
+                * Note: Since blockChain has a transaction cache, that is,
+                * BlockChain holds transactions, in order to prevent circular references,
+                *the callback of the transaction cannot hold the blockChain of shared_ptr,
+                *must be weak_ptr
+                */
                 tx->setRpcCallback(
                     [weakedBlockChain, _notifyCallback, transactionCallback, clientProtocolversion,
                         _groupID](LocalisedTransactionReceipt::Ptr receipt, dev::bytesConstRef input,
@@ -1545,6 +1550,8 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
                 break;
             }
             //return toJS(ret.first);
+            RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
+                      <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         }
 
     }
