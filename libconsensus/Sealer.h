@@ -28,6 +28,7 @@
  */
 #pragma once
 #include "ConsensusEngineBase.h"
+#include "libdevcore/Log.h"
 #include <libconsensus/ConsensusEngineBase.h>
 #include <libblockchain/BlockChainInterface.h>
 #include <libdevcore/Worker.h>
@@ -152,9 +153,34 @@ protected:
 
     virtual bool checkTxsEnough4nl(uint64_t maxTxsCanSeal)
     {
+        /**
+        *info   提交了块以后的false
+        *info  enough=false
+        *info  canHandleBlockForNextLeader4nl()=false,
+        *info  tx_num >= maxTxsCanSeal?=false
+        *info  reachBlockIntervalTime()=false
+        *info
+        *info  没提交块以前的false
+        *info  enough=false 
+        *info  canHandleBlockForNextLeader4nl()=true
+        *info  tx_num >= maxTxsCanSeal?=false
+        *info  reachBlockIntervalTime()=false
+
+        *info  没提交块以前的false
+        *info  enough=false 
+        *info  canHandleBlockForNextLeader4nl()=true
+        *info  tx_num >= maxTxsCanSeal?=true
+        *info  reachBlockIntervalTime()=false
+        
+        */
         uint64_t tx_num = m_sealing.block->getTransactionSize();
+        //canHandleBlockForNextLeader4nl得让其返回true
         bool enough =
             canHandleBlockForNextLeader4nl() && (tx_num >= maxTxsCanSeal || reachBlockIntervalTime());
+        // SEAL_LOG(INFO) << LOG_KV("enough",enough)
+        //                 <<LOG_KV("canHandleBlockForNextLeader4nl()",canHandleBlockForNextLeader4nl())
+        //                 <<LOG_KV("tx_num >= maxTxsCanSeal?",tx_num >= maxTxsCanSeal)
+        //                 <<LOG_KV("reachBlockIntervalTime()",reachBlockIntervalTime());
         if (enough)
         {
             SEAL_LOG(DEBUG) << "[checkTxsEnough] Tx enough: [txNum]: " << tx_num;

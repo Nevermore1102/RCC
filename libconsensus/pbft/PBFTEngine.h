@@ -278,10 +278,10 @@ public:
         }
         return true;
     }
-    //Jason
+    //Jason m_notifyNextLeaderSeal得为false,返回才可以为true
     bool canHandleBlockForNextLeader4nl()
     {
-        if (m_notifyNextLeaderSeal)
+        if (m_notifyNextLeaderSeal)//
         {
             return false;
         }

@@ -167,16 +167,18 @@ void Sealer::doWork(bool wait)
                 // loadTransactions(maxTxsPerBlock - tx_num);
                 loadTransactions4nl(maxTxsPerBlock - tx_num, nodeSize,node_idx);
             }
-                
             /// check enough or reach block interval
-            if (!checkTxsEnough4nl(maxTxsPerBlock))
+            if (!checkTxsEnough4nl(maxTxsPerBlock))//只有返回true 才可以通过
             {
+                //  SEAL_LOG(INFO)<<LOG_DESC("!checkTxsEnough4nl(maxTxsPerBlock)");
                 ///< 10 milliseconds to next loop
                 boost::unique_lock<boost::mutex> l(x_signalled);
                 m_signalled.wait_for(l, boost::chrono::milliseconds(1));
                 return;
             }
-//            SEAL_LOG(INFO) << LOG_DESC("通过checkTxsEnough(maxTxsPerBlock)")<<LOG_KV("blkNum", m_sealing.block->header().number());
+        //    SEAL_LOG(INFO) << LOG_DESC("通过checkTxsEnough(maxTxsPerBlock)")
+        //                     <<LOG_KV("blkNum", m_sealing.block->header().number())
+        //                     <<LOG_KV("TransactionSize", m_sealing.block->getTransactionSize());
             //TODO:Jason修改的第二个点, 将shouldHandleBlock注释,让所有区块都能打包块
 //            if (shouldHandleBlock())
             //TODO:Jason修改的第三个点只有当size不等于0的时候,才会handleBlock

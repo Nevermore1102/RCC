@@ -129,7 +129,7 @@ protected:
     //Jason
     bool canHandleBlockForNextLeader4nl() override
     {
-        return m_pbftEngine->canHandleBlockForNextLeader4nl();
+        return m_pbftEngine->canHandleBlockForNextLeader4nl(); 
     }
     void setBlock();
     void attempIncreaseTimeoutTx();
