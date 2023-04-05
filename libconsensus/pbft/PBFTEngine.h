@@ -278,6 +278,15 @@ public:
         }
         return true;
     }
+    //Jason
+    bool canHandleBlockForNextLeader4nl()
+    {
+        if (m_notifyNextLeaderSeal)
+        {
+            return false;
+        }
+        return true;
+    }
     void rehandleCommitedPrepareCache(PrepareReq const& req);
     bool shouldSeal();
     /// broadcast prepare message
@@ -768,6 +777,7 @@ protected:
         m_signalled.notify_all();
     }
     void notifySealing(dev::eth::Block const& block);
+    void notifySealing4nl(dev::eth::Block const& block);
     /// to ensure at least 100MB available disk space
     virtual bool isDiskSpaceEnough(std::string const& path)
     {

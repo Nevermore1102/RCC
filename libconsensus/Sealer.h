@@ -148,10 +148,25 @@ protected:
         }
         return enough;
     }
+    //Jason
+
+    virtual bool checkTxsEnough4nl(uint64_t maxTxsCanSeal)
+    {
+        uint64_t tx_num = m_sealing.block->getTransactionSize();
+        bool enough =
+            canHandleBlockForNextLeader4nl() && (tx_num >= maxTxsCanSeal || reachBlockIntervalTime());
+        if (enough)
+        {
+            SEAL_LOG(DEBUG) << "[checkTxsEnough] Tx enough: [txNum]: " << tx_num;
+        }
+        return enough;
+    }
+
 
     /// in case of the next leader packeted the number of maxTransNum transactions before the last
     /// block is consensused
     virtual bool canHandleBlockForNextLeader() { return true; }
+    virtual bool canHandleBlockForNextLeader4nl() { return true; }
     virtual bool reachBlockIntervalTime() { return false; }
     virtual void handleBlock() {}
     virtual bool shouldHandleBlock() { return true; }

@@ -138,6 +138,8 @@ void Sealer::doWork(bool wait)
         {
             /// get current transaction num
             uint64_t tx_num = m_sealing.block->getTransactionSize();
+            // SEAL_LOG(INFO)<<LOG_DESC("获取size成功")
+            //             <<LOG_KV;
 
             /// add this to in case of unlimited-loop
             if (m_txPool->status().current == 0)
@@ -167,7 +169,7 @@ void Sealer::doWork(bool wait)
             }
                 
             /// check enough or reach block interval
-            if (!checkTxsEnough(maxTxsPerBlock))
+            if (!checkTxsEnough4nl(maxTxsPerBlock))
             {
                 ///< 10 milliseconds to next loop
                 boost::unique_lock<boost::mutex> l(x_signalled);
