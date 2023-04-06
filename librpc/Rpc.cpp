@@ -1550,8 +1550,9 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
                 break;
             }
             //return toJS(ret.first);
-            RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
-                      <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
+            //Jason
+            // RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
+            //           <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         }
 
     }

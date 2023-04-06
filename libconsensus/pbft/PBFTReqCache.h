@@ -550,6 +550,13 @@ namespace dev
             /// add specified signReq to the sign-cache
             inline void addSignReq4nl(SignReq4nl::Ptr req)
             {
+
+                if(req->height == highestblockNumber){
+                     PBFTENGINE_LOG(INFO)<<LOG_DESC("无效签名包,因为对应的块已经提交")
+                                         <<LOG_KV("签名包层数",req->height)
+                                         <<LOG_KV("当前已提交块高度",highestblockNumber);
+                     return;
+                }
                 auto signature = toHex(req->sig);
                 // determine existence: in case of assign overhead
                 if (m_signCache4nl.count(req->block_hash) && m_signCache4nl[req->block_hash].count(signature))
@@ -561,6 +568,7 @@ namespace dev
                 PBFTENGINE_LOG(INFO)<<LOG_DESC("添加签名包")
                     <<LOG_KV("hash",req->block_hash.abridged())
                     <<LOG_KV("签名包来源idx",req->idx)
+                   
                     <<LOG_KV("sign cache size",m_signCache4nl[req->block_hash].size());
 
             }
@@ -568,6 +576,12 @@ namespace dev
             /// add specified commit cache to the commit-cache
             inline void addCommitReq4nl(CommitReq4nl::Ptr req)
             {
+                if(req->height == highestblockNumber){
+                     PBFTENGINE_LOG(INFO)<<LOG_DESC("无效共识包,因为对应的块已经提交")
+                                         <<LOG_KV("共识包层数",req->height)
+                                         <<LOG_KV("当前已提交块高度",highestblockNumber);
+                     return;
+                }
                 auto signature = toHex(req->sig);
                 // determine existence: in case of assign overhead
                 if (m_commitCache4nl.count(req->block_hash) && m_commitCache4nl[req->block_hash].count(signature))
@@ -578,6 +592,7 @@ namespace dev
                 PBFTENGINE_LOG(INFO)<<LOG_DESC("添加共识包")
                   <<LOG_KV("hash",req->block_hash.abridged())
                     <<LOG_KV("签名Sign Cache Size",m_signCache4nl[req->block_hash].size())
+                    <<LOG_KV("共识包层数",req->height)
                     <<LOG_KV("共识Commit Cache Size",m_commitCache4nl[req->block_hash].size());
 
             }

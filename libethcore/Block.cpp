@@ -521,12 +521,12 @@ void Block::decodeRC2(
     m_sigList = std::make_shared<SigListType>(
         block_rlp[3].toVector<std::pair<u256, std::vector<unsigned char>>>());
     
-    BLOCK_LOG(INFO)<<LOG_KV("m_sigList",m_sigList)
-                   <<LOG_KV("_withReceipt",_withReceipt);
+    // BLOCK_LOG(INFO)<<LOG_KV("m_sigList",m_sigList)
+    //                <<LOG_KV("_withReceipt",_withReceipt);
     /// get transactionReceipt list
     if (_withReceipt)
     {
-         BLOCK_LOG(INFO)<<LOG_DESC("开始分配[i]");
+        //  BLOCK_LOG(INFO)<<LOG_DESC("开始分配[i]");
         RLP transactionReceipts_rlp = block_rlp[4];
         m_transactionReceipts->resize(transactionReceipts_rlp.itemCount());
         for (size_t i = 0; i < transactionReceipts_rlp.itemCount(); i++)

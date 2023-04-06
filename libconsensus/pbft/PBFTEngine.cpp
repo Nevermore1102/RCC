@@ -56,6 +56,7 @@ namespace dev
 {
 namespace consensus
 {
+int highestblockNumber = 0;
 const std::string PBFTEngine::c_backupKeyCommitted = "committed";
 const std::string PBFTEngine::c_backupMsgDirName = "pbftMsgBackup/RocksDB";
 
@@ -63,6 +64,7 @@ const std::string PBFTEngine::c_backupMsgDirName = "pbftMsgBackup/RocksDB";
 void PBFTEngine::start()
 {
     // create PBFTMsgFactory
+    
     createPBFTMsgFactory();
     createPBFTReqCache();
     assert(m_reqCache);
@@ -1829,6 +1831,7 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
                             <<LOG_KV("node_idx",node_idx)
                             <<LOG_KV("prepareReq",prepareReq4nl->block_hash.abridged())
                             <<LOG_KV("TransactionSize",prepareReq4nl->pBlock->getTransactionSize());
+                
         auto transactions = prepareReq4nl->pBlock->transactions();
         // for(auto ele:*transactions){
         //      PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele->hash().abridged());
@@ -1839,7 +1842,6 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
         //                     <<LOG_KV("TransactionSize",p_block->getTransactionSize());
         // }
     }
-    
     PBFTENGINE_LOG(INFO)<<LOG_DESC("bigBlockfor4nl 开始计算交易根")
                         <<LOG_KV("bigBlock Tx Size",bigBlockfor4nl->getTransactionSize());
     bigBlockfor4nl->calTransactionRoot();
@@ -1860,11 +1862,14 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     // PBFTENGINE_LOG(INFO)<<LOG_KV("bigBlockfor4nl 提交结果, OK = 0",ret);
     if (ret == CommitResult::OK)
     {
-         PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::OK");
+        highestblockNumber = reqNum;
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("ret == CommitResult::OK")
+                            <<LOG_KV("highestblockNumber",highestblockNumber);
 
         PBFTENGINE_LOG(INFO) << LOG_DESC("删除交易信息bigBlockfor4nl");
         dropHandledTransactions(bigBlockfor4nl);
         PBFTENGINE_LOG(INFO) << LOG_KV("删除后 txpool size",m_txPool->pendingSize());
+
         // auto dropTxs_time_cost = utcTime() - record_time;
         // record_time = utcTime();
         // m_blockSync->noteSealingBlockNumber(m_reqCache->prepareCache().height);
