@@ -1708,7 +1708,7 @@ bool PBFTEngine::handleCommitMsg4nl(CommitReq4nl::Ptr commit_req, PBFTMsgPacket 
 // get size (hash)
 // if size==minValidNodeSize 触发commit逻辑 广播commit包
 //
-void PBFTEngine::checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself)
+void PBFTEngine::checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself,int64_t sealingNodes)
 {
     // if(byself) PBFTENGINE_LOG(INFO)<<LOG_DESC("自己触发");
     auto minValidNodeSize = minValidNodes();

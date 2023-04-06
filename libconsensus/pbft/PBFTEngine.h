@@ -391,7 +391,7 @@ public:
     bool OnlyGenerateSignMsg4nl(
         PrepareReq4nl::Ptr _prepareReq, std::ostringstream& _oss);
     bool handleSignMsg4nl(SignReq4nl::Ptr signReq, PBFTMsgPacket const& pbftMsg);
-    void  checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself=false);
+    void  checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself=false,int64_t sealingNodes=4);
     bool broadcastCommitReq4nl(PrepareReq4nl const& req);
     bool handleCommitMsg4nl(CommitReq4nl::Ptr commitReq, PBFTMsgPacket const& pbftMsg);
     bool checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx);
