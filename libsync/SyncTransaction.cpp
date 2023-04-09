@@ -101,6 +101,8 @@ void SyncTransaction::maintainTransactions4nl()
 }
 
 
+
+
 void SyncTransaction::maintainTransactions()
 {
     auto ts = m_txPool->topTransactionsCondition(c_maxSendTransactions, m_nodeId);
@@ -148,6 +150,41 @@ void SyncTransaction::sendTransactions(std::shared_ptr<Transactions> _ts,
         sendTxsStatus(_ts, selectedPeers);
     }
 }
+
+//Jason
+void SyncTransaction::sendTransactions4nl(std::shared_ptr<Transactions> _ts,
+    bool const& _fastForwardRemainTxs, int64_t const& _startIndex)
+{
+    std::shared_ptr<NodeIDs> selectedPeers;
+    std::shared_ptr<std::set<dev::h512>> peers = m_syncStatus->peersSet();
+    // fastforward remaining transactions
+    if (_fastForwardRemainTxs)
+    {
+        // copy m_fastForwardedNodes to selectedPeers in case of m_fastForwardedNodes changed
+        selectedPeers = std::make_shared<NodeIDs>();
+        *selectedPeers = *m_fastForwardedNodes;
+    }
+    else
+    {
+        // only broadcastTransactions to the consensus nodes
+        if (fp_txsReceiversFilter)
+        {
+            selectedPeers = fp_txsReceiversFilter(peers);
+        }
+        else
+        {
+            selectedPeers = m_syncStatus->peers();
+        }
+    }
+    broadcastTransactions(selectedPeers, _ts, _fastForwardRemainTxs, _startIndex);
+    if (!_fastForwardRemainTxs && m_running.load())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        sendTxsStatus(_ts, selectedPeers);
+    }
+}
+
+
 
 void SyncTransaction::broadcastTransactions(std::shared_ptr<NodeIDs> _selectedPeers,
     std::shared_ptr<Transactions> _ts, bool const& _fastForwardRemainTxs,
@@ -236,6 +273,96 @@ void SyncTransaction::broadcastTransactions(std::shared_ptr<NodeIDs> _selectedPe
         return true;
     });
 }
+
+void SyncTransaction::broadcastTransactions4nl
+(std::shared_ptr<NodeIDs> _selectedPeers,
+    std::shared_ptr<Transactions> _ts, bool const& _fastForwardRemainTxs,
+    int64_t const& _startIndex)
+{
+    unordered_map<NodeID, std::vector<size_t>> peerTransactions;
+    auto endIndex =
+        std::min((int64_t)(_startIndex + c_maxSendTransactions - 1), (int64_t)(_ts->size() - 1));
+
+    auto randomSelectedPeers = _selectedPeers;
+    bool randomSelectedPeersInited = false;
+    int64_t consIndex = 0;
+    if (m_treeRouter)
+    {
+        consIndex = m_treeRouter->consIndex();
+    }
+    for (ssize_t i = _startIndex; i <= endIndex; ++i)
+    {
+        auto t = (*_ts)[i];
+        NodeIDs peers;
+
+        int64_t selectSize = _selectedPeers->size();
+        // add redundancy when receive transactions from P2P
+        if ((!t->rpcTx() || t->isKnownBySomeone()) && !_fastForwardRemainTxs)
+        {
+            continue;
+        }
+        if (m_treeRouter && !randomSelectedPeersInited && !_fastForwardRemainTxs)
+        {
+            randomSelectedPeers =
+                m_treeRouter->selectNodes(m_syncStatus->peersSet(), consIndex, true);
+            randomSelectedPeersInited = true;
+        }
+        // the randomSelectedPeers is empty
+        if (randomSelectedPeers->size() == 0)
+        {
+            randomSelectedPeersInited = false;
+            continue;
+        }
+        peers = m_syncStatus->filterPeers(
+            selectSize, randomSelectedPeers, [&](std::shared_ptr<SyncPeerStatus> _p) {
+                bool unsent = !t->isTheNodeContainsTransaction(m_nodeId) || _fastForwardRemainTxs;
+                bool isSealer = _p->isSealer;
+                return isSealer && unsent && !t->isTheNodeContainsTransaction(_p->nodeId);
+            });
+
+        t->appendNodeContainsTransaction(m_nodeId);
+        if (0 == peers.size())
+            continue;
+        for (auto const& p : peers)
+        {
+            peerTransactions[p].push_back(i);
+            t->appendNodeContainsTransaction(p);
+        }
+    }
+
+    m_syncStatus->foreachPeerRandom([&](shared_ptr<SyncPeerStatus> _p) {
+        std::vector<bytes> txRLPs;
+        unsigned txsSize = peerTransactions[_p->nodeId].size();
+        if (0 == txsSize)
+            return true;  // No need to send
+
+        for (auto const& i : peerTransactions[_p->nodeId])
+        {
+            txRLPs.emplace_back((*_ts)[i]->rlp(WithSignature));
+        }
+
+
+        std::shared_ptr<SyncTransactionsPacket> packet = std::make_shared<SyncTransactionsPacket>();
+        if (m_treeRouter)
+        {
+            packet->encode(txRLPs, true, consIndex);
+        }
+        else
+        {
+            packet->encode(txRLPs);
+        }
+        auto msg = packet->toMessage(m_protocolId, (!_fastForwardRemainTxs));
+        m_service->asyncSendMessageByNodeID(_p->nodeId, msg, CallbackFuncWithSession(), Options());
+        SYNC_LOG(DEBUG) << LOG_BADGE("Tx") << LOG_DESC("Send transaction to peer")
+                        << LOG_KV("txNum", int(txsSize))
+                        << LOG_KV("fastForwardRemainTxs", _fastForwardRemainTxs)
+                        << LOG_KV("startIndex", _startIndex)
+                        << LOG_KV("toNodeId", _p->nodeId.abridged())
+                        << LOG_KV("messageSize(B)", msg->buffer()->size());
+        return true;
+    });
+}
+
 
 void SyncTransaction::forwardRemainingTxs()
 {
