@@ -339,7 +339,7 @@ int main() {
     //!!! 发送片内交易
     transactionInjectionTest test(rpcService, dev::consensus::internal_groupId
         ,dev::consensus::hiera_shard_number,ledgerManager,consensus::isShardLeader);
-    test.injectionIntraTxin1shards(2000);
+    test.injectionIntraTxin1shards(5300);
     while (true) {
         //节点主线程三秒一跳，不跳就宕机了
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));

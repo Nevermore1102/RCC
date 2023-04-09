@@ -87,6 +87,19 @@ void SyncTransaction::workLoop()
         }
     }
 }
+//Jason
+void SyncTransaction::maintainTransactions4nl()
+{
+    auto ts = m_txPool->topTransactionsCondition(c_maxSendTransactions, m_nodeId);
+    auto txSize = ts->size();
+    if (txSize == 0)
+    {
+        m_newTransactions = false;
+        return;
+    }
+    sendTransactions(ts, false, 0);
+}
+
 
 void SyncTransaction::maintainTransactions()
 {

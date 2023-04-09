@@ -373,6 +373,26 @@ public:
         return index;
     }
 
+
+    inline bool canPack(int totalNodeNum, int packNodeNum, int idx) {
+        
+        // // 使用当前时间作为随机数生成器的种子
+        // auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+        // std::default_random_engine generator(seed);
+        // std::uniform_int_distribution<int> distribution(1, totalNodeNum);
+
+        // // 随机选择打包节点
+        // std::set<int> packNodes;
+        // while (packNodes.size() < packNodeNum) {
+        //     int nodeIdx = distribution(generator);
+        //     packNodes.insert(nodeIdx);
+        // }
+
+        // // 判断当前节点是否为打包节点
+        // return packNodes.find(idx) != packNodes.end();
+        return idx<packNodeNum;
+    }
+
     h512 getforwardNodeId(int _index) // ADD BY THB
     {
         return dev::consensus::forwardNodeId[_index];
@@ -391,12 +411,12 @@ public:
     bool OnlyGenerateSignMsg4nl(
         PrepareReq4nl::Ptr _prepareReq, std::ostringstream& _oss);
     bool handleSignMsg4nl(SignReq4nl::Ptr signReq, PBFTMsgPacket const& pbftMsg);
-    void  checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself=false,int64_t sealingNodes=4);
+    void  checkAndCommit4nl(int64_t reqNum,int64_t node_idx,int64_t sealingNodes=4,bool byself=false);
     bool broadcastCommitReq4nl(PrepareReq4nl const& req);
     bool handleCommitMsg4nl(CommitReq4nl::Ptr commitReq, PBFTMsgPacket const& pbftMsg);
-    bool checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx);
-    bool checkSignAndCommitAll4nl(int64_t reqNum);
-    void checkAndSave4nl(int64_t reqNum,int64_t node_idx);
+    bool checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx,int64_t sealingNodes=4);
+    bool checkSignAndCommitAll4nl(int64_t reqNum,int64_t sealingNodes=4);
+    void checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealingNodes=4);
 
 protected:
     virtual void registerDisconnectHandler();

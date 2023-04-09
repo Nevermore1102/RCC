@@ -114,6 +114,8 @@ public:
     }
 
     void maintainTransactions();
+    //Jason
+    void maintainTransactions4nl();
     void maintainDownloadingTransactions();
     void setTxsStatusGossipMaxPeers(unsigned const& _txsStatusGossipMaxPeers)
     {

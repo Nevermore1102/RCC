@@ -50,6 +50,7 @@ using namespace dev::consensus;
  * */
 void Sealer::start()
 {
+    
     if (m_startConsensus)
     {
         SEAL_LOG(WARNING) << "[Sealer module has already been started]";
@@ -150,7 +151,8 @@ void Sealer::doWork(bool wait)
             {
                 m_syncTxPool = true;
             }
-            auto nodeSize = m_consensusEngine->consensusList().size();
+            // auto nodeSize = m_consensusEngine->consensusList().size();
+            int nodeSize = globalSealingNodes;
             // auto node_idx = consensus::node_idx;
      
             // 默认1000,是可变类型

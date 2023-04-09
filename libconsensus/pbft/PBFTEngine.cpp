@@ -57,6 +57,7 @@ namespace dev
 namespace consensus
 {
 int highestblockNumber = 0;
+int globalSealingNodes = 4;
 const std::string PBFTEngine::c_backupKeyCommitted = "committed";
 const std::string PBFTEngine::c_backupMsgDirName = "pbftMsgBackup/RocksDB";
 
@@ -1460,7 +1461,7 @@ bool PBFTEngine::OnlyGenerateSignMsg4nl(
     m_reqCache->addSignReq4nl(sign_req);
 
     // 触发check -- 可能落后，cache内已有签名包
-    checkAndCommit4nl(sign_req->height,sign_req->idx,true);
+    checkAndCommit4nl(sign_req->height,sign_req->idx,globalSealingNodes,true);
     // PBFTENGINE_LOG(INFO)<<LOG_KV("self randomnum end",randomnum);
 
     return succ;
@@ -1488,8 +1489,8 @@ bool PBFTEngine::handleSignMsg4nl(SignReq4nl::Ptr sign_req, PBFTMsgPacket const&
         << LOG_KV("view", m_view)
         << LOG_KV("fromIp", pbftMsg.endpoint); 
     m_reqCache->addSignReq4nl(sign_req);
-    checkAndCommit4nl(sign_req->height,sign_req->idx);
-    //Jason
+    checkAndCommit4nl(sign_req->height,sign_req->idx,globalSealingNodes);
+    //JasonC
     return true;
 }
 void PBFTEngine::addRawPrepare(PrepareReq::Ptr _prepareReq)
@@ -1708,7 +1709,7 @@ bool PBFTEngine::handleCommitMsg4nl(CommitReq4nl::Ptr commit_req, PBFTMsgPacket 
 // get size (hash)
 // if size==minValidNodeSize 触发commit逻辑 广播commit包
 //
-void PBFTEngine::checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself,int64_t sealingNodes)
+void PBFTEngine::checkAndCommit4nl(int64_t reqNum,int64_t node_idx,int64_t sealingNodes,bool byself)
 {
     // if(byself) PBFTENGINE_LOG(INFO)<<LOG_DESC("自己触发");
     auto minValidNodeSize = minValidNodes();
@@ -1747,13 +1748,13 @@ void PBFTEngine::checkAndCommit4nl(int64_t reqNum,int64_t node_idx,bool byself,i
 
         //check and save 
 
-        checkAndSave4nl(reqNum, node_idx);
+        checkAndSave4nl(reqNum, node_idx,globalSealingNodes);
     }
     return ;
 
 }
 //对一个pre包进行check,够票触发总的
-bool PBFTEngine::checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx)
+bool PBFTEngine::checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx,int64_t sealingNodes)
 {
     auto minValidNodeSize = minValidNodes();
     //get hash
@@ -1781,13 +1782,13 @@ bool PBFTEngine::checkSignAndCommitOnePre4nl(int64_t reqNum,int64_t node_idx)
     return false;
 }
 
-bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum)
+bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum,int64_t sealingNodes)
 {
 
-    // PBFTENGINE_LOG(INFO)<<LOG_KV("Total Node Num",m_nodeNum)
+    PBFTENGINE_LOG(INFO)<<LOG_KV("当前打包节点数目",sealingNodes);
     //                     <<LOG_KV("m_reqCache->prepareCache4nl().at(reqNum).size()",m_reqCache->prepareCache4nl().at(reqNum).size());
     // Jason 设计为收到所有prepare信息之后才可以save
-    if(m_reqCache->prepareCache4nl().at(reqNum).size()!=m_nodeNum){
+    if(m_reqCache->prepareCache4nl().at(reqNum).size()!= sealingNodes){
         return false;
     }
     //对于每个prepare信息,检查,但是此时有可能preparecache也是收集不全的.
@@ -1800,13 +1801,14 @@ bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum)
     return true;
 }
 
-void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
+void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealingNodes)
 {
+    int nodesNum = consensusList().size();
     auto start_commit_time = utcTime();
     auto record_time = utcTime();
-    if(checkSignAndCommitOnePre4nl(reqNum,node_idx))
+    if(checkSignAndCommitOnePre4nl(reqNum,node_idx,globalSealingNodes))
     {
-        if(!checkSignAndCommitAll4nl(reqNum)) {
+        if(!checkSignAndCommitAll4nl(reqNum,globalSealingNodes)) {
             return ;
         }
     }
@@ -1853,7 +1855,33 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
     
     dev::blockverifier::ExecutiveContext::Ptr exeContext4nl = executeBlock(*bigBlockfor4nl);
     // notifySealing4nl(*(bigBlockfor4nl));
-    m_notifyNextLeaderSeal = false;
+    if(reqNum<5){
+        m_notifyNextLeaderSeal = false;
+    }else if(reqNum>=5&&reqNum< 10){
+        if(canPack(nodesNum, 2, nodeIdx())){
+            m_notifyNextLeaderSeal = false;
+        }else{
+            m_notifyNextLeaderSeal = true;
+        }
+        globalSealingNodes=2;
+
+    }else if(reqNum>=10 && reqNum<15){
+        if(canPack(nodesNum, 3, nodeIdx())){
+            m_notifyNextLeaderSeal = false;
+        }else{
+            m_notifyNextLeaderSeal = true;
+        }
+        globalSealingNodes=3;
+
+    }else{
+        if(canPack(nodesNum, 1, nodeIdx())){
+            m_notifyNextLeaderSeal = false;
+        }else{
+            m_notifyNextLeaderSeal = true;
+        }
+        globalSealingNodes=1;
+
+    }
     PBFTENGINE_LOG(INFO)<<LOG_DESC("bigBlockfor4nl 执行区块结束,开始提交")
                         <<LOG_KV("exeContext4nl",exeContext4nl);
     CommitResult ret = m_blockChain->commitBlock(bigBlockfor4nl,std::shared_ptr<ExecutiveContext>(exeContext4nl));
@@ -1885,6 +1913,8 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx)
         //     << LOG_KV("dropTxsTimeCost", dropTxs_time_cost)
         //     << LOG_KV("noteSealingTimeCost", noteSealing_time_cost)
         //     << LOG_KV("totalTimeCost", utcTime() - start_commit_time);
+
+        //** 之前没有删除cache,导致持续打包.
         m_reqCache->delCache4nl(reqNum);
     }
     else
@@ -2094,9 +2124,10 @@ void PBFTEngine::reportBlockWithoutLock(Block const& block)
         }
         // 清除所有与prepareReq和signReq相关的缓存
         m_reqCache->delCache(m_highestBlock);
-        PBFTENGINE_LOG(INFO) << LOG_DESC("^^^^^^^^Report") << LOG_KV("num", m_highestBlock.number())
-                             << LOG_KV("sealerIdx", m_highestBlock.sealer())
+        PBFTENGINE_LOG(INFO) << LOG_DESC("^^^^^^^^Report") 
+                             << LOG_KV("num", m_highestBlock.number())
                              << LOG_KV("hash", m_highestBlock.hash().abridged())
+                             << LOG_KV("sealerIdx", m_highestBlock.sealer())
                              << LOG_KV("next", m_consensusBlockNumber)
                              << LOG_KV("txSize", block.getTransactionSize())
                              << LOG_KV("nodeIdx", nodeIdx());
