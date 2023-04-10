@@ -174,13 +174,13 @@ private:
     void broadcastTransactions(std::shared_ptr<dev::p2p::NodeIDs> _selectedPeers,
         std::shared_ptr<dev::eth::Transactions> _ts, bool const& _fastForwardRemainTxs,
         int64_t const& _startIndex);
-    void broadcastTransactions4nl(std::shared_ptr<dev::p2p::NodeIDs> _selectedPeers,
+    void broadcastTransactions4nl( const NodeID& _targetNodeId,
         std::shared_ptr<dev::eth::Transactions> _ts, bool const& _fastForwardRemainTxs,
         int64_t const& _startIndex);
     void sendTransactions(std::shared_ptr<dev::eth::Transactions> _ts,
         bool const& _fastForwardRemainTxs, int64_t const& _startIndex);
     void sendTransactions4nl(std::shared_ptr<dev::eth::Transactions> _ts,
-        bool const& _fastForwardRemainTxs, int64_t const& _startIndex);
+        bool const& _fastForwardRemainTxs, int64_t const& _startIndex, const NodeID& _targetNodeId);
     void sendTxsStatus(
         std::shared_ptr<dev::eth::Transactions> _txs, std::shared_ptr<NodeIDs> _selectedPeers);
 };

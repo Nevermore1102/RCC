@@ -166,11 +166,12 @@ void Sealer::doWork(bool wait)
                 //Jason
                 auto node_idx =global_node_idx;
                 // SEAL_LOG(INFO) << LOG_KV("consensus::global_node_idx",node_idx);
-                // loadTransactions(maxTxsPerBlock - tx_num);
-                loadTransactions4nl(maxTxsPerBlock - tx_num, nodeSize,node_idx);
+                loadTransactions(maxTxsPerBlock - tx_num);
+                // loadTransactions4nl(maxTxsPerBlock - tx_num, nodeSize,node_idx);
             }
             /// check enough or reach block interval
-            if (!checkTxsEnough4nl(maxTxsPerBlock))//只有返回true 才可以通过
+            // if (!checkTxsEnough4nl(maxTxsPerBlock))//只有返回true 才可以通过
+            if(!checkTxsEnough4nl(maxTxsPerBlock))
             {
                 //  SEAL_LOG(INFO)<<LOG_DESC("!checkTxsEnough4nl(maxTxsPerBlock)");
                 ///< 10 milliseconds to next loop

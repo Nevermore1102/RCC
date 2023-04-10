@@ -1835,9 +1835,9 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealing
                             <<LOG_KV("TransactionSize",prepareReq4nl->pBlock->getTransactionSize());
                 
         auto transactions = prepareReq4nl->pBlock->transactions();
-        // for(auto ele:*transactions){
-        //      PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele->hash().abridged());
-        // }
+        for(auto ele:*transactions){
+             PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele->hash().abridged());
+        }
         bigBlockfor4nl->appendTransactions(transactions);
         // if(p_block!=nullptr){
         //     PBFTENGINE_LOG(INFO)<<LOG_KV("Block Hash",p_block->blockHeaderHash().abridged())

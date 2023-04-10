@@ -1507,15 +1507,14 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
             //type为创建合约时该地址为0x0
             FixedHash<20> contractAddress;
             //不要log了
-            // RPC_LOG(INFO) << LOG_DESC("将随机交易投递到交易池")
-            //     //<< LOG_KV("signedData", _rlp)
-            //     //<< LOG_KV("txhash", tx->hash())
-            //     << LOG_KV("tx_nonce", tx->nonce());
+            RPC_LOG(INFO) << LOG_DESC("将随机交易投递到交易池")
+                            << LOG_KV("txhash", tx->hash().abridged());
+            // << LOG_KV("tx_nonce", tx->nonce());
             // <<LOG_KV("tx->receiveAddress()", tx->receiveAddress())
             // <<LOG_KV("is  contract tx?", tx->receiveAddress()==contractAddress?"true":"faslse");
-            //<< LOG_KV("_K", tx->data())
-            //<< LOG_KV("vrs", toHex(tx->vrs()->asBytes()))
-            //<< LOG_KV("_K", tx->data());
+            // << LOG_KV("_K", tx->data())
+            // << LOG_KV("vrs", toHex(tx->vrs()->asBytes()))
+            // << LOG_KV("_K", tx->data());
             // RPC_LOG(INFO) << LOG_DESC("解析交易")
             //             <<LOG_KV("v", tx->vrs().use_count())
             //             <<LOG_KV("r", tx->vrs()->r.abridged())
@@ -1551,8 +1550,8 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
             }
             //return toJS(ret.first);
             //Jason
-            // RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
-            //           <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
+            RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
+                      <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         }
 
     }

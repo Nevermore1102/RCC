@@ -147,6 +147,21 @@ public:
         } 
     }
 
+    uint whichBeSended(int node_count) {
+        u256 nonce = this->m_nonce;
+        std::array<uint8_t, 32> nonceBytes;
+        // toBigEndian(nonce, nonceBytes.begin());
+        toBigEndian(nonce, nonceBytes);
+        // Extract the last 4 bytes as an integer
+        uint32_t nonceInt = 0;
+        std::memcpy(&nonceInt, &nonceBytes[28], sizeof(nonceInt));
+        nonceInt = boost::endian::big_to_native(nonceInt);
+
+        int32_t nonceMod = nonceInt % node_count;
+
+        cpp_int nonceModBigInt(nonceMod);
+       return nonceMod;
+    }
 
     /// Constructs a transaction from the given RLP.
     explicit Transaction(bytesConstRef _rlp, CheckTransaction _checkSig);
