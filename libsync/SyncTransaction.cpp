@@ -164,6 +164,7 @@ void SyncTransaction::broadcastTransactions(std::shared_ptr<NodeIDs> _selectedPe
     int64_t consIndex = 0;
     if (m_treeRouter)
     {
+        SYNC_LOG(INFO) <<  LOG_DESC("使用treeRouter");
         consIndex = m_treeRouter->consIndex();
     }
     //对于每个节点
@@ -290,13 +291,18 @@ void SyncTransaction::maintainTransactions4nl()
             {
                 m_txPool->import(tx);
             }
-            SYNC_LOG(INFO) <<  LOG_DESC("如果交易分配给自己,插入交易池成功");
+            SYNC_LOG(INFO) <<  LOG_DESC("交易分配给自己,插入交易池成功");
         }
         else
         {
             // 向其他节点发送交易
             sendTransactions4nl(transactions, false, 0,nodeId);
-            SYNC_LOG(INFO) <<  LOG_DESC("向其他节点发送交易成功");
+            SYNC_LOG(INFO) <<  LOG_DESC("向其他节点发送交易成功,在本节点交易池中删除交易");
+            for (const auto& tx : *transactions)
+            {
+                m_txPool->drop(tx->hash());
+            }
+            SYNC_LOG(INFO) <<  LOG_DESC("已从交易池中删除发送给其他节点的交易");
         }
         
     }
@@ -405,7 +411,13 @@ void SyncTransaction::broadcastTransactions4nl
         }
 
         std::shared_ptr<SyncTransactionsPacket> packet = std::make_shared<SyncTransactionsPacket>();
-        packet->encode(txRLPs);
+        int64_t consIndex = 0;
+        if (m_treeRouter)
+        {
+            SYNC_LOG(INFO) <<  LOG_DESC("使用treeRouter");
+            consIndex = m_treeRouter->consIndex();
+        }
+        packet->encode(txRLPs, true, consIndex);
         auto msg = packet->toMessage(m_protocolId, (!_fastForwardRemainTxs));
         m_service->asyncSendMessageByNodeID(_p->nodeId, msg, CallbackFuncWithSession(), Options());
         SYNC_LOG(INFO) << LOG_BADGE("Tx") << LOG_DESC("Send transaction to peer")

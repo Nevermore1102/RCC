@@ -20,6 +20,7 @@
  */
 
 #include "RLP.h"
+#include "libdevcore/Log.h"
 using namespace std;
 using namespace dev;
 
@@ -132,14 +133,19 @@ size_t RLP::actualSize() const
 
 void RLP::requireGood() const
 {
-    if (isNull())
+    if (isNull()){
+        LOG(INFO)<<LOG_DESC("isNull()");
         BOOST_THROW_EXCEPTION(BadRLP());
+    }
     byte n = m_data[0];
     if (n != c_rlpDataImmLenStart + 1)
         return;
-    if (m_data.size() < 2)
+    if (m_data.size() < 2){
+        LOG(INFO)<<LOG_DESC("m_data.size() < 2");
         BOOST_THROW_EXCEPTION(BadRLP());
+    }
     if (m_data[1] < c_rlpDataImmLenStart)
+        LOG(INFO)<<LOG_DESC("m_data[1] < c_rlpDataImmLenStart");
         BOOST_THROW_EXCEPTION(BadRLP());
 }
 

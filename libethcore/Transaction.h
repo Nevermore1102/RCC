@@ -18,6 +18,7 @@
 #pragma once
 
 #include "TransactionReceipt.h"
+#include "libdevcore/Common.h"
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/RLP.h>
@@ -31,7 +32,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
-
+#include <cstdint>
 using namespace boost::multiprecision;
 namespace dev
 {
@@ -148,19 +149,13 @@ public:
     }
 
     uint whichBeSended(int node_count) {
-        u256 nonce = this->m_nonce;
-        std::array<uint8_t, 32> nonceBytes;
-        // toBigEndian(nonce, nonceBytes.begin());
-        toBigEndian(nonce, nonceBytes);
-        // Extract the last 4 bytes as an integer
-        uint32_t nonceInt = 0;
-        std::memcpy(&nonceInt, &nonceBytes[28], sizeof(nonceInt));
-        nonceInt = boost::endian::big_to_native(nonceInt);
+        auto hash = this->hash();
 
-        int32_t nonceMod = nonceInt % node_count;
+        uint64_t hash_prefix;
+        memcpy(&hash_prefix, hash.data(), 8); // 将哈希值的前8个字节复制到hash_prefix中
 
-        cpp_int nonceModBigInt(nonceMod);
-       return nonceMod;
+        size_t targetNodeIndex = static_cast<size_t>(hash_prefix % node_count);
+        return targetNodeIndex;
     }
 
     /// Constructs a transaction from the given RLP.
