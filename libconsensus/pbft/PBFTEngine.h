@@ -393,6 +393,34 @@ public:
         return idx<packNodeNum;
     }
 
+    inline std::vector<int> getSealingList(int packNodeNum, int reqNum) {
+        std::vector<int> packNodes;
+
+        // 计算标识值
+        int identifier = reqNum % packNodeNum;
+
+        // 从标识值开始，将接下来的 packNodeNum 个节点加入打包节点列表
+        for (int i = 0; i < packNodeNum; ++i) {
+            int nodeIndex = (identifier + i) % packNodeNum;
+            packNodes.push_back(nodeIndex);
+        }
+        PBFTENGINE_LOG(INFO)<<LOG_DESC("打印下一轮打包节点")
+                            <<LOG_KV("当前节点",nodeIdx());
+        
+        for (int i = 0;i<packNodeNum;++i){
+            PBFTENGINE_LOG(INFO) << LOG_KV("打包节点",packNodes[i]);
+        }
+                        
+        return packNodes;
+    }
+    bool isCurrentNodeInPackNodes(int currentNodeId, const std::vector<int>& packNodes) {
+    // 使用 std::find 在 packNodes 中查找 currentNodeId
+    auto it = std::find(packNodes.begin(), packNodes.end(), currentNodeId);
+
+    // 如果找到 currentNodeId，则返回 true；否则返回 false
+    return it != packNodes.end();
+}
+
     h512 getforwardNodeId(int _index) // ADD BY THB
     {
         return dev::consensus::forwardNodeId[_index];

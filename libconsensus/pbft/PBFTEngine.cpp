@@ -58,6 +58,8 @@ namespace consensus
 {
 int highestblockNumber = 0;
 int globalSealingNodes = 4;
+vector<int>  globalSealingNodesList = {0,1,2,3};
+
 const std::string PBFTEngine::c_backupKeyCommitted = "committed";
 const std::string PBFTEngine::c_backupMsgDirName = "pbftMsgBackup/RocksDB";
 
@@ -1857,30 +1859,34 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealing
     // notifySealing4nl(*(bigBlockfor4nl));
     if(reqNum<5){
         m_notifyNextLeaderSeal = false;
-    }else if(reqNum>=5&&reqNum< 10){
-        if(canPack(nodesNum, 2, nodeIdx())){
-            m_notifyNextLeaderSeal = false;
-        }else{
-            m_notifyNextLeaderSeal = true;
-        }
+    }else if(reqNum>=5&&reqNum< 10){ 
         globalSealingNodes=2;
-
-    }else if(reqNum>=10 && reqNum<15){
-        if(canPack(nodesNum, 3, nodeIdx())){
+        globalSealingNodesList = getSealingList(2,reqNum);
+        bool isPacker = isCurrentNodeInPackNodes(nodeIdx(), globalSealingNodesList);
+        if (isPacker) {
             m_notifyNextLeaderSeal = false;
-        }else{
-            m_notifyNextLeaderSeal = true;
+        } else {
+             m_notifyNextLeaderSeal = true;
         }
+    }else if(reqNum>=10 && reqNum<15){ 
         globalSealingNodes=3;
+        globalSealingNodesList = getSealingList(3,reqNum);
+        bool isPacker = isCurrentNodeInPackNodes(nodeIdx(), globalSealingNodesList);
+        if (isPacker) {
+            m_notifyNextLeaderSeal = false;
+        } else {
+             m_notifyNextLeaderSeal = true;
+        }
 
     }else{
-        if(canPack(nodesNum, 1, nodeIdx())){
-            m_notifyNextLeaderSeal = false;
-        }else{
-            m_notifyNextLeaderSeal = true;
-        }
         globalSealingNodes=1;
-
+        globalSealingNodesList = getSealingList(1,reqNum);
+        bool isPacker = isCurrentNodeInPackNodes(nodeIdx(), globalSealingNodesList);
+        if (isPacker) {
+            m_notifyNextLeaderSeal = false;
+        } else {
+             m_notifyNextLeaderSeal = true;
+        }
     }
     PBFTENGINE_LOG(INFO)<<LOG_DESC("bigBlockfor4nl 执行区块结束,开始提交")
                         <<LOG_KV("exeContext4nl",exeContext4nl);
