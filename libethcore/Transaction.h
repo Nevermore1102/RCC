@@ -95,7 +95,8 @@ public:
         m_groupId(_groupId)
     {
         std::random_device rd;
-        generator_ = std::mt19937(rd());
+        firstTransfer = false;
+        secondTransfer = false;
     }
 
     /// Constructs an unsigned contract-creation transaction.
@@ -113,7 +114,8 @@ public:
         m_groupId(_groupId)
     {
         std::random_device rd;
-        generator_ = std::mt19937(rd());
+        firstTransfer = false;
+        secondTransfer = false;
     }
     //Jason
     /*
@@ -148,14 +150,14 @@ public:
         } 
     }
 
-    uint whichBeSended(int node_count) {
+    uint whichBeSended(const std::vector<int>& node_indices) {
         auto hash = this->hash();
 
         uint64_t hash_prefix;
         memcpy(&hash_prefix, hash.data(), 8); // 将哈希值的前8个字节复制到hash_prefix中
 
-        size_t targetNodeIndex = static_cast<size_t>(hash_prefix % node_count);
-        return targetNodeIndex;
+        size_t targetNodeIndex = static_cast<size_t>(hash_prefix % node_indices.size());
+        return node_indices[targetNodeIndex];
     }
 
     /// Constructs a transaction from the given RLP.
@@ -427,7 +429,8 @@ public:
     std::shared_ptr<crypto::Signature> m_vrs; // modifty by thb
     
     h256 original_hash; // modifty by thb
-
+    bool firstTransfer;
+    bool secondTransfer;
 protected:
     static bool isZeroSignature(u256 const& _r, u256 const& _s) { return !_r && !_s; }
     std::mt19937 generator_;
@@ -459,6 +462,7 @@ protected:
                    ///< unused gas gets refunded once the contract is ended.
     bytes m_data;  ///< The data associated with the transaction, or the
                    ///< initialiser if it's a creation transaction.
+   
     // std::shared_ptr<crypto::Signature> m_vrs;  ///< The signature of the transaction.
                                                ///< Encodes the sender.
     mutable h256 m_hashWith;                   ///< Cached hash of transaction with signature.

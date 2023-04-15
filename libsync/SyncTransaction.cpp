@@ -164,7 +164,7 @@ void SyncTransaction::broadcastTransactions(std::shared_ptr<NodeIDs> _selectedPe
     int64_t consIndex = 0;
     if (m_treeRouter)
     {
-        SYNC_LOG(INFO) <<  LOG_DESC("使用treeRouter");
+        // SYNC_LOG(INFO) <<  LOG_DESC("使用treeRouter");
         consIndex = m_treeRouter->consIndex();
     }
     //对于每个节点
@@ -253,118 +253,175 @@ void SyncTransaction::maintainTransactions4nl()
         return;
     }
      // 分配交易给不同节点
-    std::unordered_map<NodeID, std::shared_ptr<Transactions>> transactionsByNode;
-    // SYNC_LOG(INFO) << LOG_KV("consensus::globalSealingNodes",consensus::globalSealingNodes)
+    std::unordered_map<NodeID, std::shared_ptr<Transactions>> transactionsByAllNode;
+    // SYNC_LOG(INFO) << LOG_KV("consensus::m_sealerList",4)
     //                 << LOG_KV("tx size",ts->size());
     for (const auto& tx : *ts)
     {
-        auto targetNodeIndex = tx->whichBeSended(consensus::globalSealingNodes);
+        tx->firstTransfer = true;
+        auto targetNodeIndex = tx->whichBeSended({0,1,2,3});//先hardcode一下
         // SYNC_LOG(INFO) <<  LOG_DESC("在maintainTransactions4nl确定发送给哪个节点")
         //                 << LOG_KV("tx hash",tx->hash().abridged())
         //                 << LOG_KV("targetNodeIndex",targetNodeIndex);
 
         const NodeID targetNodeId = m_blockChain->sealerList().at(targetNodeIndex);
         // SYNC_LOG(INFO) <<  LOG_DESC("targetNodeId获取成功");
-        if (transactionsByNode.find(targetNodeId) == transactionsByNode.end())
+        if (transactionsByAllNode.find(targetNodeId) == transactionsByAllNode.end())
         {
-            transactionsByNode[targetNodeId] = std::make_shared<Transactions>();
+            transactionsByAllNode[targetNodeId] = std::make_shared<Transactions>();
         }
-        transactionsByNode[targetNodeId]->emplace_back(tx);
+        transactionsByAllNode[targetNodeId]->emplace_back(tx);
         //  SYNC_LOG(INFO) <<  LOG_DESC("tx加入成功");
     }
 
     // TODO 向每个节点发送分配给它们的交易
     // In SyncTransaction::maintainTransactions4nl 
-    // SYNC_LOG(INFO) <<  LOG_DESC("向每个节点发送分配给它们的交易");
+    // SYNC_LOG(INFO) <<  LOG_DESC("第一次转发,向每个节点发送分配给它们的交易,用于统计负载");
 
-    for (const auto& entry : transactionsByNode)
+    for (const auto& entry : transactionsByAllNode)
     {
 
         const NodeID& nodeId = entry.first;
         const std::shared_ptr<Transactions>& transactions = entry.second;
         // SYNC_LOG(INFO) <<  LOG_KV("nodeId",nodeId.abridged())
-                        // << LOG_KV("tx size ", transactions->size());
+        //                 << LOG_KV("tx size ", transactions->size());
         if (nodeId == m_nodeId) // 如果交易分配给自己
         {
-            // 将交易插入交易池
-            for (const auto& tx : *transactions)
-            {
-                m_txPool->import(tx);
-            }
-            // SYNC_LOG(INFO) <<  LOG_DESC("交易分配给自己,插入交易池成功");
+            // TODO 统计自己的负载
+             SYNC_LOG(INFO) <<  LOG_DESC("在分配阶段,自己负载+1");
+             for(auto tx:*transactions){
+                 m_processedFirstTransferHashes.insert(tx->hash());
+                 consensus::load = m_processedFirstTransferHashes.size();
+             }
         }
         else
         {
             // 向其他节点发送交易
             sendTransactions4nl(transactions, false, 0,nodeId);
-            // SYNC_LOG(INFO) <<  LOG_DESC("向其他节点发送交易成功,在本节点交易池中删除交易");
-            for (const auto& tx : *transactions)
-            {
-                m_txPool->drop(tx->hash());
-            }
-            // SYNC_LOG(INFO) <<  LOG_DESC("已从交易池中删除发送给其他节点的交易");
         }
         
     }
+     //TODO 第一次转发结束后，重新分配交易并向每个共识节点发送分配给它们的交易
+    SYNC_LOG(INFO) << LOG_DESC("重新分配交易并向每个共识节点发送分配给它们的交易");
+    std::unordered_map<NodeID, std::shared_ptr<Transactions>> transactionsByConsensusNode;
+
+    for (const auto& tx : *ts)
+        {
+            tx->secondTransfer = true;
+            int targetNodeIndex = tx->whichBeSended(consensus::globalSealingNodesList);
+            SYNC_LOG(INFO) <<  LOG_DESC("在maintainTransactions4nl确定发送给哪个节点")
+                        << LOG_KV("tx hash",tx->hash().abridged())
+                        << LOG_KV("targetNodeIndex",targetNodeIndex);
+            const NodeID targetNodeId =  m_blockChain->sealerList().at(targetNodeIndex);
+
+            if (transactionsByConsensusNode.find(targetNodeId) == transactionsByConsensusNode.end())
+            {
+                transactionsByConsensusNode[targetNodeId] = std::make_shared<Transactions>();
+            }
+            transactionsByConsensusNode[targetNodeId]->emplace_back(tx);
+        }
+
+        // 向每个共识节点发送分配给它们的交易
+        for (const auto& entry : transactionsByConsensusNode)
+        {
+            const NodeID& nodeId = entry.first;
+            const std::shared_ptr<Transactions>& transactions = entry.second;
+            SYNC_LOG(INFO) <<  LOG_DESC("第二次转发")
+                            << LOG_KV("nodeId",nodeId.abridged())
+                            << LOG_KV("tx size",transactions->size());
+            if (nodeId == m_nodeId) // 如果交易分配给自己
+            {
+                // 将交易插入交易池
+                for (const auto& tx : *transactions)
+                {
+                    m_txPool->import(tx);
+                }
+                SYNC_LOG(INFO) <<  LOG_DESC("交易分配给自己,插入交易池成功");
+            }else{
+                sendTransactionsForConsesusNode(transactions, false, 0,nodeId);
+                SYNC_LOG(INFO) <<  LOG_DESC("第二次转发向其他节点发送交易成功,在本节点交易池中删除交易");     
+                for (const auto& tx : *transactions)
+                    {
+                        m_txPool->drop(tx->hash());
+                    } 
+                }
+        }
 }
 
 
-//Jason
+// Jason
 void SyncTransaction::sendTransactions4nl(std::shared_ptr<Transactions> _ts,
     bool const& _fastForwardRemainTxs, int64_t const& _startIndex,
-    const NodeID& _targetNodeId  = dev::h512())
+    const NodeID& _targetNodeId = dev::h512())
 {
-    std::shared_ptr<NodeIDs> selectedPeers;
+    std::shared_ptr<NodeIDs> selectedPeers = std::make_shared<NodeIDs>();
     std::shared_ptr<std::set<dev::h512>> peers = m_syncStatus->peersSet();
-    // fastforward remaining transactions
-    if (_fastForwardRemainTxs)//默认为false
-    {
 
-        // copy m_fastForwardedNodes to selectedPeers in case of m_fastForwardedNodes changed
-        selectedPeers = std::make_shared<NodeIDs>();
+    // Fast-forward remaining transactions
+    if (_fastForwardRemainTxs) // 默认为false
+    {
+        // Copy m_fastForwardedNodes to selectedPeers in case of m_fastForwardedNodes changed
         *selectedPeers = *m_fastForwardedNodes;
     }
     else
     {
-        // only broadcastTransactions to the consensus nodes
+        // Only broadcastTransactions to the consensus nodes
         if (fp_txsReceiversFilter)
         {
-
-
-            // SYNC_LOG(INFO) <<  LOG_DESC("fp_txsReceiversFilter 不为null");
-            // selectedPeers = fp_txsReceiversFilter(peers);
+            // TODO: 这里添加您的代码以处理fp_txsReceiversFilter为真的情况
         }
         else
         {
-            // selectedPeers = m_syncStatus->peers();
-            //  selectedPeers = std::make_shared<NodeIDs>();
-
+            // TODO: 这里添加您的代码以处理fp_txsReceiversFilter为假的情况
         }
-
     }
-    selectedPeers = std::make_shared<NodeIDs>();
-    // SYNC_LOG(INFO) <<  LOG_DESC("打印未添加转发目标节点");
-    // for(auto peer : *selectedPeers){
-    //      SYNC_LOG(INFO) <<  LOG_KV("peer",peer.abridged());
-    // }
-    //TODO 传递目标节点ID以及要发送的交易。
 
+    // 如果传递了目标节点ID，则将其添加到要发送的节点列表中
     if (_targetNodeId != dev::h512())
     {
-
         selectedPeers->emplace_back(_targetNodeId);
     }
-    // SYNC_LOG(INFO) <<  LOG_DESC("打印需要添加的目标节点之后")
-                    // <<  LOG_KV("peer",_targetNodeId.abridged());
+    // SYNC_LOG(INFO) << LOG_DESC("打印需要添加的目标节点之后")
+    //                << LOG_KV("peer", _targetNodeId.abridged());
 
     broadcastTransactions4nl(_targetNodeId, _ts, _fastForwardRemainTxs, _startIndex);
-    // if (!_fastForwardRemainTxs && m_running.load())
-    // {
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    //     sendTxsStatus(_ts, selectedPeers);
-    // }
 }
 
+// Jason
+void SyncTransaction::sendTransactionsForConsesusNode(std::shared_ptr<Transactions> _ts,
+    bool const& _fastForwardRemainTxs, int64_t const& _startIndex,
+    const NodeID& _targetNodeId = dev::h512())
+{
+    std::shared_ptr<NodeIDs> selectedPeers = std::make_shared<NodeIDs>();
+    std::shared_ptr<std::set<dev::h512>> peers = m_syncStatus->peersSet();
+
+    // Fast-forward remaining transactions
+    if (_fastForwardRemainTxs) // 默认为false
+    {
+        // Copy m_fastForwardedNodes to selectedPeers in case of m_fastForwardedNodes changed
+        *selectedPeers = *m_fastForwardedNodes;
+    }
+    else
+    {
+        // Only broadcastTransactions to the consensus nodes
+        if (fp_txsReceiversFilter)
+        {
+            // TODO: 这里添加您的代码以处理fp_txsReceiversFilter为真的情况
+        }
+        else
+        {
+            // TODO: 这里添加您的代码以处理fp_txsReceiversFilter为假的情况
+        }
+    }
+
+    // 如果传递了目标节点ID，则将其添加到要发送的节点列表中
+    if (_targetNodeId != dev::h512())
+    {
+        selectedPeers->emplace_back(_targetNodeId);
+    }
+
+    broadcastTransactionsForConsensusNode(_targetNodeId, _ts, _fastForwardRemainTxs, _startIndex);
+}
 
 
 
@@ -386,10 +443,9 @@ void SyncTransaction::broadcastTransactions4nl
             // add redundancy when receive transactions from P2P
             if ((!t->rpcTx() || t->isKnownBySomeone()) && !_fastForwardRemainTxs)
             {
-                continue;
+                if(t->secondTransfer==false)
+                    continue;
             }
-           
-          
             //对方将获得当前交易的hash
             t->appendNodeContainsTransaction(_targetNodeId);
             peerTransactions[_targetNodeId].push_back(i);
@@ -404,6 +460,7 @@ void SyncTransaction::broadcastTransactions4nl
         //                 << LOG_KV("txSize",txsSize); 
         if (0 == txsSize)
             return true;  // No need to send
+
 
         for (auto const& i : peerTransactions[_p->nodeId])
         {
@@ -426,6 +483,74 @@ void SyncTransaction::broadcastTransactions4nl
         //                 << LOG_KV("startIndex", _startIndex)
         //                 << LOG_KV("toNodeId", _p->nodeId.abridged())
         //                 << LOG_KV("messageSize(B)", msg->buffer()->size());
+        return true;
+        });
+}
+
+//Jason
+void SyncTransaction::broadcastTransactionsForConsensusNode
+(const NodeID& _targetNodeId,
+    std::shared_ptr<Transactions> _ts, bool const& _fastForwardRemainTxs,
+    int64_t const& _startIndex)
+    {   
+        //peerTransactions 将存储每个节点（NodeID）需要接收的交易索引列表。
+        unordered_map<NodeID, std::vector<size_t>> peerTransactions;
+        auto endIndex =
+        std::min((int64_t)(_startIndex + c_maxSendTransactions - 1), (int64_t)(_ts->size() - 1));
+        for (ssize_t i = _startIndex; i <= endIndex; ++i)
+        {
+            auto t = (*_ts)[i];
+            NodeIDs peers;
+            
+            // add redundancy when receive transactions from P2P
+            if ((!t->rpcTx() || t->isKnownBySomeone()) && !_fastForwardRemainTxs)
+            {
+
+                if(t->secondTransfer==false){
+                    SYNC_LOG(INFO) << LOG_DESC("不通过判断,t->secondTransfer==false")
+                               << LOG_KV("!t->rpcTx()",!t->rpcTx())
+                               << LOG_KV("t->isKnownBySomeone()",t->isKnownBySomeone());
+                    continue;
+                }
+            }
+            SYNC_LOG(INFO) << LOG_DESC("通过判断");
+            //对方将获得当前交易的hash
+            t->appendNodeContainsTransaction(_targetNodeId);
+            peerTransactions[_targetNodeId].push_back(i);
+        }
+
+
+        m_syncStatus->foreachPeerRandom([&](shared_ptr<SyncPeerStatus> _p) {
+        std::vector<bytes> txRLPs;
+        unsigned txsSize = peerTransactions[_p->nodeId].size();
+         SYNC_LOG(INFO) << LOG_DESC("broadcastTransactionsForConsensusNode中的foreachPeerRandom")
+                        << LOG_KV("_p.nodeId",_p->nodeId.abridged())
+                        << LOG_KV("txSize",txsSize); 
+        if (0 == txsSize)
+            return true;  // No need to send
+
+    
+        for (auto const& i : peerTransactions[_p->nodeId])
+        {
+            txRLPs.emplace_back((*_ts)[i]->rlp(WithSignature));
+        }
+
+        std::shared_ptr<SyncTransactionsPacket> packet = std::make_shared<SyncTransactionsPacket>();
+        int64_t consIndex = 0;
+        if (m_treeRouter)
+        {
+            // SYNC_LOG(INFO) <<  LOG_DESC("使用treeRouter");
+            consIndex = m_treeRouter->consIndex();
+        }
+        packet->encode(txRLPs, true, consIndex);
+        auto msg = packet->toMessage(m_protocolId, (!_fastForwardRemainTxs));
+        m_service->asyncSendMessageByNodeID(_p->nodeId, msg, CallbackFuncWithSession(), Options());
+        SYNC_LOG(INFO) << LOG_BADGE("Tx") << LOG_DESC("Send transaction to peer")
+                        << LOG_KV("txNum", int(txsSize))
+                        << LOG_KV("fastForwardRemainTxs", _fastForwardRemainTxs)
+                        << LOG_KV("startIndex", _startIndex)
+                        << LOG_KV("toNodeId", _p->nodeId.abridged())
+                        << LOG_KV("messageSize(B)", msg->buffer()->size());
         return true;
         });
 }

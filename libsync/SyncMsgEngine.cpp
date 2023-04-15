@@ -251,7 +251,8 @@ void SyncMsgEngine::onPeerTransactions(SyncMsgPacket::Ptr _packet, dev::p2p::P2P
                                    << LOG_KV("fromNodeId", _packet->nodeId.abridged());
             return;
         }
-        m_txQueue->push(_packet, _msg, _packet->nodeId);
+        //Jason
+        m_txQueue->push4nl(_packet, _msg, _packet->nodeId);
         if (m_onNotifySyncTrans)
         {
             m_onNotifySyncTrans();

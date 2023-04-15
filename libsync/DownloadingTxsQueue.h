@@ -24,6 +24,7 @@
 #include "Common.h"
 #include "SyncMsgPacket.h"
 #include "SyncStatus.h"
+#include "libdevcore/FixedHash.h"
 #include <libdevcore/Guards.h>
 #include <libdevcore/TreeTopology.h>
 #include <libethcore/Transaction.h>
@@ -66,6 +67,12 @@ public:
     void pop2TxPool(std::shared_ptr<dev::txpool::TxPoolInterface> _txPool,
         dev::eth::CheckTransaction _checkSig = dev::eth::CheckTransaction::None);
 
+     void push4nl(SyncMsgPacket::Ptr _packet, dev::p2p::P2PMessage::Ptr _msg, NodeID const& _fromPeer);
+
+    // pop all queue into tx pool
+    void pop2TxPool4nl(std::shared_ptr<dev::txpool::TxPoolInterface> _txPool,
+        dev::eth::CheckTransaction _checkSig = dev::eth::CheckTransaction::None);
+
     ssize_t bufferSize() const
     {
         ReadGuard l(x_buffer);
@@ -89,6 +96,7 @@ public:
     {
         m_needImportToTxPool = _needImportToTxPool;
     }
+// std::unordered_set<dev::h256> m_processedFirstTransferHashes;
 
 private:
     NodeID m_nodeId;

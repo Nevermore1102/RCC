@@ -86,6 +86,12 @@ namespace dev {
 }
 
 namespace dev {
+    namespace sync {
+        std::unordered_set<dev::h256> m_processedFirstTransferHashes = {};
+    }
+}
+    
+namespace dev {
     namespace blockverifier{
     }
 }
@@ -336,10 +342,12 @@ int main() {
 
 //     PLUGIN_LOG(INFO) << LOG_DESC("开始注入交易...");
     // injectTransactions(rpcService, ledgerManager);
+    
+
     //!!! 发送片内交易
     transactionInjectionTest test(rpcService, dev::consensus::internal_groupId
         ,dev::consensus::hiera_shard_number,ledgerManager,consensus::isShardLeader);
-    test.injectionIntraTxin1shards(4100);
+    test.injectionIntraTxin1shards(10);
     while (true) {
         //节点主线程三秒一跳，不跳就宕机了
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));

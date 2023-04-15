@@ -36,6 +36,8 @@ namespace consensus
 extern int global_node_idx; 
 extern int highestblockNumber;
 extern int globalSealingNodes;
+extern int load;
+extern vector<int> historyLoadList;
 extern vector<int> globalSealingNodesList;
 
 typedef uint16_t IDXTYPE;

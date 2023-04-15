@@ -57,6 +57,8 @@ namespace dev
 namespace consensus
 {
 int highestblockNumber = 0;
+int load = 0;
+vector<int>  historyLoadList = {0};
 int globalSealingNodes = 4;
 vector<int>  globalSealingNodesList = {0,1,2,3};
 
@@ -1805,6 +1807,7 @@ bool PBFTEngine::checkSignAndCommitAll4nl(int64_t reqNum,int64_t sealingNodes)
 
 void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealingNodes)
 {
+
     int nodesNum = consensusList().size();
     auto start_commit_time = utcTime();
     auto record_time = utcTime();
@@ -1818,7 +1821,9 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealing
         return ;
     }
     //进入save逻辑 该轮次票已收齐；
-    PBFTENGINE_LOG(INFO)<<LOG_DESC("进入save逻辑 该轮次票已收齐；");
+    PBFTENGINE_LOG(INFO)<<LOG_DESC("进入save逻辑 该轮次票已收齐")
+                        << LOG_KV("当前节点load",load);
+
     //1. 四块合一 2.执行 3. 存储 4. 更新状态让打包节点继续打包
     //TODO 四块合一
     dev::eth::Block::Ptr bigBlockfor4nl = m_blockFactory->createBlock();
@@ -1837,9 +1842,9 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealing
                             <<LOG_KV("TransactionSize",prepareReq4nl->pBlock->getTransactionSize());
                 
         auto transactions = prepareReq4nl->pBlock->transactions();
-        // for(auto ele:*transactions){
-        //      PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele->hash().abridged());
-        // }
+        for(auto ele:*transactions){
+             PBFTENGINE_LOG(INFO)<<LOG_KV("ele",ele->hash().abridged());
+        }
         bigBlockfor4nl->appendTransactions(transactions);
         // if(p_block!=nullptr){
         //     PBFTENGINE_LOG(INFO)<<LOG_KV("Block Hash",p_block->blockHeaderHash().abridged())
@@ -1857,9 +1862,9 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealing
     
     dev::blockverifier::ExecutiveContext::Ptr exeContext4nl = executeBlock(*bigBlockfor4nl);
     // notifySealing4nl(*(bigBlockfor4nl));
-    if(reqNum<5){
+    if(reqNum<3){
         m_notifyNextLeaderSeal = false;
-    }else if(reqNum>=5&&reqNum< 10){ 
+    }else if(reqNum>=3&&reqNum< 6){ 
         globalSealingNodes=2;
         globalSealingNodesList = getSealingList(2,reqNum);
         bool isPacker = isCurrentNodeInPackNodes(nodeIdx(), globalSealingNodesList);
@@ -1868,7 +1873,7 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealing
         } else {
              m_notifyNextLeaderSeal = true;
         }
-    }else if(reqNum>=10 && reqNum<15){ 
+    }else if(reqNum>=6 && reqNum<10){ 
         globalSealingNodes=3;
         globalSealingNodesList = getSealingList(3,reqNum);
         bool isPacker = isCurrentNodeInPackNodes(nodeIdx(), globalSealingNodesList);
@@ -1903,6 +1908,8 @@ void PBFTEngine::checkAndSave4nl(int64_t reqNum,int64_t node_idx,int64_t sealing
         PBFTENGINE_LOG(INFO) << LOG_DESC("删除交易信息bigBlockfor4nl");
         dropHandledTransactions(bigBlockfor4nl);
         PBFTENGINE_LOG(INFO) << LOG_KV("删除后 txpool size",m_txPool->pendingSize());
+        historyLoadList.push_back(load);
+        load = 0;
 
         // auto dropTxs_time_cost = utcTime() - record_time;
         // record_time = utcTime();

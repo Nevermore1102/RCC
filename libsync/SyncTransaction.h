@@ -177,9 +177,14 @@ private:
     void broadcastTransactions4nl( const NodeID& _targetNodeId,
         std::shared_ptr<dev::eth::Transactions> _ts, bool const& _fastForwardRemainTxs,
         int64_t const& _startIndex);
+    void broadcastTransactionsForConsensusNode( const NodeID& _targetNodeId,
+        std::shared_ptr<dev::eth::Transactions> _ts, bool const& _fastForwardRemainTxs,
+        int64_t const& _startIndex);
     void sendTransactions(std::shared_ptr<dev::eth::Transactions> _ts,
         bool const& _fastForwardRemainTxs, int64_t const& _startIndex);
     void sendTransactions4nl(std::shared_ptr<dev::eth::Transactions> _ts,
+        bool const& _fastForwardRemainTxs, int64_t const& _startIndex, const NodeID& _targetNodeId);
+    void sendTransactionsForConsesusNode(std::shared_ptr<dev::eth::Transactions> _ts,
         bool const& _fastForwardRemainTxs, int64_t const& _startIndex, const NodeID& _targetNodeId);
     void sendTxsStatus(
         std::shared_ptr<dev::eth::Transactions> _txs, std::shared_ptr<NodeIDs> _selectedPeers);

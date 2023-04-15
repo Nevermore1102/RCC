@@ -39,8 +39,11 @@
 
 namespace dev
 {
+    
 namespace sync
 {
+extern  std::unordered_set<dev::h256> m_processedFirstTransferHashes;
+
 DEV_SIMPLE_EXCEPTION(SyncVerifyHandlerNotSet);
 DEV_SIMPLE_EXCEPTION(InValidSyncPacket);
 // Every downloading request timeout request:

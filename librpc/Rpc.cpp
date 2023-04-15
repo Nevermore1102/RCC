@@ -21,6 +21,7 @@
 
 #include "Rpc.h"
 #include "JsonHelper.h"
+#include "libconsensus/Common.h"
 #include "libnetwork/ASIOInterface.h"
 #include <jsonrpccpp/common/exception.h>
 #include <jsonrpccpp/server.h>

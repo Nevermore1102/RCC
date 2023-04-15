@@ -21,6 +21,7 @@
  */
 
 #include "DownloadingTxsQueue.h"
+#include "libconsensus/Common.h"
 #include <tbb/parallel_for.h>
 
 using namespace dev;
@@ -33,6 +34,61 @@ void DownloadingTxsQueue::push(
     std::shared_ptr<DownloadTxsShard> txsShard =
         std::make_shared<DownloadTxsShard>(_packet->rlp().data(), _fromPeer);
     int RPCPacketType = 1;
+    if (_msg->packetType() == RPCPacketType && m_treeRouter)
+    {
+        int64_t consIndex = _packet->rlp()[1].toPositiveInt64();
+        SYNC_LOG(DEBUG) << LOG_DESC("receive and send transactions by tree")
+                        << LOG_KV("consIndex", consIndex)
+                        << LOG_KV("fromPeer", _fromPeer.abridged());
+
+        auto selectedNodeList = m_treeRouter->selectNodes(m_syncStatus->peersSet(), consIndex);
+        // append all the parent nodes into the knownNode
+        auto parentNodeList = m_treeRouter->selectParent(m_syncStatus->peersSet(), consIndex, true);
+        for (auto const& _parentNodeId : *parentNodeList)
+        {
+            txsShard->appendKnownNode(_parentNodeId);
+        }
+        // forward the received txs
+        for (auto const& selectedNode : *selectedNodeList)
+        {
+            if (selectedNode == _fromPeer || !m_service)
+            {
+                continue;
+            }
+            m_service->asyncSendMessageByNodeID(selectedNode, _msg, nullptr);
+            txsShard->appendKnownNode(selectedNode);
+            SYNC_LOG(DEBUG) << LOG_DESC("forward transaction")
+                            << LOG_KV("selectedNode", selectedNode.abridged());
+        }
+    }
+    WriteGuard l(x_buffer);
+    m_buffer->emplace_back(txsShard);
+}
+
+
+void DownloadingTxsQueue::push4nl(
+    SyncMsgPacket::Ptr _packet, dev::p2p::P2PMessage::Ptr _msg, NodeID const& _fromPeer)
+{
+    std::shared_ptr<DownloadTxsShard> txsShard =
+        std::make_shared<DownloadTxsShard>(_packet->rlp().data(), _fromPeer);
+    int RPCPacketType = 1;
+    
+    RLP const& txsBytesRLP = RLP(ref(txsShard->txsBytes))[0];
+    auto txs = std::make_shared<dev::eth::Transactions>();
+
+    dev::eth::TxsParallelParser::decode(
+                    txs, txsBytesRLP.toBytesConstRef(),eth::CheckTransaction::None, true);
+    for (auto tx : *txs)
+        {
+           if(tx->firstTransfer){
+                auto txHash = tx->hash();
+                m_processedFirstTransferHashes.insert(txHash);
+                consensus::load = m_processedFirstTransferHashes.size();
+                SYNC_LOG(INFO) << LOG_DESC("收到!在push4nl中")
+                               << LOG_KV("txHash",txHash.abridged())
+                               << LOG_KV("load",consensus::load);
+            }
+        }
     if (_msg->packetType() == RPCPacketType && m_treeRouter)
     {
         int64_t consIndex = _packet->rlp()[1].toPositiveInt64();
@@ -111,6 +167,7 @@ void DownloadingTxsQueue::pop2TxPool(
             // decode
             auto txs = std::make_shared<dev::eth::Transactions>();
             std::shared_ptr<DownloadTxsShard> txsShard = (*localBuffer)[i];
+            
             // TODO drop by Txs Shard
             if (g_BCOSConfig.version() >= RC2_VERSION)
             {
@@ -131,6 +188,7 @@ void DownloadingTxsQueue::pop2TxPool(
             }
             decode_time_cost += (utcTime() - record_time);
             record_time = utcTime();
+
 
             // parallel verify transaction before import
             tbb::parallel_for(tbb::blocked_range<size_t>(0, txs->size()),
@@ -159,42 +217,41 @@ void DownloadingTxsQueue::pop2TxPool(
             NodeID fromPeer = txsShard->fromPeer;
             for (auto tx : *txs)
             {
-                try
-                {
-                    auto importResult = _txPool->import(tx);
-                    if (dev::eth::ImportResult::Success == importResult)
-                    {
-                        tx->appendNodeContainsTransaction(fromPeer);
-                        tx->appendNodeListContainTransaction(*(txsShard->knownNodes));
-                        successCnt++;
+                    try{
+                        auto importResult = _txPool->import(tx);
+                        if (dev::eth::ImportResult::Success == importResult)
+                        {
+                            tx->appendNodeContainsTransaction(fromPeer);
+                            tx->appendNodeListContainTransaction(*(txsShard->knownNodes));
+                            successCnt++;
+                        }
+                        else if (dev::eth::ImportResult::AlreadyKnown == importResult)
+                        {
+                            SYNC_LOG(TRACE)
+                                << LOG_BADGE("Tx")
+                                << LOG_DESC("Import peer transaction into txPool DUPLICATED from peer")
+                                << LOG_KV("reason", int(importResult))
+                                << LOG_KV("peer", fromPeer.abridged())
+                                << LOG_KV("txHash", tx->hash().abridged());
+                        }
+                        else
+                        {
+                            SYNC_LOG(TRACE)
+                                << LOG_BADGE("Tx")
+                                << LOG_DESC("Import peer transaction into txPool FAILED from peer")
+                                << LOG_KV("reason", int(importResult))
+                                << LOG_KV("peer", fromPeer.abridged())
+                                << LOG_KV("txHash", tx->hash().abridged());
+                        }
                     }
-                    else if (dev::eth::ImportResult::AlreadyKnown == importResult)
+                    catch (std::exception& e)
                     {
-                        SYNC_LOG(TRACE)
-                            << LOG_BADGE("Tx")
-                            << LOG_DESC("Import peer transaction into txPool DUPLICATED from peer")
-                            << LOG_KV("reason", int(importResult))
-                            << LOG_KV("peer", fromPeer.abridged())
-                            << LOG_KV("txHash", tx->hash().abridged());
+                        SYNC_LOG(WARNING)
+                            << LOG_BADGE("Tx") << LOG_DESC("Invalid transaction RLP received")
+                            << LOG_KV("hash", tx->hash().abridged()) << LOG_KV("reason", e.what())
+                            << LOG_KV("rlp", toHex(tx->rlp()));
+                        continue;
                     }
-                    else
-                    {
-                        SYNC_LOG(TRACE)
-                            << LOG_BADGE("Tx")
-                            << LOG_DESC("Import peer transaction into txPool FAILED from peer")
-                            << LOG_KV("reason", int(importResult))
-                            << LOG_KV("peer", fromPeer.abridged())
-                            << LOG_KV("txHash", tx->hash().abridged());
-                    }
-                }
-                catch (std::exception& e)
-                {
-                    SYNC_LOG(WARNING)
-                        << LOG_BADGE("Tx") << LOG_DESC("Invalid transaction RLP received")
-                        << LOG_KV("hash", tx->hash().abridged()) << LOG_KV("reason", e.what())
-                        << LOG_KV("rlp", toHex(tx->rlp()));
-                    continue;
-                }
             }
             import_time_cost += (utcTime() - record_time);
         }

@@ -187,7 +187,9 @@ void Sealer::doWork(bool wait)
             //TODO:Jason修改的第三个点只有当size不等于0的时候,才会handleBlock
             if (m_sealing.block->getTransactionSize()!=0)
             {
-                SEAL_LOG(INFO) << LOG_DESC("可以生成块")<<LOG_KV("blkNum", m_sealing.block->header().number());
+                SEAL_LOG(INFO) << LOG_DESC("可以生成块")
+                                <<LOG_KV("blkNum", m_sealing.block->header().number())
+                                << LOG_KV("当前节点load",load);
                 // transactionNum += m_sealing.block->getTransactionSize();
                 // SEAL_LOG(INFO) << LOG_KV("Seal_transactionNum", transactionNum);
                 m_txPool->dropBlockTrans(m_sealing.block);
