@@ -1447,13 +1447,13 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
                        << LOG_KV("groupID", _groupID) << LOG_KV("rlp", _rlp);
 #endif
 
-        RPC_LOG(INFO) << LOG_DESC("sharper::RPC::开始随机发送交易")
-                      <<LOG_KV("随机交易数量", num_randomtx);
+        // RPC_LOG(INFO) << LOG_DESC("sharper::RPC::开始随机发送交易")
+        //               <<LOG_KV("随机交易数量", num_randomtx);
 
         auto txPool = ledgerManager()->txPool(_groupID);
         // only check txPool here
-        RPC_LOG(INFO)   << LOG_DESC("获取交易池成功")
-                        <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
+        // RPC_LOG(INFO)   << LOG_DESC("获取交易池成功")
+                        // <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         if (!txPool)
         {
             BOOST_THROW_EXCEPTION(
@@ -1507,8 +1507,10 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
             //type为创建合约时该地址为0x0
             FixedHash<20> contractAddress;
             //不要log了
-            RPC_LOG(INFO) << LOG_DESC("将随机交易投递到交易池")
-                            << LOG_KV("txhash", tx->hash().abridged());
+
+            // RPC_LOG(INFO) << LOG_DESC("将随机交易投递到交易池")
+            //                 << LOG_KV("txhash", tx->hash().abridged());
+
             // << LOG_KV("tx_nonce", tx->nonce());
             // <<LOG_KV("tx->receiveAddress()", tx->receiveAddress())
             // <<LOG_KV("is  contract tx?", tx->receiveAddress()==contractAddress?"true":"faslse");
@@ -1549,9 +1551,9 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
                 break;
             }
             //return toJS(ret.first);
-            //Jason
-            RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
-                      <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
+             //Jason
+            // RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
+            //           <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         }
 
     }

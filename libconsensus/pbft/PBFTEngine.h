@@ -397,11 +397,11 @@ public:
         std::vector<int> packNodes;
 
         // 计算标识值
-        int identifier = reqNum % packNodeNum;
+        int identifier = reqNum % m_sealerList.size();
 
         // 从标识值开始，将接下来的 packNodeNum 个节点加入打包节点列表
         for (int i = 0; i < packNodeNum; ++i) {
-            int nodeIndex = (identifier + i) % packNodeNum;
+            int nodeIndex = (identifier + i) % m_sealerList.size();
             packNodes.push_back(nodeIndex);
         }
         PBFTENGINE_LOG(INFO)<<LOG_DESC("打印下一轮打包节点")

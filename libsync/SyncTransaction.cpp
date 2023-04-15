@@ -254,36 +254,36 @@ void SyncTransaction::maintainTransactions4nl()
     }
      // 分配交易给不同节点
     std::unordered_map<NodeID, std::shared_ptr<Transactions>> transactionsByNode;
-    SYNC_LOG(INFO) << LOG_KV("consensus::globalSealingNodes",consensus::globalSealingNodes)
-                    << LOG_KV("tx size",ts->size());
+    // SYNC_LOG(INFO) << LOG_KV("consensus::globalSealingNodes",consensus::globalSealingNodes)
+    //                 << LOG_KV("tx size",ts->size());
     for (const auto& tx : *ts)
     {
         auto targetNodeIndex = tx->whichBeSended(consensus::globalSealingNodes);
-        SYNC_LOG(INFO) <<  LOG_DESC("在maintainTransactions4nl确定发送给哪个节点")
-                        << LOG_KV("tx hash",tx->hash().abridged())
-                        << LOG_KV("targetNodeIndex",targetNodeIndex);
+        // SYNC_LOG(INFO) <<  LOG_DESC("在maintainTransactions4nl确定发送给哪个节点")
+        //                 << LOG_KV("tx hash",tx->hash().abridged())
+        //                 << LOG_KV("targetNodeIndex",targetNodeIndex);
 
         const NodeID targetNodeId = m_blockChain->sealerList().at(targetNodeIndex);
-        SYNC_LOG(INFO) <<  LOG_DESC("targetNodeId获取成功");
+        // SYNC_LOG(INFO) <<  LOG_DESC("targetNodeId获取成功");
         if (transactionsByNode.find(targetNodeId) == transactionsByNode.end())
         {
             transactionsByNode[targetNodeId] = std::make_shared<Transactions>();
         }
         transactionsByNode[targetNodeId]->emplace_back(tx);
-         SYNC_LOG(INFO) <<  LOG_DESC("tx加入成功");
+        //  SYNC_LOG(INFO) <<  LOG_DESC("tx加入成功");
     }
 
     // TODO 向每个节点发送分配给它们的交易
     // In SyncTransaction::maintainTransactions4nl 
-    SYNC_LOG(INFO) <<  LOG_DESC("向每个节点发送分配给它们的交易");
+    // SYNC_LOG(INFO) <<  LOG_DESC("向每个节点发送分配给它们的交易");
 
     for (const auto& entry : transactionsByNode)
     {
 
         const NodeID& nodeId = entry.first;
         const std::shared_ptr<Transactions>& transactions = entry.second;
-        SYNC_LOG(INFO) <<  LOG_KV("nodeId",nodeId.abridged())
-                        << LOG_KV("tx size ", transactions->size());
+        // SYNC_LOG(INFO) <<  LOG_KV("nodeId",nodeId.abridged())
+                        // << LOG_KV("tx size ", transactions->size());
         if (nodeId == m_nodeId) // 如果交易分配给自己
         {
             // 将交易插入交易池
@@ -291,18 +291,18 @@ void SyncTransaction::maintainTransactions4nl()
             {
                 m_txPool->import(tx);
             }
-            SYNC_LOG(INFO) <<  LOG_DESC("交易分配给自己,插入交易池成功");
+            // SYNC_LOG(INFO) <<  LOG_DESC("交易分配给自己,插入交易池成功");
         }
         else
         {
             // 向其他节点发送交易
             sendTransactions4nl(transactions, false, 0,nodeId);
-            SYNC_LOG(INFO) <<  LOG_DESC("向其他节点发送交易成功,在本节点交易池中删除交易");
+            // SYNC_LOG(INFO) <<  LOG_DESC("向其他节点发送交易成功,在本节点交易池中删除交易");
             for (const auto& tx : *transactions)
             {
                 m_txPool->drop(tx->hash());
             }
-            SYNC_LOG(INFO) <<  LOG_DESC("已从交易池中删除发送给其他节点的交易");
+            // SYNC_LOG(INFO) <<  LOG_DESC("已从交易池中删除发送给其他节点的交易");
         }
         
     }
@@ -354,8 +354,8 @@ void SyncTransaction::sendTransactions4nl(std::shared_ptr<Transactions> _ts,
 
         selectedPeers->emplace_back(_targetNodeId);
     }
-    SYNC_LOG(INFO) <<  LOG_DESC("打印需要添加的目标节点之后")
-                    <<  LOG_KV("peer",_targetNodeId.abridged());
+    // SYNC_LOG(INFO) <<  LOG_DESC("打印需要添加的目标节点之后")
+                    // <<  LOG_KV("peer",_targetNodeId.abridged());
 
     broadcastTransactions4nl(_targetNodeId, _ts, _fastForwardRemainTxs, _startIndex);
     // if (!_fastForwardRemainTxs && m_running.load())
@@ -399,9 +399,9 @@ void SyncTransaction::broadcastTransactions4nl
         m_syncStatus->foreachPeerRandom([&](shared_ptr<SyncPeerStatus> _p) {
         std::vector<bytes> txRLPs;
         unsigned txsSize = peerTransactions[_p->nodeId].size();
-         SYNC_LOG(INFO) << LOG_DESC("broadcastTransactions4nl中的foreachPeerRandom")
-                        << LOG_KV("_p.nodeId",_p->nodeId.abridged())
-                        << LOG_KV("txSize",txsSize); 
+        //  SYNC_LOG(INFO) << LOG_DESC("broadcastTransactions4nl中的foreachPeerRandom")
+        //                 << LOG_KV("_p.nodeId",_p->nodeId.abridged())
+        //                 << LOG_KV("txSize",txsSize); 
         if (0 == txsSize)
             return true;  // No need to send
 
@@ -414,18 +414,18 @@ void SyncTransaction::broadcastTransactions4nl
         int64_t consIndex = 0;
         if (m_treeRouter)
         {
-            SYNC_LOG(INFO) <<  LOG_DESC("使用treeRouter");
+            // SYNC_LOG(INFO) <<  LOG_DESC("使用treeRouter");
             consIndex = m_treeRouter->consIndex();
         }
         packet->encode(txRLPs, true, consIndex);
         auto msg = packet->toMessage(m_protocolId, (!_fastForwardRemainTxs));
         m_service->asyncSendMessageByNodeID(_p->nodeId, msg, CallbackFuncWithSession(), Options());
-        SYNC_LOG(INFO) << LOG_BADGE("Tx") << LOG_DESC("Send transaction to peer")
-                        << LOG_KV("txNum", int(txsSize))
-                        << LOG_KV("fastForwardRemainTxs", _fastForwardRemainTxs)
-                        << LOG_KV("startIndex", _startIndex)
-                        << LOG_KV("toNodeId", _p->nodeId.abridged())
-                        << LOG_KV("messageSize(B)", msg->buffer()->size());
+        // SYNC_LOG(INFO) << LOG_BADGE("Tx") << LOG_DESC("Send transaction to peer")
+        //                 << LOG_KV("txNum", int(txsSize))
+        //                 << LOG_KV("fastForwardRemainTxs", _fastForwardRemainTxs)
+        //                 << LOG_KV("startIndex", _startIndex)
+        //                 << LOG_KV("toNodeId", _p->nodeId.abridged())
+        //                 << LOG_KV("messageSize(B)", msg->buffer()->size());
         return true;
         });
 }
