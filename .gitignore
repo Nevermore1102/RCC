@@ -62,3 +62,4 @@ libblockverifier/BlockVerifier_fisco.cpp
 .cache/clangd/
 
 vs.tar
+CMakeLists.txt
