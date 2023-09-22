@@ -1448,13 +1448,13 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
                        << LOG_KV("groupID", _groupID) << LOG_KV("rlp", _rlp);
 #endif
 
-        // RPC_LOG(INFO) << LOG_DESC("sharper::RPC::开始随机发送交易")
-        //               <<LOG_KV("随机交易数量", num_randomtx);
+        RPC_LOG(INFO) << LOG_DESC("sharper::RPC::开始随机发送交易")
+                      <<LOG_KV("随机交易数量", num_randomtx);
 
         auto txPool = ledgerManager()->txPool(_groupID);
         // only check txPool here
-        // RPC_LOG(INFO)   << LOG_DESC("获取交易池成功")
-                        // <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
+        RPC_LOG(INFO)   << LOG_DESC("获取交易池成功")
+                        <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         if (!txPool)
         {
             BOOST_THROW_EXCEPTION(
@@ -1553,8 +1553,8 @@ std::string Rpc::sendRandomRawTransaction4sharper(int _groupID, const std::strin
             }
             //return toJS(ret.first);
              //Jason
-            // RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
-            //           <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
+            RPC_LOG(INFO) << LOG_DESC("注入交易池成功!!!!")
+                      <<LOG_KV("交易池交易数量", txPool->pendingList()->size());
         }
 
     }

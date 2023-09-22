@@ -63,6 +63,8 @@ void SyncTransaction::stop()
 
 void SyncTransaction::doWork()
 {
+    //不开启负载转发
+    return ;
     maintainDownloadingTransactions();
 
     // only maintain transactions for the nodes inner the group
@@ -70,6 +72,7 @@ void SyncTransaction::doWork()
     {
         // SYNC_LOG(INFO) << LOG_DESC("m_needMaintainTransactions && m_newTransactions && m_txQueue->bufferSize() == 0,开始调用maintainTransactions()");
         maintainTransactions4nl();
+        //maintainTransactions();//原先转移函数
         // maintainTransactions4nl();
     }
 
